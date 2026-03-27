@@ -1,0 +1,35 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+
+# Preserved ownership when users are deleted (v0.0.1)
+
+When a user is removed from `auth.users`, their questions and question sets are **not** deleted. The system keeps a record of who originally owned the content so that it remains discoverable (e.g. "questions by this user") and the app continues to work without errors.
+
+---
+
+## Behavior
+
+- **question_versions**: `owner_id` has a foreign key to `auth.users(id)` with **ON DELETE SET NULL**. When a user is deleted, `owner_id` is set to null. A separate column **`preserved_owner_id`** stores the original owner UUID (set by trigger before the FK nulls `owner_id`). Rows with `owner_id` null are **read-only** (no one can approve pending versions or delete them); listing and filtering still use the effective owner (current or preserved) for display and for "questions by this user."
+- **question_sets**: `owner_id` already used ON DELETE SET NULL; **`preserved_owner_id`** was added so the original creator is retained for history and filtering when the user is deleted.
+
+---
+
+## Effective owner
+
+For display and for filtering (e.g. "show questions by user X"), the app uses the **effective owner**: `owner_id` when present, otherwise `preserved_owner_id`. So deleted users’ content still shows as "by [that user]" and can be found via an optional `ownerId` filter on the questions listing API.
+
+---
+
+## Implementation details
+
+- **Triggers**: Before delete on `auth.users`, triggers copy `owner_id` into `preserved_owner_id` for `question_versions` and `question_sets` so the value is not lost when the FK sets `owner_id` to null.
+- **Insert**: On insert, `preserved_owner_id` is set from `owner_id` (trigger or application) so new rows always have preserved owner.
+- **RLS**: For `question_versions`, select is allowed when `owner_id = auth.uid()` or `owner_id is null` (orphaned); update and delete are allowed only when `owner_id = auth.uid()`.
+- **API**: `GET /api/questions?ownerId=<uuid>` returns approved questions whose current or preserved owner is that UUID.
+
+See migration `00013_preserved_owner_and_no_cascade.sql` and `getEffectiveOwner()` in `src/lib/questions/store-db.ts`.

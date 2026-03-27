@@ -1,0 +1,334 @@
+# QUESTION-FORMAT-0.0.1.qmd"
+
+This document defines how questions are stored on the **filesystem** for the initial MVP. It is referenced by SPEC-0.0.1.qmd.
+
+All structured data uses **YAML** for readability and easy hand-editing. Prefer **multiple small files** over one large file so editors can work on one concern at a time.
+
+---
+
+## One Folder per Question Version
+
+- Each **version** of a question has its **own folder**. Questions are **immutable** and **versionable**: creating a new version adds a new folder; existing version folders are never overwritten.
+- **Layout:** Under the questions root, `{logical_id}/{version}/` (e.g. `questions/550e8400-e29b-41d4-a716-446655440000/1.0.0.0/`). The **logical_id** (e.g. UUID or slug) is the stable question identity across versions; **version** is the four-part semantic version string (see below).
+- All question content and metadata for that version live inside this folder (`meta.yaml`, `prompt.md`, type-specific files).
+
+---
+
+## Required Files
+
+### `meta.yaml` (required)
+
+Minimal metadata that identifies and classifies the question. Keep this file short so it’s easy to scan and edit.
+
+**Required fields:**
+
+| Field    | Type   | Description |
+|----------|--------|-------------|
+| `id`     | string | Logical question id (MUST match parent folder name, i.e. the `logical_id` in the path). |
+| `type`   | string | Question type (see Section 4). |
+| `version`| string | **Four-part semantic version** `Q_MAJ.Q_MIN.A_MAJ.A_MIN` (e.g. `1.0.0.0`). See Version semantics below. |
+
+**Optional (recommended):**
+
+| Field             | Type     | Description |
+|-------------------|----------|-------------|
+| `title`           | string   | Short title for admin UIs. |
+| `domain`          | string   | Knowledge domain (e.g. `bash`, `r`, `regex`, `excel`, `html`, `css`). |
+| `tags`            | string[] | Hierarchical tag paths for filtering and discovery (e.g. `[programming/bash/intro, programming/bash/week-1]`). Path separator is `/`. See SPEC-0.0.6 and SPEC-0.0.8. |
+| `sandbox_zip_ref` | string   | (bash only) Filename or path to a zip for the sandbox folder tree. |
+| `created_at`      | string   | ISO 8601 date (user or system on first upload). |
+| `modified_at`     | string   | ISO 8601 date (system on each modification upload). |
+
+**Version semantics (four-part, required from day one):**
+
+- **Q_MAJ** (question major): Bump when the **meaning** of the question changes.
+- **Q_MIN** (question minor): Bump when only **wording** of the question changes (copyedit, typos).
+- **A_MAJ** (answer major): Bump when the **meaning or correctness** of the answer changes.
+- **A_MIN** (answer minor): Bump when only **wording** of answers changes, or when **equivalent** correct answers are added (same meaning, more ways to be correct).
+
+Example:
+
+```yaml
+id: 550e8400-e29b-41d4-a716-446655440000
+type: multiple_choice
+version: "1.0.0.0"
+title: List files in current directory
+domain: bash
+tags:
+  - bash
+  - intro
+```
+
+### Prompt file: `prompt.md` or `prompt.txt` (required)
+
+- The question text shown to the student.
+- **Exactly one** prompt file is required per question: either `prompt.md` (Markdown) or `prompt.txt` (plain text).
+- **If both are present**: The system MUST use **`prompt.md`** and MUST ignore `prompt.txt`. (Markdown takes precedence so editors can add a `.txt` fallback without changing runtime behavior.)
+- **If neither is present**: The question is **invalid**; upload MUST be rejected and the question MUST NOT be used for tests until a prompt file is added.
+- **Recommendation**: Include only one of the two to avoid confusion; the system does not validate or warn when both exist.
+
+---
+
+## Type-Specific Files
+
+Depending on `type`, the folder may include additional files. All paths are relative to the question folder. Use one file per concern where possible.
+
+### Multiple choice (`type: multiple_choice`)
+
+**`options.yaml`** (required) — list of choices. Mark the correct one with `correct: true`. Use simple keys so options can be added without learning a schema.
+
+Example:
+
+```yaml
+# options.yaml — one entry per choice; exactly one should have correct: true
+- id: a
+  text: Option A
+  correct: true
+- id: b
+  text: Option B
+- id: c
+  text: Option C
+```
+
+Alternative: if you prefer to list the correct id separately (e.g. for long option lists), you can use a single `correct_id` in a small wrapper. The system MAY support:
+
+```yaml
+correct_id: a
+options:
+  - id: a
+    text: Option A
+  - id: b
+    text: Option B
+```
+
+MVP implementation chooses one convention; the first (inline `correct: true`) is recommended for readability.
+
+### Short answer (`type: short_answer`)
+
+**`expected.yaml`** (optional) — expected answer(s) or grading hint. Prefer one simple field when that’s enough.
+
+Example (single expected answer):
+
+```yaml
+answer: "the exact expected string"
+```
+
+Example (multiple accepted answers):
+
+```yaml
+answers:
+  - "first acceptable answer"
+  - "second acceptable answer"
+```
+
+**`rubric.yaml`** (optional) — use when grading is criteria-based. Keep criteria as a simple list.
+
+Example:
+
+```yaml
+criteria:
+  - Must mention X
+  - Must include at least one example
+points_per_criterion: 5
+```
+
+Exact schema can be refined per evaluator; the above are easy to type and modify.
+
+### Long answer (`type: long_answer`)
+
+Same as short answer: **`expected.yaml`** and/or **`rubric.yaml`**. Use `rubric.yaml` when feedback is criteria-based rather than a single string match.
+
+### R / Bash coding (`type: r` or `type: bash`)
+
+- **`solution.R`** or **`solution.sh`** (required) — reference solution. Used to generate or compare outputs.
+- **`tests.yaml`** (optional) — explicit test inputs/scenarios. If absent, the system may derive tests from the solution or another spec.
+- **`meta.yaml`** may include optional **`sandbox_zip_ref`** (bash only) — filename or path to a zip containing the sandbox folder tree. The system extracts this zip and runs the script with that directory as the working directory; per-test `setup` in `tests.yaml` still runs after the zip is applied.
+
+Keep `tests.yaml` as one scenario per list item so tests can be added or removed without editing a big structure.
+
+### Bash predict output (`type: bash_predict_output`)
+
+- **`script.sh`** (required) — the script shown to the student. The student predicts its output without running it.
+- **`expected.yaml`** (required) — stored expected output (e.g. `answer: "..."`) for **editor review**. At grading time the system runs the script and uses the **computed** output as the key; if it differs from the stored value, the system logs a mismatch and uses the computed value for grading.
+
+Example for Bash:
+
+```yaml
+# tests.yaml — each item is one test scenario (e.g. inputs or description)
+- description: "Empty directory"
+  stdin: ""
+  # optional: env, cwd, etc. TBD per evaluator
+- description: "Directory with two files"
+  stdin: ""
+  setup: "touch foo bar"
+```
+
+Example for R (conceptual):
+
+```yaml
+# tests.yaml — inputs passed to the solution / user code
+- description: "Default case"
+  inputs:
+    x: 1
+    y: 2
+- description: "Edge case"
+  inputs:
+    x: 0
+    y: 0
+```
+
+Exact keys (e.g. `stdin`, `inputs`, `setup`) depend on the evaluator; the format should stay list-based and readable.
+
+### Excel, HTML, CSS
+
+- **Excel formula / HTML / CSS**: Add in a later revision. Prefer separate files (e.g. `expected.yaml` for formula or snippet, optional asset files) and the same readability guidelines.
+
+---
+
+## Question Type Values (MVP)
+
+Use lowercase. Canonical list:
+
+| Type                  | Description                    |
+|-----------------------|--------------------------------|
+| `multiple_choice`     | Single correct choice          |
+| `short_answer`        | Short text, single/multiple expected answers or rubric |
+| `long_answer`         | Longer text, rubric or expected answer |
+| `r`                   | R code                         |
+| `bash`                | Bash (write code; auto-check output) |
+| `bash_predict_output` | Bash (predict output; no terminal; grading uses runtime-computed key) |
+| `excel_formula`       | (optional in MVP)              |
+| `html`                | (optional in MVP)              |
+| `css`                 | (optional in MVP)              |
+
+The SPEC defines which types are implemented in the initial MVP.
+
+---
+
+## Upload and Versioning
+
+- **New question**: Any user provides content (via UI or a folder/zip). System creates a new `logical_id` (e.g. UUID), assigns version `1.0.0.0`, and writes files under `questions/{logical_id}/{version}/`. The version is **approved** (uploader is owner). No overwrite of existing version folders.
+- **New version**: Any user can propose a new version by providing updated content and a **version bump type** (question_major, question_minor, answer_major, answer_minor). System computes the next version string, writes a **new** folder `questions/{logical_id}/{new_version}/`, and does not modify any existing version folder. If the user is the question owner, the version is **approved**; otherwise it is **pending** until the owner approves it. Only approved versions are used in tests.
+- **Validation**: On upload, the system MUST validate presence of `id`, `type`, and `version` in `meta.yaml` (with `version` in four-part form); the presence of exactly one prompt source; and type-specific required files. The `id` in `meta.yaml` MUST match the logical_id (parent folder name) in the path.
+- **Ownership**: Ownership of questions is stored in the database. The core question format (`meta.yaml`, prompt, type-specific files) stays portable. Optionally, an app-specific file `db_meta.yaml` in the same version folder may record ownership and status for sync/backup (see SPEC-DB-FS-QUESTION-SYNC); it can be ignored or deleted when using questions outside this system. When a user is deleted, their questions are not deleted; ownership is preserved for history and filtering (see SPEC-PRESERVED-OWNERSHIP-0.0.1).
+
+---
+
+## Optional: db_meta.yaml (app metadata)
+
+When the system writes or syncs question versions to the filesystem, it may add a **separate** file `db_meta.yaml` in each version folder. This file is **optional** and **app-specific**. It contains only: `owner_id` (uuid), `status` (`approved` or `pending`), `proposed_by` (uuid or null). It is used for DB–FS sync and backup; the core question content (`meta.yaml`, prompt, options, etc.) remains independent. If you use the same question folders in another system or without this app, you can ignore or delete `db_meta.yaml` and still have valid, portable question content.
+
+---
+
+## Edge Cases and Deterministic Behavior
+
+The following rules remove ambiguity. Implementations MUST behave as specified.
+
+### Prompt file
+
+| Scenario | Behavior |
+|---------|----------|
+| Both `prompt.md` and `prompt.txt` present | Use **`prompt.md`**; ignore `prompt.txt`. |
+| Only `prompt.md` present | Use `prompt.md`. |
+| Only `prompt.txt` present | Use `prompt.txt`. |
+| Neither present | **Invalid.** Reject upload; do not use question. |
+
+### `meta.yaml` identity and type
+
+| Scenario | Behavior |
+|---------|----------|
+| `id` in `meta.yaml` differs from folder name | **Invalid.** Reject upload (or treat as invalid when loading). Folder name is the canonical id; `meta.yaml` `id` MUST match. |
+| `type` missing or empty | **Invalid.** Reject upload. |
+| `type` not in the canonical list (Section 4) | **Invalid.** Reject upload. |
+| `version` missing or empty | **Invalid.** Reject upload. |
+| `version` not four-part (Q_MAJ.Q_MIN.A_MAJ.A_MIN) | **Invalid.** Reject upload. |
+
+### Type-specific required files
+
+| Question type | Required files | If missing |
+|---------------|----------------|------------|
+| `multiple_choice` | `options.yaml` | **Invalid.** Reject upload. |
+| `short_answer` / `long_answer` | (none beyond meta + prompt) | Valid; grading may use defaults or fail gracefully per evaluator. |
+| `r` | `solution.R` | **Invalid.** Reject upload. |
+| `bash` | `solution.sh` | **Invalid.** Reject upload. |
+
+For types not yet defined (e.g. `excel_formula`, `html`, `css`), required files are specified when the type is added.
+
+### Multiple choice options
+
+| Scenario | Behavior |
+|---------|----------|
+| No option has `correct: true` | **Invalid.** Reject upload (or reject when loading). |
+| More than one option has `correct: true` | **Invalid.** Reject upload (or reject when loading). |
+| `options.yaml` missing or empty list | **Invalid.** Reject upload. |
+| Duplicate option `id` values | **Invalid.** Reject upload. |
+
+### Malformed or missing YAML
+
+| Scenario | Behavior |
+|---------|----------|
+| `meta.yaml` missing | **Invalid.** Reject upload. |
+| `meta.yaml` not valid YAML | **Invalid.** Reject upload; return parse error to user. |
+| Type-specific YAML (e.g. `options.yaml`) not valid YAML | **Invalid.** Reject upload; return parse error. |
+
+### 6.6 New version creation (immutable versions)
+
+| Scenario | Behavior |
+|---------|----------|
+| Upload specifies (logical_id, version) that already exists in storage | **Invalid.** Reject; versions are immutable. User must supply a new version string or use the app to bump version. |
+| Non-owner creates a new version | **Allowed.** Version is stored as **pending** until the question owner approves it; only approved versions are used in tests. |
+| id in meta.yaml differs from the logical_id (parent folder) in the path | **Invalid.** Reject; meta.yaml id MUST match the path. |
+| New version upload omits meta.yaml or prompt | **Invalid.** Every version folder MUST contain required files. |
+
+---
+
+## Example Folder Layouts
+
+Layout is `questions/{logical_id}/{version}/` with required and type-specific files inside each version folder.
+
+**Multiple choice (one version):**
+
+```
+questions/
+  <logical_id>/
+    1.0.0.0/
+      meta.yaml
+      prompt.md
+      options.yaml
+```
+
+**Bash coding:**
+
+```
+questions/
+  <logical_id>/
+    1.0.0.0/
+      meta.yaml
+      prompt.md
+      solution.sh
+      tests.yaml
+```
+
+**Short answer with rubric:**
+
+```
+questions/
+  <logical_id>/
+    1.0.0.0/
+      meta.yaml
+      prompt.md
+      rubric.yaml
+```
+
+**R coding (minimal):**
+
+```
+questions/
+  <logical_id>/
+    1.0.0.0/
+      meta.yaml
+      prompt.md
+      solution.R
+```
+
+This format lets users develop and version questions locally (e.g. with Git) and upload when connected. YAML and separate files keep each piece easy to read and edit. For behavior when files are missing or conflict, see Section 6.

@@ -1,0 +1,57 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+# Tags taxonomy — filesystem format (SPEC-0.0.8)
+
+Hierarchical tags are stored under a configurable root (default `tags/`). The path separator is **`/`** (e.g. `programming/python/if`). See [SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd](SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd).
+
+---
+
+## Layout
+
+- **Root:** `TAGS_ROOT` env or `tags/` under project root.
+- **File:** `taxonomy.yaml` in the root.
+
+---
+
+## taxonomy.yaml
+
+Single file containing the full taxonomy. Sync imports FS-only tags into the database; DB is source of truth for listing.
+
+| Field | Type | Description |
+|-------|------|--------------|
+| `tags` | array | List of tag entries. |
+| `updated_at` | string (optional) | ISO 8601. |
+
+Each tag entry:
+
+| Field | Type | Description |
+|-------|------|--------------|
+| `id` | string (optional) | UUID; if omitted, one is generated on import. |
+| `name` | string | Display name (e.g. `if`). |
+| `parent_id` | string (optional) | UUID of parent tag; null for root. |
+| `path` | string | Full path with `/` (e.g. `programming/python/if`). Must be unique. |
+
+---
+
+## Example
+
+```yaml
+tags:
+  - name: programming
+    path: programming
+  - name: python
+    parent_id: null
+    path: programming/python
+  - name: if
+    path: programming/python/if
+  - name: control-flow
+    path: programming/python/control-flow
+updated_at: "2025-03-12T12:00:00Z"
+```
+
+Questions and tutorials reference tags by **path** (e.g. `programming/python/if`).

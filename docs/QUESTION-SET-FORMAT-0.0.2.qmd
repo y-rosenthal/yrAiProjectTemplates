@@ -1,0 +1,126 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+
+# Question Set Format — File-based storage (v0.0.2)
+
+This document defines how **question sets** are stored on the **filesystem** using YAML. It is referenced by [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd). The same structure can be used for version control, bulk import, or as a source that is synced or loaded into the database.
+
+All structured data uses **YAML** for readability and easy hand-editing.
+
+**References:** [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd), [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd).  
+See [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd) for document versioning.
+
+---
+
+## One folder per question set
+
+- Each question set has its **own folder** under a configured root (e.g. `question-sets/`).
+- **Layout:** `{root}/{set_id}/` where `set_id` is a unique identifier (e.g. UUID or slug such as `bash-basics`). The **set_id** MUST match the `id` field in the set file (see below).
+- The folder contains a single YAML file that defines the set (metadata and list of questions).
+
+---
+
+## Required file: `set.yaml`
+
+Each question set folder MUST contain a file named **`set.yaml`**. This file holds the set identity, title, optional description, and the ordered list of question logical ids.
+
+### Required fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique question set id. MUST match the parent folder name (the `set_id` in the path). Use a UUID or a stable slug (e.g. `bash-basics`, `week-3-homework`). |
+| `title` | string | User-facing name for the set (e.g. "Bash basics", "Week 3 homework"). |
+| `question_logical_ids` | array of strings | Ordered list of question logical ids (as in [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd)). Order in the array is the order questions are presented when the set is taken as a test. Each element MUST be a non-empty string; duplicates are allowed in the format but the system MAY normalize to unique ids per set. |
+
+### Optional fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | string | Short description of the set (e.g. for the list UI). |
+| `instructions` | string | Instructions shown to the user when taking the set (e.g. how to use attached files). |
+| `attached_files` | array of objects | Optional list of files that may be used to answer questions. Each object has `filename` (string, required) and `description` (string, optional). Files are stored in a `files/` subfolder under the set folder. |
+| `sandbox_zip_ref` | string | Filename or path to a zip containing a shared sandbox folder tree for bash (Type A) questions in this set. When present, it can be used as the default for questions that do not define their own `sandbox_zip_ref`. |
+| `created_at` | string | ISO 8601 date (user or system). |
+| `modified_at` | string | ISO 8601 date (user or system on edit). |
+
+---
+
+## Example
+
+Folder: `question-sets/bash-basics/`
+
+File: `question-sets/bash-basics/set.yaml`
+
+```yaml
+id: bash-basics
+title: Bash basics
+description: Introductory bash commands and scripting.
+question_logical_ids:
+  - q-mult-001
+  - 550e8400-e29b-41d4-a716-446655440000
+  - my-bash-script-question
+```
+
+Minimal valid example (no optional fields):
+
+```yaml
+id: week-1-quiz
+title: Week 1 quiz
+question_logical_ids:
+  - q-mult-001
+```
+
+---
+
+## Validation rules
+
+Implementations that read or validate file-based question sets MUST enforce:
+
+1. **Path and id**: The parent folder name MUST equal the `id` value in `set.yaml`. If they differ, the set is invalid (reject or report an error).
+2. **Required fields**: `id`, `title`, and `question_logical_ids` MUST be present. `question_logical_ids` MUST be an array; it MAY be empty (empty set).
+3. **Types**: `id` and `title` MUST be non-empty strings. Each element of `question_logical_ids` MUST be a non-empty string.
+4. **No extra structure**: Unknown top-level keys MAY be ignored or preserved for forward compatibility; they MUST NOT cause validation to fail.
+
+---
+
+## Relationship to questions
+
+- Each value in `question_logical_ids` refers to a question by its **logical id** (the same id used in the question folder path under the questions root, e.g. `questions/{logical_id}/{version}/`). The system that *uses* the set (e.g. when taking as a test) resolves each logical id to a concrete question version (e.g. latest approved) per [QUESTION-MODULE-SPEC.qmd](QUESTION-MODULE-SPEC.qmd) and [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd).
+- References to non-existent questions do not invalidate the set file; at runtime, the loader MAY skip missing questions or fail depending on implementation.
+
+---
+
+## Relationship to database
+
+The **database is the source of truth** for listing and for “take as test,” in line with how **questions** work: the filesystem under `question-sets/` is **import-only**. Run the same sync as for questions (`POST /api/admin/sync-questions`, which also syncs question sets) or rely on startup sync when using local FS. Each folder’s name becomes `source_slug` in `question_sets`; repeated syncs **upsert** by slug (update metadata and replace item order; attached files under `files/` are copied into DB-backed storage).
+
+- **Create in UI**: Inserts into `question_sets` / `question_set_items` only.
+- **Edit in repo**: Change `set.yaml` (and files under `files/`) then **sync** so the DB matches.
+
+This document defines the **file-based** representation for version control and hand-editing; the implementation imports it into the DB per SPEC-QUESTION-SETS (aligned with SPEC-DB-FS-QUESTION-SYNC for questions).
+
+---
+
+## Summary
+
+| Item | Requirement |
+|------|-------------|
+| Root | Configured root (e.g. `question-sets/`). |
+| Folder | One folder per set: `{root}/{set_id}/`. |
+| File | `set.yaml` inside the folder. |
+| Required in `set.yaml` | `id` (match folder), `title`, `question_logical_ids` (array of strings). |
+| Optional in `set.yaml` | `description`, `created_at`, `modified_at`. |
+
+---
+
+## Related documents
+
+- **SPEC-QUESTION-SETS-0.0.2.qmd** — Question sets feature, DB, API, UI.
+- **QUESTION-FORMAT-0.0.1.qmd** — Question folder layout and logical id.
+- **QUESTION-MODULE-SPEC.qmd** — Question API and resolution of logical id to version.
+- **DOC-GUIDE-v001.qmd** — Document versioning.

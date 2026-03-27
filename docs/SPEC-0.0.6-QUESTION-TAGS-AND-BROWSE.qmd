@@ -1,0 +1,149 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+# SPEC: Question tags and questions browser (v0.0.6)
+
+This spec defines a **tag system** for questions and a **questions browser** UI. Questions may have multiple tags. Tags are stored and indexed in the database and stored in the filesystem version of each question. When creating a question set, users can filter available questions by tags. A new "Browse questions" page allows any authenticated user to see all approved questions (not only those they own). This document is written so that an implementer (or an LLM) can implement it without access to prior discussion.
+
+---
+
+## Purpose and goals
+
+**Part A — Tag system**
+
+- **User goal:** Authors and instructors can attach **tags** to questions (e.g. `bash`, `intro`, `week-2`) so that questions can be filtered and discovered by topic or category.
+- **Storage:** Tags are part of question content: stored in **meta.yaml** in each version folder and in the **database** (`question_versions.tags`) for indexing and filtering. Sync and dual-write keep FS and DB in sync; tags are ingested from the filesystem when reading the FS question store into the DB.
+- **Filtering:** When creating a question set, the user can filter the list of available questions by one or more tags (questions that have **all** selected tags are shown). The same filter is available in the questions browser.
+
+**Part B — Questions browser**
+
+- **User goal:** Today the only way to see questions is to create a question set (picker list) or take a test. Users need a dedicated way to **browse** all questions—to see what exists, search or filter by tags, and view metadata (id, title, type, domain, tags) without building a set or taking a test.
+- **Scope:** The browser shows **all approved questions** (any owner), one row per logical_id (latest version). Optional tag filter. No ownership filter; everyone sees the same catalog.
+
+---
+
+## Relevant existing code (do not reimplement)
+
+- **Question format:** `docs/QUESTION-FORMAT-0.0.1.qmd` — meta.yaml schema; add optional `tags` array here and in types.
+- **Parse/serialize:** `src/lib/questions/parse.ts` — builds `ParsedQuestion` from meta.yaml and files; must include `tags` from meta. `src/lib/questions/serialize.ts` — writes meta.yaml; must write `tags` when present.
+- **DB:** `src/lib/questions/store-db.ts` — `question_versions` table; add `tags text[]` column; `insertQuestionVersion` and row types must include tags. Use Supabase `.contains('tags', filterTags)` for "has all these tags."
+- **Sync:** `src/lib/questions/sync-questions.ts` — FS-only import and "in both" comparison must include tags; insert and write-back must pass tags.
+- **API:** `src/app/api/questions/route.ts` — GET returns list for create-set form; add optional query param `tags` and include `tags` in each item; use listing function that supports tag filter.
+- **Create-set form:** `src/app/question-sets/new/create-set-form.tsx` — currently loads all approved questions; add tag filter UI and pass selected tags to GET /api/questions.
+- **Home/nav:** `src/app/page.tsx` — add link to the new "Browse questions" page.
+
+---
+
+## Part A: Tag system
+
+### A.1 Data model
+
+**Filesystem (meta.yaml)**
+
+- Add optional field **`tags`**: array of non-empty strings, e.g. `tags: [bash, intro, week-1]`. Omitted or empty means no tags. Order is not significant; duplicates should be normalized away on read/write.
+
+**Database**
+
+- Add column **`tags`** to `question_versions`: type **`text[]`**, default **`'{}'`**. Create a **GIN index** for containment queries: `create index idx_question_versions_tags on question_versions using gin(tags);`. Filtering "questions that have all of [tag1, tag2]" uses `tags @> array['tag1','tag2']` (Supabase: `.contains('tags', ['tag1','tag2'])`).
+
+**Types (TypeScript)**
+
+- **MetaYaml**, **ParsedQuestion**, **QuestionMetaListItem**: add optional `tags?: string[]`.
+- **QuestionVersionRow**, **InsertQuestionVersion**: add `tags: string[] | null` (or `string[]` with default).
+- Payload types used for create/update (e.g. **BashPayload**, **MultipleChoicePayload**, **BashPredictOutputPayload**): add optional `tags?: string[]` so new questions can set tags.
+
+### A.2 Parse and serialize
+
+- **parse.ts:** When loading meta.yaml, set `question.tags` from `meta.tags`: if present and array, map to non-empty strings and dedupe; otherwise `undefined`.
+- **serialize.ts:** In every path that builds meta (serializeMultipleChoice, serializeBash, serializeBashPredictOutput, serializeParsedQuestion), add `if (payload.tags?.length) meta.tags = payload.tags` (or `question.tags` for serializeParsedQuestion) so that tags are written to meta.yaml when present.
+
+### A.3 Validation
+
+- **validate.ts (validateMetaYaml):** Allow optional `tags`; if present, must be an array of strings; normalize to non-empty strings in returned meta. Invalid entries (non-strings) can be dropped or rejected per project convention; recommend accept array and filter to strings.
+
+### A.4 Sync and ingestion
+
+- **sync-questions.ts:** When building the insert payload for an FS-only version, include `tags: question.tags ?? []`. When comparing FS vs DB for "in both" case, include tags in the comparison (sameMeta); if tags differ, DB wins and we overwrite FS with DB version (serializeParsedQuestion already writes tags when present). After insert, writeDbMeta is unchanged (tags live in meta.yaml, not db_meta.yaml).
+- **insertQuestionVersion:** Accept and insert `tags` (array or empty array).
+- **dual-write / writeQuestionVersionToFs:** No change; content files (including meta.yaml with tags) come from serialize; db_meta.yaml stays owner/status only.
+
+### A.5 API and listing
+
+- **GET /api/questions:** Accept optional query param **`tags`** (e.g. `?tags=bash,intro` or multiple `tags=bash&tags=intro`). Parse to `string[]`. Call a listing function that returns approved latest-per-logical_id, with optional filter: when tags provided, only rows where `tags` contains all of them. Include **`tags`** in each returned item: `{ id, type, version, title, domain, tags }`.
+- **DB layer:** Add (or extend) a function e.g. `listApprovedQuestionsForListing(supabase, { tags?: string[] })` that returns the same shape as the current list (latest approved per logical_id), applying `.contains('tags', tags)` when tags are provided. Implement "latest per logical_id" in application code after the query if needed (filter by status, then dedupe by logical_id taking latest by version).
+
+---
+
+## Part B: Questions browser UI
+
+### B.1 Route and page
+
+- **Route:** Add a new page, e.g. **`/questions/browse`**, so "Browse questions" is clearly separate from "My questions" (`/questions`).
+- **Page:** New file `src/app/questions/browse/page.tsx`. Require authentication. Fetch `GET /api/questions` (with optional `?tags=...`). Render a table or list of all returned questions: columns/cells for **id**, **title**, **type**, **domain**, **tags**. Optional **tag filter** UI (multi-select or comma-separated) that refetches with the selected tags. Style consistently with the rest of the app (e.g. card or table, back link to home).
+
+### B.2 Navigation
+
+- **Home:** In `src/app/page.tsx`, add a link (e.g. "Browse questions") that points to `/questions/browse`. Place it near "Question sets" and "My questions" so users can discover it.
+
+### B.3 Scope
+
+- The browser shows the **same** list as the create-set question picker: all approved questions, latest version per logical_id, with optional tag filter. No ownership filter; all authenticated users see the same catalog.
+
+---
+
+## Part C: Backfill tags on existing questions (filesystem)
+
+- **Goal:** Existing question version folders may have no `tags` in meta.yaml. To avoid empty tags everywhere and to make filtering useful, backfill tags once on the filesystem.
+- **Approach:** One-time script (e.g. `scripts/backfill-question-tags.ts` or `.mts`) that:
+  - Iterates every version directory under the questions root (use `listVersionKeysFromFs` and read each version’s meta.yaml).
+  - For each meta.yaml, if `tags` is missing or empty, derive tags from existing fields: e.g. `[domain, type].filter(Boolean)` deduped, normalized (e.g. lowercase, trim). Optionally include a slug from title if desired.
+  - Writes back meta.yaml with the new `tags` field (preserve other keys and formatting as much as possible).
+- **After backfill:** Run sync (or rely on next startup sync) so the database is updated from FS. No separate DB-only backfill required; sync will populate `tags` from the updated meta.yaml.
+
+---
+
+## Part D: Files to create or modify (checklist)
+
+| Action | Path | Description |
+|--------|------|-------------|
+| Create | `supabase/migrations/00008_question_versions_tags.sql` | Add `tags text[] default '{}'`, GIN index |
+| Edit | `src/lib/questions/types.ts` | Add `tags?` to MetaYaml, ParsedQuestion, payloads, QuestionMetaListItem; tags in row/insert types |
+| Edit | `docs/QUESTION-FORMAT-0.0.1.qmd` | Document optional `tags` in meta.yaml |
+| Edit | `src/lib/questions/parse.ts` | Read `tags` from meta into question.tags |
+| Edit | `src/lib/questions/serialize.ts` | Write tags to meta in all serialize paths |
+| Edit | `src/lib/questions/validate.ts` | Accept and return tags in validateMetaYaml |
+| Edit | `src/lib/questions/store-db.ts` | Add tags to row/insert; implement listApprovedQuestionsForListing with optional tag filter |
+| Edit | `src/lib/questions/sync-questions.ts` | Pass tags on insert; include tags in sameMeta comparison |
+| Edit | `src/app/api/questions/route.ts` | GET: query param tags, return tags in items; POST: pass tags to insert |
+| Edit | `src/app/question-sets/new/create-set-form.tsx` | Tag filter UI; fetch with tags; display tags per question |
+| Create | `src/app/questions/browse/page.tsx` | Browse page: list all questions, optional tag filter |
+| Edit | `src/app/page.tsx` | Add "Browse questions" link |
+| Create | `scripts/backfill-question-tags.ts` (or .mts) | One-time backfill of tags in FS meta.yaml |
+| Edit | Tests | parse.test.ts, serialize.test.ts, validate.test.ts: add tests for tags |
+
+---
+
+## Part E: Tag filter semantics
+
+- **API:** `GET /api/questions?tags=bash,intro` returns only questions whose `tags` array contains **all** of `bash` and `intro` (Postgres: `tags @> array['bash','intro']`).
+- **Create-set form and Browse:** When the user selects one or more tags, send them in the `tags` query param; show only questions that have all selected tags. Empty selection means no filter (all approved questions).
+
+---
+
+## Summary
+
+- **Part A** delivers: tags stored in meta.yaml and in `question_versions.tags`, parsed and serialized, validated, synced, and filterable via the API.
+- **Part B** delivers: a dedicated "Browse questions" page showing all approved questions with optional tag filter, linked from home.
+- **Part C** delivers: a one-time script to backfill tags on existing FS questions so that existing content is taggable and sync brings tags into the DB.
+
+---
+
+## Notes for implementers
+
+- **Tags in db_meta.yaml:** Do not put tags in db_meta.yaml; they are question content and belong in meta.yaml only.
+- **Documentation:** When editing `.qmd` files in `docs/`, follow repository rules in AGENTS.md: exactly one H1, required guard comment, no title in YAML, no hard-coded section numbers.
+- **Tests:** Add unit tests for: parsing meta.yaml with `tags`; serializing payload/parsed question with tags to meta.yaml; validateMetaYaml accepting and returning tags. Integration or API tests for tag filter can be added if the project has them.

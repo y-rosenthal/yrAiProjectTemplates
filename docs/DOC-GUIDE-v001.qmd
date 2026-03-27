@@ -1,0 +1,43 @@
+# DOC-GUIDE-v001.qmd
+
+This document describes the various types of documentation files and the
+version numbering scheme.
+
+## Reading the docs as an HTML book
+
+The documentation in `docs/` can be rendered as a single **Quarto book** (HTML) for easier reading. To build or rebuild the book after documentation changes, see **[QUARTO-DOC-GUIDE.qmd](QUARTO-DOC-GUIDE.qmd)**. That guide explains how to install the Quarto tools (if needed) and how to regenerate the book. The built book is in `docs/_book/`; open `docs/_book/index.html` in a browser to read it.
+
+In the book, the sidebar (table of contents) lists each chapter, and the page title is usually the same as the document’s heading or filename. **Exception:** the chapter that displays the repository README is built from `Overview.qmd`, which only includes `README.md`. In the sidebar it appears as **README**; on the webpage, the top-level heading is taken directly from `README.md` (e.g. “yrS3 — Tutorial & Testing System”), not from the Overview filename. Edit only `README.md` to change that content; the book updates automatically when rebuilt.
+
+## v001 version format
+
+In general, any document (including this one) can have a -v001 format style 
+version number at the end of its name. 
+This notation is used to ensure that it is easy to compare
+different versions of the same document - without needing to know how to use
+GIT commands.
+
+## SPEC documents
+
+This system will be continuously developed in an incremental way.
+Each incremental development phase will be versioned in 0.0.1 style.
+Each incremental development phase will have a spec document named SPEC-v0.0.1.md
+or something similar, where the version number for the spec matches the 
+version number of the release.
+
+## PRD documents
+
+PRD stands for Product Requirements Document.
+In this project, a PRD is a living document that describes the goals and vision for the full system—closer to a product vision than to a minimal "requirements list."
+The project relies heavily on LLM-assisted coding, and **PRD** is a term that LLMs recognize and understand, so the files are named PRD (e.g. `PRD-0.0.1-v001.qmd`) and this guide uses that term for consistency.
+
+The names of PRD documents e.g. PRD-0.0.1-v001 represent (a) the SPEC version
+that was active at the time the PRD was modified, as well as a 2ndary ver number.
+The ver number at the end of the name of a PRD document represents different
+versions of the PRD for a particular incremental development step.
+If the PRD was not modified at a particular incremental development step, then
+no new PRD version would be created at that step and the PRD version number will remain
+unchanged for that step. Therefore the PRD version numbers could skip numbers, for example
+if the PRD was modified when SPEC-v0.0.1 was created and then again when SPEC-v0.0.5
+was created then the only versions of the PRD would be PRD-v0.0.1 and PRD-v0.0.5.
+

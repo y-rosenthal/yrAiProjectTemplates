@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Tutorial &amp; Testing System — specs, setup, and reference.">
+
+<title>8&nbsp; SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9) – yrS3 Documentation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html" rel="next">
+<link href="./PRD-0.0.1-v001.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-12250bc6d41324f970c4c53c607dc95b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="sidebar-parts.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.html">SPEC files for different releases</a></li><li class="breadcrumb-item"><a href="./SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9)</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">yrS3 Documentation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Intro</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Guide to the documentation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DOC-GUIDE-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">DOC-GUIDE-v001.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DOC-AUTHORING-GUIDE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">DOC-AUTHORING-GUIDE.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUARTO-DOC-GUIDE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">QUARTO-DOC-GUIDE.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">PRD files (vision documents)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v003.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v003.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v002.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v002.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v001.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">SPEC files for different releases</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">SPEC: Hierarchical tags and canonical facts (v0.0.8)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.7-QUESTION-BROWSE-DETAIL-VIEW.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">SPEC: Question browser detail view and keyboard navigation (v0.0.7)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">SPEC: Question tags and questions browser (v0.0.6)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.5-DEFAULT-OWNER-AND-SYSTEM-LOGGING.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">SPEC: Default question sync owner and system message logging (v0.0.5)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.4-IMPLEMENT-BASH-QUESTIONS-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">SPEC 0.0.4 — Implement Bash Questions (v001)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-QUESTION-SETS-0.0.2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">SPEC-QUESTION-SETS-0.0.2.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-DB-FS-QUESTION-SYNC-0.0.3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">SPEC: Database–Filesystem Question Sync (v0.0.3)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">SPEC-0.0.1.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">How to setup and run the system</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SETUP-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">SETUP-0.0.1-v001.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Developer guide</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DEVELOPER-GUIDE-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Developer Guide (v0.0.1)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AUTOMATED-TESTS-GUIDE-0.0.3-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Automated Tests Guide (v0.0.3)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Technical reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./TECH-STACK-0.0.3-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Technical Stack (v0.0.3)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Question Format Specification</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-MODULE-SPEC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">QUESTION-MODULE-SPEC</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-FORMAT-0.0.1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">QUESTION-FORMAT-0.0.1.qmd”</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-SET-FORMAT-0.0.2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Question Set Format — File-based storage (v0.0.2)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Tags and facts format (SPEC-0.0.8)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./TAGS-FORMAT-0.0.8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Tags taxonomy — filesystem format (SPEC-0.0.8)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./FACTS-FORMAT-0.0.8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Canonical facts — filesystem format (SPEC-0.0.8)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul>
+  <li><a href="#purpose-and-scope" id="toc-purpose-and-scope" class="nav-link active" data-scroll-target="#purpose-and-scope"><span class="header-section-number">8.1</span> Purpose and scope</a>
+  <ul class="collapse">
+  <li><a href="#goals" id="toc-goals" class="nav-link" data-scroll-target="#goals"><span class="header-section-number">8.1.1</span> Goals</a></li>
+  <li><a href="#scope" id="toc-scope" class="nav-link" data-scroll-target="#scope"><span class="header-section-number">8.1.2</span> Scope</a></li>
+  </ul></li>
+  <li><a href="#part-a-ai-duplicate-detection-and-override-logging" id="toc-part-a-ai-duplicate-detection-and-override-logging" class="nav-link" data-scroll-target="#part-a-ai-duplicate-detection-and-override-logging"><span class="header-section-number">8.2</span> Part A: AI duplicate-detection and override logging</a>
+  <ul class="collapse">
+  <li><a href="#a.1-duplicate-check-backend" id="toc-a.1-duplicate-check-backend" class="nav-link" data-scroll-target="#a.1-duplicate-check-backend"><span class="header-section-number">8.2.1</span> A.1 Duplicate check (backend)</a></li>
+  <li><a href="#a.2-conversation-flow-ui" id="toc-a.2-conversation-flow-ui" class="nav-link" data-scroll-target="#a.2-conversation-flow-ui"><span class="header-section-number">8.2.2</span> A.2 Conversation flow (UI)</a></li>
+  <li><a href="#a.3-override-logging-on-create" id="toc-a.3-override-logging-on-create" class="nav-link" data-scroll-target="#a.3-override-logging-on-create"><span class="header-section-number">8.2.3</span> A.3 Override logging on create</a></li>
+  <li><a href="#a.4-ui-requirements-summary" id="toc-a.4-ui-requirements-summary" class="nav-link" data-scroll-target="#a.4-ui-requirements-summary"><span class="header-section-number">8.2.4</span> A.4 UI requirements (summary)</a></li>
+  </ul></li>
+  <li><a href="#part-b-tag-merge" id="toc-part-b-tag-merge" class="nav-link" data-scroll-target="#part-b-tag-merge"><span class="header-section-number">8.3</span> Part B: Tag merge</a>
+  <ul class="collapse">
+  <li><a href="#b.1-behavior" id="toc-b.1-behavior" class="nav-link" data-scroll-target="#b.1-behavior"><span class="header-section-number">8.3.1</span> B.1 Behavior</a></li>
+  <li><a href="#b.2-api" id="toc-b.2-api" class="nav-link" data-scroll-target="#b.2-api"><span class="header-section-number">8.3.2</span> B.2 API</a></li>
+  <li><a href="#b.3-edge-cases" id="toc-b.3-edge-cases" class="nav-link" data-scroll-target="#b.3-edge-cases"><span class="header-section-number">8.3.3</span> B.3 Edge cases</a></li>
+  </ul></li>
+  <li><a href="#part-c-tutorial-sync-from-filesystem" id="toc-part-c-tutorial-sync-from-filesystem" class="nav-link" data-scroll-target="#part-c-tutorial-sync-from-filesystem"><span class="header-section-number">8.4</span> Part C: Tutorial sync from filesystem</a>
+  <ul class="collapse">
+  <li><a href="#c.1-scope" id="toc-c.1-scope" class="nav-link" data-scroll-target="#c.1-scope"><span class="header-section-number">8.4.1</span> C.1 Scope</a></li>
+  <li><a href="#c.2-sync-semantics" id="toc-c.2-sync-semantics" class="nav-link" data-scroll-target="#c.2-sync-semantics"><span class="header-section-number">8.4.2</span> C.2 Sync semantics</a></li>
+  <li><a href="#c.3-when-sync-runs" id="toc-c.3-when-sync-runs" class="nav-link" data-scroll-target="#c.3-when-sync-runs"><span class="header-section-number">8.4.3</span> C.3 When sync runs</a></li>
+  <li><a href="#c.4-implementation-notes" id="toc-c.4-implementation-notes" class="nav-link" data-scroll-target="#c.4-implementation-notes"><span class="header-section-number">8.4.4</span> C.4 Implementation notes</a></li>
+  </ul></li>
+  <li><a href="#part-d-implementation-order-and-checklist" id="toc-part-d-implementation-order-and-checklist" class="nav-link" data-scroll-target="#part-d-implementation-order-and-checklist"><span class="header-section-number">8.5</span> Part D: Implementation order and checklist</a>
+  <ul class="collapse">
+  <li><a href="#recommended-order" id="toc-recommended-order" class="nav-link" data-scroll-target="#recommended-order"><span class="header-section-number">8.5.1</span> Recommended order</a></li>
+  <li><a href="#checklist-summary" id="toc-checklist-summary" class="nav-link" data-scroll-target="#checklist-summary"><span class="header-section-number">8.5.2</span> Checklist (summary)</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">8.6</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.html">SPEC files for different releases</a></li><li class="breadcrumb-item"><a href="./SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9)</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9)</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+<p>This spec implements the <strong>deferred items</strong> from <a href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html">SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd</a>: (1) <strong>AI duplicate-detection conversation UI</strong>, (2) <strong>override logging on create</strong>, (3) <strong>merge for tags</strong> (in addition to the existing facts merge), and (4) <strong>tutorial sync from filesystem on startup</strong>. The database schema and APIs for tags, facts, tutorials, override_logs, and merge_logs already exist from v0.0.8; this spec defines the missing flows, UI, and sync behavior.</p>
+<p><strong>References:</strong> <a href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html">SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd</a>, <a href="./TAGS-FORMAT-0.0.8.html">TAGS-FORMAT-0.0.8.qmd</a>, <a href="./FACTS-FORMAT-0.0.8.html">FACTS-FORMAT-0.0.8.qmd</a>, <a href="./DOC-GUIDE-v001.html">DOC-GUIDE-v001.qmd</a>.</p>
+<hr>
+<section id="purpose-and-scope" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="purpose-and-scope"><span class="header-section-number">8.1</span> Purpose and scope</h2>
+<section id="goals" class="level3" data-number="8.1.1">
+<h3 data-number="8.1.1" class="anchored" data-anchor-id="goals"><span class="header-section-number">8.1.1</span> Goals</h3>
+<ul>
+<li><strong>Duplicate-detection UI:</strong> When a user proposes a new tag or fact (or edits a fact), run a duplicate check; if potential duplicates are found, require a <strong>conversation</strong> with the AI before the user can proceed. The UI must support this flow and store the conversation and any override in the database.</li>
+<li><strong>Override logging on create:</strong> When the user overrides the AI (creates the tag/fact anyway despite a duplicate warning), <strong>write</strong> an entry to <code>override_logs</code> (entity_type, entity_id, ai_summary, human_rebuttal, conversation_json, created_by) at create time—not only have the schema and a list API.</li>
+<li><strong>Tag merge:</strong> Provide a <strong>merge API for tags</strong> (analogous to the existing merge API for facts): choose a surviving tag and a merged tag; update all references (question_versions.tags, tutorial_tag_paths, and any other consumers) from the merged path to the surviving path; remove or retire the merged tag; record the merge in <code>merge_logs</code>.</li>
+<li><strong>Tutorial sync from FS:</strong> On <strong>startup</strong> (and optionally via an admin sync endpoint), <strong>sync tutorials</strong> from the filesystem into the database: import FS-only tutorials, resolve conflicts with DB-wins semantics, and optionally write the DB state back to the FS mirror. Use the same dual-source pattern as questions and question sets.</li>
+</ul>
+</section>
+<section id="scope" class="level3" data-number="8.1.2">
+<h3 data-number="8.1.2" class="anchored" data-anchor-id="scope"><span class="header-section-number">8.1.2</span> Scope</h3>
+<ul>
+<li><strong>In scope:</strong> Duplicate-check API and conversation/override flow for tags and facts; UI for the conversation and override confirmation; persistence of override_logs on create; tag merge API and path-update logic; tutorial sync (FS → DB, conflict resolution, startup and admin trigger).</li>
+<li><strong>Out of scope:</strong> Detailed AI prompt design; extraction of facts from free text; full tutorial authoring workflows.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="part-a-ai-duplicate-detection-and-override-logging" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="part-a-ai-duplicate-detection-and-override-logging"><span class="header-section-number">8.2</span> Part A: AI duplicate-detection and override logging</h2>
+<section id="a.1-duplicate-check-backend" class="level3" data-number="8.2.1">
+<h3 data-number="8.2.1" class="anchored" data-anchor-id="a.1-duplicate-check-backend"><span class="header-section-number">8.2.1</span> A.1 Duplicate check (backend)</h3>
+<ul>
+<li><strong>Tags:</strong> When the user proposes a new tag (path and optionally name), the system must <strong>search</strong> existing tags for potential duplicates. Criteria may include: path equality, path similarity (e.g.&nbsp;same leaf segment, same prefix), or semantic similarity (e.g.&nbsp;via an AI or embedding step). Return a list of candidate duplicate tags (id, path, name) and, if using AI, a short <strong>reason</strong> (e.g.&nbsp;“Same path segment ‘if’ under a similar parent”).</li>
+<li><strong>Facts:</strong> When the user proposes a new fact (canonical_text) or an edit to an existing fact, the system must <strong>search</strong> existing facts for potential duplicates. Use at least: full-text or substring match on <code>canonical_text</code>. Optionally use AI or embeddings for near-duplicate detection. Return candidate facts (id, canonical_text, tag_path) and an optional <strong>reason</strong>.</li>
+<li><strong>API:</strong> Provide endpoints that the create/edit UI can call <strong>before</strong> submitting the create/update, e.g.:
+<ul>
+<li><code>POST /api/tags/check-duplicates</code> — body: <code>{ path, name? }</code>; response: <code>{ candidates: Array&lt;{ id, path, name, reason? }&gt;, is_duplicate: boolean }</code>.</li>
+<li><code>POST /api/facts/check-duplicates</code> — body: <code>{ canonical_text, exclude_id? }</code>; response: <code>{ candidates: Array&lt;{ id, canonical_text, tag_path, reason? }&gt;, is_duplicate: boolean }</code>.</li>
+</ul></li>
+<li>If <code>candidates.length &gt; 0</code>, the UI must <strong>not</strong> allow a direct create/update; it must enter the <strong>conversation flow</strong> (see below). If the user then chooses to create anyway, the create API must record an <strong>override</strong> (see A.3).</li>
+</ul>
+</section>
+<section id="a.2-conversation-flow-ui" class="level3" data-number="8.2.2">
+<h3 data-number="8.2.2" class="anchored" data-anchor-id="a.2-conversation-flow-ui"><span class="header-section-number">8.2.2</span> A.2 Conversation flow (UI)</h3>
+<ul>
+<li>When the duplicate check returns one or more candidates:
+<ol type="1">
+<li><strong>Show</strong> the candidate(s) and the AI’s reason (if any) in the UI.</li>
+<li><strong>Start a conversation:</strong> The user can send messages (e.g.&nbsp;“I need a separate tag for X because …”); the system sends the user message and current context (new tag/fact, candidates) to an AI and returns the AI’s reply. This may be a single exchange or multiple turns. The UI must support at least one user message and one AI reply; multiple turns are recommended.</li>
+<li><strong>Decide:</strong> The user chooses one of:
+<ul>
+<li><strong>Use existing:</strong> Abandon the create (or link to an existing tag/fact). No new entity is created; no override log.</li>
+<li><strong>Create anyway (override):</strong> Proceed with create. The system <strong>allows</strong> the create and <strong>logs an override</strong> (A.3). The user must be <strong>informed</strong> that this action will be logged for administrator review and must be given a chance to provide a <strong>rebuttal</strong> (short text) that is stored with the override.</li>
+</ul></li>
+</ol></li>
+<li><strong>Storage:</strong> The full <strong>conversation</strong> (ordered list of { role: ‘user’ | ‘assistant’, content: string }) must be stored. Store it in the <code>override_logs.conversation_json</code> column when an override occurs. Optionally persist the conversation in a separate table or in the filesystem for non-override cases (e.g.&nbsp;when the user later chooses “use existing”); the minimum is to persist when the user overrides.</li>
+</ul>
+</section>
+<section id="a.3-override-logging-on-create" class="level3" data-number="8.2.3">
+<h3 data-number="8.2.3" class="anchored" data-anchor-id="a.3-override-logging-on-create"><span class="header-section-number">8.2.3</span> A.3 Override logging on create</h3>
+<ul>
+<li>When the user <strong>creates</strong> a tag or fact <strong>after</strong> the duplicate-check flow and chooses “create anyway”:
+<ol type="1">
+<li><strong>Create</strong> the tag or fact as normal (insert into <code>tags</code> or <code>facts</code>).</li>
+<li><strong>Insert</strong> a row into <code>override_logs</code> with:
+<ul>
+<li><code>entity_type</code>: <code>'tag'</code> or <code>'fact'</code>.</li>
+<li><code>entity_id</code>: the <strong>new</strong> tag or fact id (uuid).</li>
+<li><code>ai_summary</code>: text summarizing why the AI considered this a duplicate (from the duplicate-check or conversation).</li>
+<li><code>human_rebuttal</code>: the rebuttal text provided by the user (optional but encouraged).</li>
+<li><code>conversation_json</code>: JSON array of the conversation messages (role, content).</li>
+<li><code>created_by</code>: the authenticated user id.</li>
+</ul></li>
+<li><strong>Do not</strong> block or roll back the create; the override is recorded for administrator review (existing GET /api/admin/override-logs can list these).</li>
+</ol></li>
+<li>The same applies when the user <strong>updates</strong> a fact and the duplicate check returns candidates and the user overrides: log to <code>override_logs</code> with <code>entity_id</code> = the fact id being updated.</li>
+</ul>
+</section>
+<section id="a.4-ui-requirements-summary" class="level3" data-number="8.2.4">
+<h3 data-number="8.2.4" class="anchored" data-anchor-id="a.4-ui-requirements-summary"><span class="header-section-number">8.2.4</span> A.4 UI requirements (summary)</h3>
+<ul>
+<li>Tag create UI: call duplicate check before submit; if candidates, show conversation flow; on “create anyway,” collect rebuttal, then submit create and ensure backend writes override_logs.</li>
+<li>Fact create/edit UI: same pattern—duplicate check, conversation, optional rebuttal, then create/update and override log when the user overrides.</li>
+<li>Users must be able to <strong>search</strong> tags and facts by text/path (no need to type UUIDs); duplicate-check and conversation are in addition to existing search.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="part-b-tag-merge" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="part-b-tag-merge"><span class="header-section-number">8.3</span> Part B: Tag merge</h2>
+<section id="b.1-behavior" class="level3" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="b.1-behavior"><span class="header-section-number">8.3.1</span> B.1 Behavior</h3>
+<ul>
+<li><strong>Merge tag A into tag B:</strong> Tag B is the <strong>surviving</strong> tag (path and row remain). Tag A is the <strong>merged</strong> tag (path and row will be removed or retired).</li>
+<li><strong>References:</strong> Questions and tutorials reference tags by <strong>path</strong> (e.g.&nbsp;<code>question_versions.tags</code> is <code>text[]</code> of paths; <code>tutorial_tag_paths</code> has <code>tag_path</code>). Therefore:
+<ol type="1">
+<li>Replace every occurrence of the <strong>merged path</strong> (tag A’s path) with the <strong>surviving path</strong> (tag B’s path) in:
+<ul>
+<li><code>question_versions.tags</code> (array update: replace element merged_path with surviving_path where present).</li>
+<li><code>tutorial_tag_paths.tag_path</code> (update rows where tag_path = merged_path to tag_path = surviving_path; if this creates a duplicate row for the same tutorial_id, collapse to one).</li>
+</ul></li>
+<li><strong>Delete</strong> the merged tag row from <code>tags</code> (tag A). If the taxonomy must retain history, alternatively soft-delete (e.g.&nbsp;add a <code>merged_into_id</code> or <code>deleted_at</code> column) and leave the row; this spec allows either, but at least one of delete or soft-delete is required.</li>
+<li><strong>Insert</strong> into <code>merge_logs</code>: <code>entity_type = 'tag'</code>, <code>surviving_id</code> = tag B’s id, <code>merged_id</code> = tag A’s id, <code>merged_by</code> = authenticated user.</li>
+</ol></li>
+<li><strong>Idempotency:</strong> If the merged tag path no longer appears in any table (e.g.&nbsp;already updated), the merge can still proceed (delete tag row and write merge_logs).</li>
+</ul>
+</section>
+<section id="b.2-api" class="level3" data-number="8.3.2">
+<h3 data-number="8.3.2" class="anchored" data-anchor-id="b.2-api"><span class="header-section-number">8.3.2</span> B.2 API</h3>
+<ul>
+<li><strong>POST /api/admin/merge/tags</strong> — body: <code>{ surviving_id: uuid, merged_id: uuid }</code>. Validates that both ids exist in <code>tags</code> and that surviving_id ≠ merged_id. Performs path replacement in <code>question_versions</code> and <code>tutorial_tag_paths</code>, then deletes the merged tag and inserts into <code>merge_logs</code>. Returns <code>{ ok: true, surviving_id, merged_id }</code> or an error.</li>
+</ul>
+</section>
+<section id="b.3-edge-cases" class="level3" data-number="8.3.3">
+<h3 data-number="8.3.3" class="anchored" data-anchor-id="b.3-edge-cases"><span class="header-section-number">8.3.3</span> B.3 Edge cases</h3>
+<ul>
+<li>If the surviving tag row is missing or the merged tag row is missing, return 400.</li>
+<li>If replacing the path in <code>question_versions.tags</code> or <code>tutorial_tag_paths</code> would create a duplicate (e.g.&nbsp;tutorial already has both paths), replace the merged path with the surviving path and ensure a single row per (tutorial_id, surviving_path); for question_versions, ensure the tags array has no duplicate path entries after replacement.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="part-c-tutorial-sync-from-filesystem" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="part-c-tutorial-sync-from-filesystem"><span class="header-section-number">8.4</span> Part C: Tutorial sync from filesystem</h2>
+<section id="c.1-scope" class="level3" data-number="8.4.1">
+<h3 data-number="8.4.1" class="anchored" data-anchor-id="c.1-scope"><span class="header-section-number">8.4.1</span> C.1 Scope</h3>
+<ul>
+<li><strong>Source:</strong> Tutorials root (e.g.&nbsp;<code>TUTORIALS_ROOT</code> or <code>tutorials/</code>). Layout per <a href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html">SPEC-0.0.8</a> and tutorial store-fs: one folder per tutorial <code>{id}/</code>, with <code>meta.yaml</code> (id, title, external_ref, content_mode, stored_content_path, fact_ids, tag_paths, timestamps).</li>
+<li><strong>Target:</strong> Database tables <code>tutorials</code>, <code>tutorial_facts</code>, <code>tutorial_tag_paths</code>. DB is the source of truth for listing and for in-app behavior; the FS is a mirror for authoring and portability.</li>
+</ul>
+</section>
+<section id="c.2-sync-semantics" class="level3" data-number="8.4.2">
+<h3 data-number="8.4.2" class="anchored" data-anchor-id="c.2-sync-semantics"><span class="header-section-number">8.4.2</span> C.2 Sync semantics</h3>
+<ul>
+<li><strong>FS-only tutorial:</strong> A folder under the tutorials root with a valid <code>meta.yaml</code> and an <code>id</code> that does not exist in <code>tutorials</code> → <strong>import</strong>: insert into <code>tutorials</code>, then insert into <code>tutorial_facts</code> and <code>tutorial_tag_paths</code> from meta.yaml. Use the <code>id</code> from the file as the primary key (so that FS and DB ids match).</li>
+<li><strong>In both FS and DB:</strong> If the same tutorial id exists in both, compare core fields (e.g.&nbsp;title, external_ref, content_mode, stored_content_path). If different, <strong>DB wins</strong>: overwrite the FS copy with the DB version (write meta.yaml and any stored content paths from DB), or move the FS version to a conflicts folder and write the DB version to the normal path—same pattern as question sync in <a href="./SPEC-DB-FS-QUESTION-SYNC-0.0.3.html">SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd</a>. If same, skip.</li>
+<li><strong>DB-only tutorial:</strong> Optionally, export tutorials that exist only in the DB to the FS (e.g.&nbsp;for backup). Minimum required: support FS → DB import and conflict resolution (DB wins).</li>
+</ul>
+</section>
+<section id="c.3-when-sync-runs" class="level3" data-number="8.4.3">
+<h3 data-number="8.4.3" class="anchored" data-anchor-id="c.3-when-sync-runs"><span class="header-section-number">8.4.3</span> C.3 When sync runs</h3>
+<ul>
+<li><strong>On startup:</strong> When the app starts (e.g.&nbsp;in the same place where question and question-set sync runs), run <strong>tutorial sync</strong> after questions and question sets (and tags/facts): scan the tutorials root, import FS-only tutorials, resolve conflicts (DB wins), and optionally write back the DB state to the FS for synced tutorials.</li>
+<li><strong>Admin trigger:</strong> Extend the existing admin sync endpoint (e.g.&nbsp;POST /api/admin/sync-questions or a dedicated POST /api/admin/sync) to run tutorial sync as well, and return counts (e.g.&nbsp;<code>tutorialsImported</code>, <code>tutorialsConflictsResolved</code>).</li>
+</ul>
+</section>
+<section id="c.4-implementation-notes" class="level3" data-number="8.4.4">
+<h3 data-number="8.4.4" class="anchored" data-anchor-id="c.4-implementation-notes"><span class="header-section-number">8.4.4</span> C.4 Implementation notes</h3>
+<ul>
+<li>Reuse the existing <code>listTutorialIdsFromFs</code>, <code>readTutorialFromFs</code> (or equivalent) to read from FS. For each id, if not in DB, insert; if in DB, compare and apply DB-wins rule. Writing back to FS: use existing or new helpers to write <code>meta.yaml</code> (and optionally content) from the DB row plus <code>tutorial_facts</code> and <code>tutorial_tag_paths</code>.</li>
+<li>Conflicts folder: if using one (e.g.&nbsp;<code>tutorials/_conflicts/{id}_{timestamp}/</code>), exclude it from the list of tutorial ids when scanning.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="part-d-implementation-order-and-checklist" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="part-d-implementation-order-and-checklist"><span class="header-section-number">8.5</span> Part D: Implementation order and checklist</h2>
+<section id="recommended-order" class="level3" data-number="8.5.1">
+<h3 data-number="8.5.1" class="anchored" data-anchor-id="recommended-order"><span class="header-section-number">8.5.1</span> Recommended order</h3>
+<ol type="1">
+<li><strong>Override logging on create</strong> — Ensure that when a tag or fact is created (or a fact updated) and the duplicate-check flow was shown and the user chose “create anyway,” the backend that performs the create/update also inserts into <code>override_logs</code>. This may require adding an optional body field (e.g.&nbsp;<code>override_reason</code>, <code>conversation</code>, <code>ai_summary</code>) to POST /api/tags and POST /api/facts (and PATCH /api/facts) so the UI can pass the rebuttal and conversation when overriding.</li>
+<li><strong>Duplicate-check APIs</strong> — Implement POST /api/tags/check-duplicates and POST /api/facts/check-duplicates (and optionally include an AI step that returns a reason). Use simple path/text matching first; add AI or embeddings later if desired.</li>
+<li><strong>Conversation UI</strong> — Build the UI flow for tag and fact create (and fact edit): call check-duplicates; if candidates, show conversation (user message → AI reply, at least one round); offer “use existing” vs “create anyway”; if “create anyway,” collect rebuttal and send create with override payload so the backend can write override_logs.</li>
+<li><strong>Tag merge API</strong> — Implement POST /api/admin/merge/tags with path replacement in question_versions and tutorial_tag_paths, delete merged tag, insert merge_logs.</li>
+<li><strong>Tutorial sync</strong> — Implement syncTutorialsFromFs (or equivalent): list FS tutorial ids, for each FS-only insert into DB and optionally write back; for each in both compare and apply DB-wins; wire sync into startup and into the admin sync endpoint.</li>
+</ol>
+</section>
+<section id="checklist-summary" class="level3" data-number="8.5.2">
+<h3 data-number="8.5.2" class="anchored" data-anchor-id="checklist-summary"><span class="header-section-number">8.5.2</span> Checklist (summary)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Override on create</td>
+<td>Backend writes to <code>override_logs</code> when user creates tag/fact (or updates fact) after choosing “create anyway” in duplicate flow; store ai_summary, human_rebuttal, conversation_json, created_by.</td>
+</tr>
+<tr class="even">
+<td>Duplicate-check APIs</td>
+<td>POST /api/tags/check-duplicates and POST /api/facts/check-duplicates; return candidates and optional reason.</td>
+</tr>
+<tr class="odd">
+<td>Conversation UI</td>
+<td>Tag/fact create (and fact edit) UI: show candidates, run conversation, “use existing” or “create anyway” with rebuttal.</td>
+</tr>
+<tr class="even">
+<td>Tag merge API</td>
+<td>POST /api/admin/merge/tags; update question_versions.tags and tutorial_tag_paths; delete merged tag; insert merge_logs.</td>
+</tr>
+<tr class="odd">
+<td>Tutorial sync</td>
+<td>Sync tutorials from FS on startup and via admin sync; FS-only import; DB wins on conflict; optional FS write-back.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="summary" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="summary"><span class="header-section-number">8.6</span> Summary</h2>
+<ul>
+<li><strong>v0.0.9</strong> adds: (1) duplicate-check endpoints and a <strong>conversation UI</strong> for tags and facts so users must engage with the AI when duplicates are suspected; (2) <strong>override logging on create</strong> by writing to <code>override_logs</code> when the user overrides; (3) <strong>tag merge</strong> via POST /api/admin/merge/tags with path replacement and merge_logs; (4) <strong>tutorial sync</strong> from the filesystem on startup and in the admin sync flow, with DB-wins conflict resolution.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<style>
+  .collapse-section-buttons { margin-bottom: 1em; }
+  .collapse-section-buttons button { margin-right: 0.5em; }
+  details.collapsible-section { margin-top: 0.5em; }
+  details.collapsible-section > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.25em; }
+  details.collapsible-section > summary::-webkit-details-marker { display: none; }
+  details.collapsible-section > summary::before { content: "▸"; display: inline-block; transition: transform 0.2s; }
+  details.collapsible-section[open] > summary::before { transform: rotate(90deg); }
+  details.collapsible-section .section-content { margin-left: 1em; margin-top: 0.25em; }
+</style>
+<script>
+(function() {
+  function initCollapsibleSections() {
+    const main = document.getElementById("quarto-document-content");
+    if (!main) return;
+
+    function wrapSection(section) {
+      const id = section.id;
+      const heading = section.querySelector("h2, h3, h4");
+      if (!heading) return;
+
+      const levelClass = section.classList.contains("level4") ? "level4" : section.classList.contains("level3") ? "level3" : "level2";
+      const details = document.createElement("details");
+      details.className = "collapsible-section " + levelClass;
+      if (id) details.id = id;
+      details.open = true;
+
+      const summary = document.createElement("summary");
+      summary.appendChild(heading);
+
+      const content = document.createElement("div");
+      content.className = "section-content";
+      while (section.childNodes.length > 0) {
+        const child = section.childNodes[0];
+        if (child === heading) {
+          section.removeChild(child);
+          continue;
+        }
+        content.appendChild(section.childNodes[0]);
+      }
+
+      details.appendChild(summary);
+      details.appendChild(content);
+      section.parentNode.replaceChild(details, section);
+    }
+
+    // Process innermost sections first (level4, then level3, then level2)
+    [].slice.call(main.querySelectorAll("section.level4")).forEach(wrapSection);
+    [].slice.call(main.querySelectorAll("section.level3")).forEach(wrapSection);
+    [].slice.call(main.querySelectorAll("section.level2")).forEach(wrapSection);
+
+    // Insert Expand all / Collapse all buttons before first collapsible section
+    const firstDetails = main.querySelector("details.collapsible-section");
+    if (firstDetails) {
+      const btnWrap = document.createElement("div");
+      btnWrap.className = "collapse-section-buttons";
+      btnWrap.innerHTML = "<button type=\"button\" class=\"btn btn-sm btn-outline-secondary\" id=\"expand-all-sections\">Expand all</button> <button type=\"button\" class=\"btn btn-sm btn-outline-secondary\" id=\"collapse-all-sections\">Collapse all</button>";
+      main.insertBefore(btnWrap, firstDetails);
+
+      document.getElementById("expand-all-sections").onclick = function() {
+        main.querySelectorAll("details.collapsible-section").forEach(function(d) { d.open = true; });
+      };
+      document.getElementById("collapse-all-sections").onclick = function() {
+        main.querySelectorAll("details.collapsible-section").forEach(function(d) { d.open = false; });
+      };
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCollapsibleSections);
+  } else {
+    initCollapsibleSections();
+  }
+})();
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./PRD-0.0.1-v001.html" class="pagination-link" aria-label="PRD-0.0.1-v001.qmd">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v001.qmd</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html" class="pagination-link" aria-label="SPEC: Hierarchical tags and canonical facts (v0.0.8)">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">SPEC: Hierarchical tags and canonical facts (v0.0.8)</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

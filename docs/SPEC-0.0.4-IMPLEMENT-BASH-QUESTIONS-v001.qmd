@@ -1,0 +1,212 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+-->
+
+# SPEC 0.0.4 — Implement Bash Questions (v001)
+
+This spec describes the implementation of two Bash question types for yrS3: **Type A** (write code, auto-check output in a sandbox) and **Type B** (predict output, no terminal; grading uses runtime-computed expected output). It also extends question sets with optional shared sandbox resources (e.g. a folder tree zip).
+
+**References:** [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd), [QUESTION-MODULE-SPEC.qmd](QUESTION-MODULE-SPEC.qmd), [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd).
+
+---
+
+## Two Bash question types
+
+### Type A: Bash (write code, auto-check output)
+
+- **Goal:** The student writes Bash code that produces a required output or behaviour.
+- **Flow:** The question can define an optional **sandbox folder tree** via a zip reference. The student writes Bash in the UI; on submit, the system runs their code in that environment (or a clean env with optional per-test `setup` commands) and compares stdout to the reference solution’s output.
+- **Grading:** Fully automatic: run the reference solution and the student’s code per test case (same `stdin`/`setup`), compare stdout.
+- **Question definition:** `meta.yaml` with `type: bash`; required `solution.sh`; optional `tests.yaml` (list of `description`, `stdin`, `setup`); optional `sandbox_zip_ref` (filename or path to a zip containing the initial folder tree). Individual questions (and each test) can still modify the tree via `setup` (e.g. `touch xyz`, `mkdir -p a/b/c`).
+
+### Type B: Bash predict output (`bash_predict_output`)
+
+- **Goal:** The student predicts what a given Bash script would output, without running anything.
+- **Flow:** The question presents **only text**: the script and any needed context. The student has **no terminal**; they type their answer. On submit, the system grades their text against the **runtime-computed** expected output (run the script once, use that as the key).
+- **Grading:** The **correct answer is not trusted from storage at grading time**. The system runs the script in a controlled environment, captures stdout, normalizes it, and compares the student’s normalized answer to that. The question definition **does** store an expected output (in `expected.yaml`) for **editor review**. If the stored expected differs from the computed output, the system **uses the computed output for grading** and **logs an error** (e.g. `bash_predict_output_stored_expected_mismatch`) so maintainers can fix the question.
+
+---
+
+## Question definition details
+
+### Type A (bash)
+
+- **Canonical type value:** `bash`.
+- **Required files:** `meta.yaml`, one of `prompt.md`/`prompt.txt`, `solution.sh`.
+- **Optional:** `tests.yaml` (list of test cases with `description`, `stdin`, `setup`). If absent, a single default test with empty stdin is used.
+- **Optional in meta:** `sandbox_zip_ref` — reference to a zip file (e.g. filename in the question version folder, or path) that contains the folder tree for the sandbox. At run time the system extracts this zip to a temp directory and runs the student’s (and reference) script with that directory as the working directory. Per-test `setup` still runs after the zip is applied, so authors can add or change files.
+
+### Type B (bash_predict_output)
+
+- **Canonical type value:** `bash_predict_output`.
+- **Required files:** `meta.yaml`, one of `prompt.md`/`prompt.txt`, `script.sh` (the script shown to the student), `expected.yaml` (stored expected output for review; see `answer` or `answers`).
+- **Grading:** At grading time the system runs `script.sh` once, normalizes stdout, and compares the student’s normalized answer to that. Stored expected is for display/review only; if it differs from computed, computed wins and a mismatch is logged.
+
+---
+
+## Question sets and shared sandbox
+
+- **Question sets** (see SPEC-QUESTION-SETS-0.0.2) are extended with an optional **sandbox zip reference** so that a set can share a folder tree for all its Bash (Type A) questions.
+- **Set-level field:** In `set.yaml` (file-based) and in the `question_sets` table (DB): optional `sandbox_zip_ref` (e.g. filename in the set folder). When present, it can be used as the default sandbox for bash questions in that set that do not define their own `sandbox_zip_ref`. Resolution of the set’s zip path is implementation-defined (e.g. for file-based sets: path relative to the set folder).
+- **Individual questions** in the set can still override with their own `sandbox_zip_ref` or use only per-test `setup` with no zip.
+
+---
+
+## Sandbox and zip extraction
+
+- **Sandbox runner:** The bash runner supports an optional **working directory** (`cwd`). When a question (or set) provides a zip reference, the system extracts that zip to a temporary directory and runs Bash with that directory as `cwd`.
+- **Zip extraction:** Implemented via a small helper (e.g. using the system `unzip` command) that extracts a given zip path to a temp dir and returns the path. The caller is responsible for cleaning up the temp dir after grading.
+- **Security:** Sandbox remains isolated (no network, timeout, limited env). Zip contents are not executed; they only define the filesystem layout for the run.
+
+---
+
+## UI
+
+- **Create question:** The “Create question” flow supports a **question type** selector: Multiple choice, **Bash (write code)**, **Bash predict output**. The form fields and payload match the chosen type (e.g. solution script + tests + optional sandbox zip ref for Type A; script source + stored expected for Type B).
+- **New version:** The “New version” flow supports existing questions of type `multiple_choice`, `bash`, and `bash_predict_output`. The same type-specific forms are used with initial data from the current version.
+- **Take test:** For **bash**, the student gets a code input (and optional “Run” against the sandbox). For **bash_predict_output**, the student sees the script as text and a textarea for their predicted output (no terminal).
+
+---
+
+## Sample questions
+
+- **Type A (bash):** Under `questions/sample-bash-001/1.0.0.0/` and `questions/sample-bash-002/1.0.0.0/` — prompt, `solution.sh`, `tests.yaml` (with optional `setup`). These can be used in a question set for practice.
+- **Type B (bash_predict_output):** Under `questions/sample-bash-predict-001/1.0.0.0/` and `questions/sample-bash-predict-002/1.0.0.0/` — prompt, `script.sh`, `expected.yaml`. The stored expected is for review; grading uses the runtime-computed output.
+
+---
+
+## Tests
+
+- **Questions module:** `validate.test.ts` — `validateBashPayload`, `validateBashPredictOutputPayload`, and `validateTypeSpecificFiles` for `bash_predict_output`. `parse.test.ts` — parsing `bash_predict_output` (script.sh, expected.yaml) and bash with `sandbox_zip_ref`. `serialize.test.ts` — `serializeBash`, `serializeBashPredictOutput`, and `serializeQuestion` for both types.
+- **Evaluators:** `bash-predict-output.test.ts` — evaluator behaviour (no script, match calculated output, no match, normalization).
+- **Existing tests:** All existing question and evaluator tests remain passing; no breaking changes to multiple_choice or short_answer.
+
+---
+
+## Developer runbook: get the system running and tested
+
+This section gives the exact steps a developer needs to run the app and verify the Bash question types. There is no requirement for backward compatibility; the system is not live, so the database can be reset or recreated.
+
+### Prerequisites
+
+- **Node.js 20+** and npm.
+- **Supabase:** Either a **hosted** Supabase project (recommended) or **local** Supabase (Docker required). For local: [Supabase CLI](https://supabase.com/docs/guides/cli) and Docker.
+- **System `unzip`** (for sandbox zip extraction when testing Type A questions with `sandbox_zip_ref`). On Ubuntu/Debian it is usually present; on macOS install if needed (e.g. via Xcode Command Line Tools or Homebrew).
+
+### 1. Clone and install
+
+```bash
+cd /path/to/yrS3
+npm install
+```
+
+### 2. Environment variables
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local`:
+
+- **`NEXT_PUBLIC_SUPABASE_URL`** — Supabase project URL.
+- **`NEXT_PUBLIC_SUPABASE_ANON_KEY`** — Supabase anon (public) key.
+
+For a **hosted** project: get these from the [Supabase Dashboard](https://supabase.com/dashboard) → your project → **Project Settings** → **API** (Project URL and anon key).
+
+For **local** Supabase: after starting the stack (step 3), run `supabase status -o env` and copy the API URL and anon key from the output.
+
+Leave **`QUESTIONS_STORAGE`** unset so the app uses the **filesystem** for questions (recommended for local dev). The repo already includes sample questions under `questions/` (including `sample-bash-001`, `sample-bash-002`, `sample-bash-predict-001`, `sample-bash-predict-002`).
+
+Optional for listing/sync: set **`QUESTION_SYNC_OWNER_ID`** to your Supabase user UUID so that FS-only question versions are imported into the DB when the app lists questions. You can add this after signing up (see step 6).
+
+### 3. Database (migrations)
+
+**Option A — Local Supabase (blow away DB and reapply all migrations)**
+
+```bash
+supabase start
+supabase db reset
+```
+
+Or use the npm script: `npm run db:reset` (runs `supabase db reset`). This applies every migration in `supabase/migrations/` and resets the local database. Use this whenever you want a clean schema (e.g. after pulling new migrations).
+
+If the stack was already running and you only changed migrations: `supabase db reset` is enough. If you changed `config.toml` or need a clean start: `supabase stop --no-backup` then `supabase start` then `supabase db reset`.
+
+**Option B — Hosted Supabase**
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push
+```
+
+This applies migrations to the linked hosted project. To "blow away" the hosted DB you would need to reset or drop objects in the Dashboard (or use a new project); for development, `db push` is usually enough to add new tables/columns.
+
+### 4. Start the dev server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in a browser.
+
+### 5. Run automated tests
+
+In a separate terminal, from the repo root:
+
+```bash
+npm run test:run
+```
+
+All tests (including question validation, parse, serialize, and evaluators for Bash and bash_predict_output) should pass. Use this before committing or to confirm the system after setup.
+
+### 6. UI flow: sign up and use the app
+
+1. **Sign up / Log in**  
+   Go to the app and create an account (email/password). If using local Supabase with email confirmation, open the Mailpit/Inbucket URL from `supabase status` and use the confirmation link from the captured email.
+
+2. **Question sets**  
+   In the UI, open **Question sets** (or the main navigation that lists sets). You should see any question sets that exist in the DB or on the filesystem (e.g. under `question-sets/` if present).
+
+3. **Create a question set (optional)**  
+   Click **Create question set**. Enter a title (e.g. "Bash practice"), optionally a description, and **select questions** to include. The list comes from the DB (and, when using FS + sync, from the `questions/` folder). Select at least the sample Bash questions (e.g. `sample-bash-001`, `sample-bash-predict-001`) if they appear, then save. If the sample questions do not appear, ensure they are under `questions/<id>/<version>/` with valid `meta.yaml` and, when using sync, that `QUESTION_SYNC_OWNER_ID` is set and you have triggered a list (e.g. by visiting the page that lists questions or question sets).
+
+4. **Take as test**  
+   From the question sets list, click **Take as test** (or equivalent) on the set you created. The app starts a test session and shows the first question.
+
+5. **Answer and submit**  
+   - For **multiple choice:** choose an option and move to the next (or submit).  
+   - For **Bash (Type A):** type or paste Bash code in the code area; you can click **Run** to execute it (uses the same sandbox as grading). Move through questions, then click **Submit test**.  
+   - For **Bash predict output (Type B):** read the script shown, type the output you expect in the text area (no terminal), then move on and **Submit test**.
+
+6. **View results**  
+   After submit, the app shows the score and per-question feedback (e.g. "All tests passed" for Bash, or "Correct." / "Your answer does not match…" for bash_predict_output).
+
+### 7. UI flow: create Bash questions (optional)
+
+1. Go to **Create question** (or "New question" in the questions area).  
+2. In the **Question type** dropdown, choose **Bash (write code — auto-check output)** or **Bash predict output (explain output, no terminal)**.  
+3. Fill in the form:  
+   - **Type A (bash):** Prompt, reference solution script, optional tests (description, stdin, setup), optional sandbox zip ref.  
+   - **Type B (bash_predict_output):** Prompt, script to show to the student, and stored expected output (for editor review; grading uses the runtime-computed output).  
+4. Submit. The question is created and stored (DB + FS when using the app's create flow). You can then add it to a question set and take a test that includes it.
+
+### 8. Verify sandbox zip (Type A, optional)
+
+To test a Type A question that uses a zip for the sandbox folder tree: create or use a question whose `meta.yaml` includes `sandbox_zip_ref: somefile.zip`, and place `somefile.zip` in that question's version folder (e.g. `questions/<logical_id>/<version>/somefile.zip`). Run a test that includes that question and submit an answer; the grader will extract the zip to a temp dir and run the student and reference scripts with that directory as the working directory. No extra UI steps—just ensure the zip exists and the ref is set.
+
+---
+
+## Summary
+
+| Item | Description |
+|------|-------------|
+| Type A | `bash` — write code, auto-check; optional `sandbox_zip_ref` and `tests.yaml` with `setup`. |
+| Type B | `bash_predict_output` — predict output, no terminal; stored expected for review; grading uses computed output; mismatch logged. |
+| Question sets | Optional `sandbox_zip_ref` on the set for shared folder tree. |
+| Sandbox | Optional `cwd`; zip extracted to temp dir when ref provided. |
+| UI | Create/new-version and take-test support both bash types. |
+| Samples | `sample-bash-001`, `sample-bash-002`, `sample-bash-predict-001`, `sample-bash-predict-002`. |

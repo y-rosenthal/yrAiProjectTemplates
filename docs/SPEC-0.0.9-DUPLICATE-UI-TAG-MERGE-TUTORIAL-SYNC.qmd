@@ -1,0 +1,148 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+# SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9)
+
+This spec implements the **deferred items** from [SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd](SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd): (1) **AI duplicate-detection conversation UI**, (2) **override logging on create**, (3) **merge for tags** (in addition to the existing facts merge), and (4) **tutorial sync from filesystem on startup**. The database schema and APIs for tags, facts, tutorials, override_logs, and merge_logs already exist from v0.0.8; this spec defines the missing flows, UI, and sync behavior.
+
+**References:** [SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd](SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd), [TAGS-FORMAT-0.0.8.qmd](TAGS-FORMAT-0.0.8.qmd), [FACTS-FORMAT-0.0.8.qmd](FACTS-FORMAT-0.0.8.qmd), [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd).
+
+---
+
+## Purpose and scope
+
+### Goals
+
+- **Duplicate-detection UI:** When a user proposes a new tag or fact (or edits a fact), run a duplicate check; if potential duplicates are found, require a **conversation** with the AI before the user can proceed. The UI must support this flow and store the conversation and any override in the database.
+- **Override logging on create:** When the user overrides the AI (creates the tag/fact anyway despite a duplicate warning), **write** an entry to `override_logs` (entity_type, entity_id, ai_summary, human_rebuttal, conversation_json, created_by) at create time—not only have the schema and a list API.
+- **Tag merge:** Provide a **merge API for tags** (analogous to the existing merge API for facts): choose a surviving tag and a merged tag; update all references (question_versions.tags, tutorial_tag_paths, and any other consumers) from the merged path to the surviving path; remove or retire the merged tag; record the merge in `merge_logs`.
+- **Tutorial sync from FS:** On **startup** (and optionally via an admin sync endpoint), **sync tutorials** from the filesystem into the database: import FS-only tutorials, resolve conflicts with DB-wins semantics, and optionally write the DB state back to the FS mirror. Use the same dual-source pattern as questions and question sets.
+
+### Scope
+
+- **In scope:** Duplicate-check API and conversation/override flow for tags and facts; UI for the conversation and override confirmation; persistence of override_logs on create; tag merge API and path-update logic; tutorial sync (FS → DB, conflict resolution, startup and admin trigger).
+- **Out of scope:** Detailed AI prompt design; extraction of facts from free text; full tutorial authoring workflows.
+
+---
+
+## Part A: AI duplicate-detection and override logging
+
+### A.1 Duplicate check (backend)
+
+- **Tags:** When the user proposes a new tag (path and optionally name), the system must **search** existing tags for potential duplicates. Criteria may include: path equality, path similarity (e.g. same leaf segment, same prefix), or semantic similarity (e.g. via an AI or embedding step). Return a list of candidate duplicate tags (id, path, name) and, if using AI, a short **reason** (e.g. "Same path segment 'if' under a similar parent").
+- **Facts:** When the user proposes a new fact (canonical_text) or an edit to an existing fact, the system must **search** existing facts for potential duplicates. Use at least: full-text or substring match on `canonical_text`. Optionally use AI or embeddings for near-duplicate detection. Return candidate facts (id, canonical_text, tag_path) and an optional **reason**.
+- **API:** Provide endpoints that the create/edit UI can call **before** submitting the create/update, e.g.:
+  - `POST /api/tags/check-duplicates` — body: `{ path, name? }`; response: `{ candidates: Array<{ id, path, name, reason? }>, is_duplicate: boolean }`.
+  - `POST /api/facts/check-duplicates` — body: `{ canonical_text, exclude_id? }`; response: `{ candidates: Array<{ id, canonical_text, tag_path, reason? }>, is_duplicate: boolean }`.
+- If `candidates.length > 0`, the UI must **not** allow a direct create/update; it must enter the **conversation flow** (see below). If the user then chooses to create anyway, the create API must record an **override** (see A.3).
+
+### A.2 Conversation flow (UI)
+
+- When the duplicate check returns one or more candidates:
+  1. **Show** the candidate(s) and the AI’s reason (if any) in the UI.
+  2. **Start a conversation:** The user can send messages (e.g. "I need a separate tag for X because …"); the system sends the user message and current context (new tag/fact, candidates) to an AI and returns the AI’s reply. This may be a single exchange or multiple turns. The UI must support at least one user message and one AI reply; multiple turns are recommended.
+  3. **Decide:** The user chooses one of:
+     - **Use existing:** Abandon the create (or link to an existing tag/fact). No new entity is created; no override log.
+     - **Create anyway (override):** Proceed with create. The system **allows** the create and **logs an override** (A.3). The user must be **informed** that this action will be logged for administrator review and must be given a chance to provide a **rebuttal** (short text) that is stored with the override.
+- **Storage:** The full **conversation** (ordered list of { role: 'user' | 'assistant', content: string }) must be stored. Store it in the `override_logs.conversation_json` column when an override occurs. Optionally persist the conversation in a separate table or in the filesystem for non-override cases (e.g. when the user later chooses "use existing"); the minimum is to persist when the user overrides.
+
+### A.3 Override logging on create
+
+- When the user **creates** a tag or fact **after** the duplicate-check flow and chooses "create anyway":
+  1. **Create** the tag or fact as normal (insert into `tags` or `facts`).
+  2. **Insert** a row into `override_logs` with:
+     - `entity_type`: `'tag'` or `'fact'`.
+     - `entity_id`: the **new** tag or fact id (uuid).
+     - `ai_summary`: text summarizing why the AI considered this a duplicate (from the duplicate-check or conversation).
+     - `human_rebuttal`: the rebuttal text provided by the user (optional but encouraged).
+     - `conversation_json`: JSON array of the conversation messages (role, content).
+     - `created_by`: the authenticated user id.
+  3. **Do not** block or roll back the create; the override is recorded for administrator review (existing GET /api/admin/override-logs can list these).
+- The same applies when the user **updates** a fact and the duplicate check returns candidates and the user overrides: log to `override_logs` with `entity_id` = the fact id being updated.
+
+### A.4 UI requirements (summary)
+
+- Tag create UI: call duplicate check before submit; if candidates, show conversation flow; on "create anyway," collect rebuttal, then submit create and ensure backend writes override_logs.
+- Fact create/edit UI: same pattern—duplicate check, conversation, optional rebuttal, then create/update and override log when the user overrides.
+- Users must be able to **search** tags and facts by text/path (no need to type UUIDs); duplicate-check and conversation are in addition to existing search.
+
+---
+
+## Part B: Tag merge
+
+### B.1 Behavior
+
+- **Merge tag A into tag B:** Tag B is the **surviving** tag (path and row remain). Tag A is the **merged** tag (path and row will be removed or retired).
+- **References:** Questions and tutorials reference tags by **path** (e.g. `question_versions.tags` is `text[]` of paths; `tutorial_tag_paths` has `tag_path`). Therefore:
+  1. Replace every occurrence of the **merged path** (tag A’s path) with the **surviving path** (tag B’s path) in:
+     - `question_versions.tags` (array update: replace element merged_path with surviving_path where present).
+     - `tutorial_tag_paths.tag_path` (update rows where tag_path = merged_path to tag_path = surviving_path; if this creates a duplicate row for the same tutorial_id, collapse to one).
+  2. **Delete** the merged tag row from `tags` (tag A). If the taxonomy must retain history, alternatively soft-delete (e.g. add a `merged_into_id` or `deleted_at` column) and leave the row; this spec allows either, but at least one of delete or soft-delete is required.
+  3. **Insert** into `merge_logs`: `entity_type = 'tag'`, `surviving_id` = tag B’s id, `merged_id` = tag A’s id, `merged_by` = authenticated user.
+- **Idempotency:** If the merged tag path no longer appears in any table (e.g. already updated), the merge can still proceed (delete tag row and write merge_logs).
+
+### B.2 API
+
+- **POST /api/admin/merge/tags** — body: `{ surviving_id: uuid, merged_id: uuid }`. Validates that both ids exist in `tags` and that surviving_id ≠ merged_id. Performs path replacement in `question_versions` and `tutorial_tag_paths`, then deletes the merged tag and inserts into `merge_logs`. Returns `{ ok: true, surviving_id, merged_id }` or an error.
+
+### B.3 Edge cases
+
+- If the surviving tag row is missing or the merged tag row is missing, return 400.
+- If replacing the path in `question_versions.tags` or `tutorial_tag_paths` would create a duplicate (e.g. tutorial already has both paths), replace the merged path with the surviving path and ensure a single row per (tutorial_id, surviving_path); for question_versions, ensure the tags array has no duplicate path entries after replacement.
+
+---
+
+## Part C: Tutorial sync from filesystem
+
+### C.1 Scope
+
+- **Source:** Tutorials root (e.g. `TUTORIALS_ROOT` or `tutorials/`). Layout per [SPEC-0.0.8](SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd) and tutorial store-fs: one folder per tutorial `{id}/`, with `meta.yaml` (id, title, external_ref, content_mode, stored_content_path, fact_ids, tag_paths, timestamps).
+- **Target:** Database tables `tutorials`, `tutorial_facts`, `tutorial_tag_paths`. DB is the source of truth for listing and for in-app behavior; the FS is a mirror for authoring and portability.
+
+### C.2 Sync semantics
+
+- **FS-only tutorial:** A folder under the tutorials root with a valid `meta.yaml` and an `id` that does not exist in `tutorials` → **import**: insert into `tutorials`, then insert into `tutorial_facts` and `tutorial_tag_paths` from meta.yaml. Use the `id` from the file as the primary key (so that FS and DB ids match).
+- **In both FS and DB:** If the same tutorial id exists in both, compare core fields (e.g. title, external_ref, content_mode, stored_content_path). If different, **DB wins**: overwrite the FS copy with the DB version (write meta.yaml and any stored content paths from DB), or move the FS version to a conflicts folder and write the DB version to the normal path—same pattern as question sync in [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd). If same, skip.
+- **DB-only tutorial:** Optionally, export tutorials that exist only in the DB to the FS (e.g. for backup). Minimum required: support FS → DB import and conflict resolution (DB wins).
+
+### C.3 When sync runs
+
+- **On startup:** When the app starts (e.g. in the same place where question and question-set sync runs), run **tutorial sync** after questions and question sets (and tags/facts): scan the tutorials root, import FS-only tutorials, resolve conflicts (DB wins), and optionally write back the DB state to the FS for synced tutorials.
+- **Admin trigger:** Extend the existing admin sync endpoint (e.g. POST /api/admin/sync-questions or a dedicated POST /api/admin/sync) to run tutorial sync as well, and return counts (e.g. `tutorialsImported`, `tutorialsConflictsResolved`).
+
+### C.4 Implementation notes
+
+- Reuse the existing `listTutorialIdsFromFs`, `readTutorialFromFs` (or equivalent) to read from FS. For each id, if not in DB, insert; if in DB, compare and apply DB-wins rule. Writing back to FS: use existing or new helpers to write `meta.yaml` (and optionally content) from the DB row plus `tutorial_facts` and `tutorial_tag_paths`.
+- Conflicts folder: if using one (e.g. `tutorials/_conflicts/{id}_{timestamp}/`), exclude it from the list of tutorial ids when scanning.
+
+---
+
+## Part D: Implementation order and checklist
+
+### Recommended order
+
+1. **Override logging on create** — Ensure that when a tag or fact is created (or a fact updated) and the duplicate-check flow was shown and the user chose "create anyway," the backend that performs the create/update also inserts into `override_logs`. This may require adding an optional body field (e.g. `override_reason`, `conversation`, `ai_summary`) to POST /api/tags and POST /api/facts (and PATCH /api/facts) so the UI can pass the rebuttal and conversation when overriding.
+2. **Duplicate-check APIs** — Implement POST /api/tags/check-duplicates and POST /api/facts/check-duplicates (and optionally include an AI step that returns a reason). Use simple path/text matching first; add AI or embeddings later if desired.
+3. **Conversation UI** — Build the UI flow for tag and fact create (and fact edit): call check-duplicates; if candidates, show conversation (user message → AI reply, at least one round); offer "use existing" vs "create anyway"; if "create anyway," collect rebuttal and send create with override payload so the backend can write override_logs.
+4. **Tag merge API** — Implement POST /api/admin/merge/tags with path replacement in question_versions and tutorial_tag_paths, delete merged tag, insert merge_logs.
+5. **Tutorial sync** — Implement syncTutorialsFromFs (or equivalent): list FS tutorial ids, for each FS-only insert into DB and optionally write back; for each in both compare and apply DB-wins; wire sync into startup and into the admin sync endpoint.
+
+### Checklist (summary)
+
+| Item | Description |
+|------|-------------|
+| Override on create | Backend writes to `override_logs` when user creates tag/fact (or updates fact) after choosing "create anyway" in duplicate flow; store ai_summary, human_rebuttal, conversation_json, created_by. |
+| Duplicate-check APIs | POST /api/tags/check-duplicates and POST /api/facts/check-duplicates; return candidates and optional reason. |
+| Conversation UI | Tag/fact create (and fact edit) UI: show candidates, run conversation, "use existing" or "create anyway" with rebuttal. |
+| Tag merge API | POST /api/admin/merge/tags; update question_versions.tags and tutorial_tag_paths; delete merged tag; insert merge_logs. |
+| Tutorial sync | Sync tutorials from FS on startup and via admin sync; FS-only import; DB wins on conflict; optional FS write-back. |
+
+---
+
+## Summary
+
+- **v0.0.9** adds: (1) duplicate-check endpoints and a **conversation UI** for tags and facts so users must engage with the AI when duplicates are suspected; (2) **override logging on create** by writing to `override_logs` when the user overrides; (3) **tag merge** via POST /api/admin/merge/tags with path replacement and merge_logs; (4) **tutorial sync** from the filesystem on startup and in the admin sync flow, with DB-wins conflict resolution.

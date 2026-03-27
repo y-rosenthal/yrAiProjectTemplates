@@ -1,0 +1,207 @@
+---
+title: "SPEC-QUESTION-SETS-0.0.2.qmd"
+---
+
+# Question Sets — SPEC 0.0.2
+
+This spec defines **question sets**: named, ordered lists of questions that can be used as a test, a homework assignment, or a study list. It extends the MVP (SPEC-0.0.1) by adding UI and persistence for creating and managing question sets, and clarifies terminology so that "test" is reserved for the *activity* of taking and submitting answers, not for the underlying set of questions.
+
+**References:** [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd), [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd), [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd), [QUESTION-MODULE-SPEC.qmd](QUESTION-MODULE-SPEC.qmd), [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd).  
+See [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd) for document versioning.
+
+---
+
+## Purpose and scope
+
+### What is a question set?
+
+A **question set** is a named, ordered list of question identifiers. The same question set can be used in different ways:
+
+- **As a test** — A learner takes the set under timed/untimed conditions, submits answers, and receives a score. This is the "take as test" flow.
+- **As homework** — The same set of questions might be assigned as homework (same or different submission rules in a future version).
+- **As a study list** — A topic-focused set of questions for practice, with or without grading.
+
+The system does **not** assume every question set is a "test." Naming and UI should reflect that question sets are generic; the *use* of a set (e.g. "Take as test") is a separate action.
+
+### Naming: "Question set" vs "Test"
+
+| Term | Meaning in this spec |
+|------|----------------------|
+| **Question set** | A named set of questions (data). Can be used as a test, homework, or study list. |
+| **Test** | The *activity* of taking a question set: start session, answer questions, submit, get score. "Test" = one *usage* of a question set. |
+| **Test session** | One user attempt (e.g. one "take" of a question set). Stored in DB as `test_sessions`. |
+
+So: **question sets** are the reusable data; **tests** (and test sessions) are the act of taking and submitting. The UI and docs should avoid implying that every question set is "a test"; prefer "question set" for the entity and "Take as test" (or similar) for the action.
+
+### Scope for 0.0.2
+
+- **In scope**
+  - Persist question sets in the database (new tables and APIs).
+  - UI to **create** a new question set: choose a name (and optional description) and **select which questions** to include (from available questions).
+  - UI to **list** question sets; from the list, the user can take a set as a test (take flow) or later edit/delete (optional for 0.0.2).
+  - Remove the config-based "tests" (`tests-config.ts`, `TESTS_CONFIG` env). Question sets are stored in the **database** (source of truth). The **filesystem** under `question-sets/` is imported via **sync** only (same model as questions). See [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd) for the file layout; sync upserts into `question_sets` with `source_slug` set to the folder name.
+  - Update documentation and code naming so that "question set" is used for the set of questions and "test" is used only for the taking/submission flow.
+
+- **Out of scope for 0.0.2**
+  - Editing or deleting question sets (can be added later).
+  - Different "modes" per set (e.g. homework vs test); for now, every question set can be "taken as a test."
+  - Ordering of questions within a set (fixed order or shuffle) is MVP-defined; spec allows storing order.
+
+---
+
+## Data model
+
+### New table: `question_sets`
+
+Store one row per question set.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid, PK | Unique question set id (e.g. `gen_random_uuid()`). |
+| `title` | text, not null | User-facing name (e.g. "Bash basics", "Week 3 homework"). |
+| `description` | text, nullable | Optional description. |
+| `owner_id` | uuid, nullable, FK → auth.users ON DELETE SET NULL | User who created the set. Nullable when user is deleted or for system/seed data. |
+| `preserved_owner_id` | uuid, nullable | Original creator UUID; kept when `owner_id` is nulled after user delete (see SPEC-PRESERVED-OWNERSHIP-0.0.1). |
+| `created_at` | timestamptz | When the set was created. |
+| `source_slug` | text, nullable, unique when present | Folder name under `question-sets/` when the set was synced from the filesystem; null for UI-created sets. |
+
+### New table: `question_set_items`
+
+Store the questions in each question set with explicit order.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid, PK | Unique row id. |
+| `question_set_id` | uuid, not null, FK → question_sets(id) ON DELETE CASCADE | Which question set. |
+| `question_logical_id` | text, not null | Question logical id (same as in question_versions / storage). |
+| `position` | int, not null | 1-based order within the set. |
+
+Unique constraint on `(question_set_id, question_logical_id)` so the same question appears at most once per set. Order is given by `position`.
+
+### Sources of question set data
+
+- **Database (source of truth)**: Tables `question_sets` and `question_set_items`. Listing, get-by-id, and take flow use the DB only. Optional column `source_slug` identifies sets imported from a repo folder.
+- **Filesystem (import only)**: Per [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd), one folder per set with `set.yaml`. **Sync** (startup and `POST /api/admin/sync-questions`) reads these folders and upserts into the DB—same approach as question sync. There is no runtime merge of DB + filesystem lists.
+
+### Changes to existing tables
+
+- **test_sessions**: Add column `set_id` (uuid, not null, FK → question_sets(id)). This is the question set used for this test attempt. Remove or stop using `test_id`; existing migrations may need a new migration that adds `set_id` and drops `test_id` (or a single new migration for a fresh install).
+- **answers**: No change; they reference `session_id` and store `question_id` / `question_version`.
+
+### RLS (row-level security)
+
+- **question_sets**: Authenticated users can read all question sets (so everyone can "take as test" any set). Insert: authenticated users can create (set `owner_id` = self). Update/delete: only owner (or later, admin) when edit/delete is added.
+- **question_set_items**: Read for authenticated; insert/update/delete only when the user owns the parent question set (policy checks `question_sets.owner_id`).
+
+---
+
+## API
+
+### Question sets
+
+| Method / path | Auth | Purpose |
+|---------------|------|---------|
+| `GET /api/question-sets` | Authenticated | List all question sets (id, title, description, question count). Optional: filter by owner. |
+| `GET /api/question-sets/[id]` | Authenticated | Get one question set by id with ordered list of question logical ids (for "take as test" flow). |
+| `POST /api/question-sets` | Authenticated | Create question set. Body: `{ title: string, description?: string, questionLogicalIds: string[] }`. Returns `{ id, title, ... }`. |
+
+For 0.0.2, no PATCH/DELETE is required; they can be added in a later spec.
+
+### Take-as-test flow
+
+- **Start test**: `POST /api/question-sets/[id]/start` — `id` is the question set id (uuid). Server loads the question set, gets ordered `question_logical_id` list, creates a test_session with `set_id = id`, returns `sessionId`, `questionIds`, etc.
+- **Submit test**: `POST /api/question-sets/[id]/submit` — `id` is the question set id. Body and behavior as today (sessionId, answers); server validates session and records results.
+
+List of question sets for the learner is `GET /api/question-sets`. The "Take as test" action uses the question set id with the start and submit endpoints above.
+
+---
+
+## UI
+
+### Home / navigation
+
+- **Question sets**: Link to list of question sets. Primary entry for learners and creators.
+- **Create question set**: From the list page, a button/link "Create question set" that goes to the create page.
+
+### Question sets list page
+
+- **Route**: `/question-sets`.
+- **Content**: List all question sets (title, description, question count). Each row has an action "Take as test" that goes to the take flow (e.g. `/question-sets/[id]/take` where `id` is the question set uuid). "Create question set" button.
+
+### Create question set page
+
+- **Route**: `/question-sets/new`.
+- **Content**:
+  - **Title** (required): text input.
+  - **Description** (optional): textarea.
+  - **Questions**: Multi-select or checkbox list of **available questions**. Questions are loaded from `GET /api/questions` or `GET /api/questions/my` (or a dedicated "list all questions for picker" endpoint). User selects which questions to include; order = order in the list when submitted (or a separate ordering step in a later version).
+  - **Submit**: POST to `POST /api/question-sets` with `title`, `description`, `questionLogicalIds`; then redirect to question sets list or to the new set's "Take as test" page.
+
+No edit/delete UI required for 0.0.2.
+
+### Take flow
+
+- **Route**: `/question-sets/[id]/take` — `id` = question set id.
+- **Behavior**: Start session via `POST /api/question-sets/[id]/start`, load questions by logical id, answer, submit via `POST /api/question-sets/[id]/submit`. Same flow as today; only the source of question ids (DB question set) and the URL/API paths change.
+
+### Naming in the UI
+
+- Use **"Question sets"** for the list and **"Create question set"** for the creation flow.
+- Use **"Take as test"** (or "Take test") for the action that starts a test session from a question set.
+
+---
+
+## Code and config changes
+
+### New and changed code
+
+- **Migrations**: New migration adding `question_sets` and `question_set_items` with RLS. Migration for `test_sessions`: add `set_id` (FK to question_sets), remove `test_id` (or create `test_sessions` with `set_id` from the start if the project can do a breaking schema change).
+- **Config**: Remove `src/lib/tests-config.ts` and env `TESTS_CONFIG`. Question sets come from the DB and/or from the filesystem per QUESTION-SET-FORMAT-0.0.2; implement a loader that reads from the configured source(s). Seed one default question set (DB or file) for development if needed.
+- **API routes**: Add `src/app/api/question-sets/route.ts` (GET list, POST create) and `src/app/api/question-sets/[id]/route.ts` (GET one with question ids). Add `src/app/api/question-sets/[id]/start/route.ts` and `src/app/api/question-sets/[id]/submit/route.ts` (move and adapt logic from the current tests API; use `set_id` in test_sessions). Remove or deprecate `src/app/api/tests/` routes.
+- **Lib**: e.g. `src/lib/question-sets.ts` (or separate `question-sets-db.ts` and `question-sets-fs.ts`) for helpers that load question sets from the DB and/or from the filesystem per QUESTION-SET-FORMAT-0.0.2.
+- **Pages**: `src/app/question-sets/page.tsx` (list), `src/app/question-sets/new/page.tsx` (create), `src/app/question-sets/[id]/take/page.tsx` (take as test). Remove or redirect old `src/app/tests/` routes to the new question-set routes.
+
+### Naming and documentation
+
+- **Code**: Use `questionSet`, `questionSetId`, `QuestionSet`, `QuestionSetItem`. Use `set_id` in test_sessions. No `TestDef` for the set itself; use `QuestionSet` (or equivalent) for the type that holds id, title, description, question ids.
+- **Docs**: Update SPEC-0.0.1 (or add a short note) that "tests" in the student sense are backed by question sets. Update DEVELOPER-GUIDE, README, and any doc that refers to "create tests" or "tests config" to "question sets" and the new API/routes. Update QUESTION-MODULE-SPEC section "Tests and test flow" to say that tests are taken from question sets and that `set_id` in test_sessions references `question_sets.id`.
+
+---
+
+## Summary of terminology (for implementation and docs)
+
+| Concept | Use in UI/code/docs |
+|--------|----------------------|
+| The set of questions | **Question set** |
+| Creating a set of questions | **Create question set**; user **chooses questions** to add |
+| The activity of answering and submitting | **Take (as) test**; **test session** |
+| DB table for the set | `question_sets` + `question_set_items` |
+| DB table for the attempt | `test_sessions` with `set_id` → `question_sets.id` |
+
+This keeps the codebase and docs clear: **question sets** are the reusable data (tests, homework, study); **tests** are the timed/untimed take-and-submit experience backed by a question set.
+
+---
+
+## Open items / TODOs (for implementation phase)
+
+- [ ] Add migration for `question_sets` and `question_set_items` and RLS.
+- [ ] Add migration for `test_sessions`: add `set_id`, remove `test_id`.
+- [ ] Implement GET/POST `/api/question-sets` and GET `/api/question-sets/[id]`.
+- [ ] Implement `POST /api/question-sets/[id]/start` and `POST /api/question-sets/[id]/submit`.
+- [ ] Implement question sets list page and create page (with question picker).
+- [ ] Implement take flow at `/question-sets/[id]/take`.
+- [ ] Remove `tests-config.ts` and `/api/tests/`, `/tests/` routes (or redirect to question-sets).
+- [ ] Update all user-facing strings and docs to use "question set" and "Take as test" consistently.
+- [ ] Support loading question sets from filesystem per QUESTION-SET-FORMAT-0.0.2 (and optionally merge with DB).
+- [ ] Optional: seed a default question set (file or DB) for development.
+
+---
+
+## Related documents
+
+- **SPEC-0.0.1.qmd** — MVP scope; tests and question storage.
+- **PRD-0.0.1-v003.qmd** — Product vision; database schema (align with question sets).
+- **QUESTION-FORMAT-0.0.1.qmd** — Question layout and metadata.
+- **QUESTION-SET-FORMAT-0.0.2.qmd** — File-based question set layout and `set.yaml` schema.
+- **QUESTION-MODULE-SPEC.qmd** — Question API and "Tests and test flow" section to update.
+- **DOC-GUIDE-v001.qmd** — Document versioning.

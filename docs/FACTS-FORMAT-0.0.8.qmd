@@ -1,0 +1,51 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+# Canonical facts — filesystem format (SPEC-0.0.8)
+
+Facts are stored under a configurable root (default `facts/`). One file per fact. See [SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd](SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.qmd).
+
+---
+
+## Layout
+
+- **Root:** `FACTS_ROOT` env or `facts/` under project root.
+- **Files:** `{id}.yaml` where `id` is the fact UUID (e.g. `facts/550e8400-e29b-41d4-a716-446655440000.yaml`).
+
+---
+
+## Fact file fields
+
+| Field | Type | Description |
+|-------|------|--------------|
+| `id` | string | UUID of the fact. |
+| `canonical_text` | string | The fact in normalized form (required). |
+| `tag_path` | string (optional) | Hierarchical tag path for organization (e.g. `programming/html`). |
+| `subject` | string (optional) | Knowledge-graph style subject. |
+| `predicate` | string (optional) | Knowledge-graph style predicate. |
+| `object` | string (optional) | Knowledge-graph style object. |
+| `created_at` | string (optional) | ISO 8601. |
+| `updated_at` | string (optional) | ISO 8601. |
+
+---
+
+## Example
+
+`facts/550e8400-e29b-41d4-a716-446655440000.yaml`:
+
+```yaml
+id: 550e8400-e29b-41d4-a716-446655440000
+canonical_text: "In HTML, the 'h1' element is a paired element."
+tag_path: programming/html
+subject: HTML h1 element
+predicate: is a
+object: paired element
+created_at: "2025-03-12T12:00:00Z"
+updated_at: "2025-03-12T12:00:00Z"
+```
+
+Sync imports FS-only facts (by `id`) into the database; DB is source of truth for listing and links.

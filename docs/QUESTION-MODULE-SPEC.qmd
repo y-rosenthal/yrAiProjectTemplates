@@ -1,0 +1,94 @@
+# QUESTION-MODULE-SPEC
+
+This document describes the **question module** implementation: how questions are represented, validated, stored, and exposed via API. It is intended for developers and for updating the system when QUESTION-FORMAT or the PRD changes.
+
+**References:** [PRD-0.0.1-v003.qmd](PRD-0.0.1-v003.qmd), [QUESTION-FORMAT-0.0.1.qmd](QUESTION-FORMAT-0.0.1.qmd), [SPEC-0.0.1.qmd](SPEC-0.0.1.qmd), [SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd](SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd) (DB–FS sync and dual-write).
+
+---
+
+## Format version and version field
+
+- The module aligns to **QUESTION-FORMAT 0.0.1**.
+- The **version** field is a **four-part semantic** string: `Q_MAJ.Q_MIN.A_MAJ.A_MIN` (e.g. `1.0.0.0`), required from day one. See QUESTION-FORMAT for when to bump each part.
+
+---
+
+## Module layout
+
+| File | Purpose |
+|------|--------|
+| `src/lib/questions/types.ts` | Question types, `MetaYaml`, `ParsedQuestion`, `VersionKey`, `QuestionPayload` (e.g. `MultipleChoicePayload`). Single source for shape of meta and payload. |
+| `src/lib/questions/version.ts` | Parse and validate four-part version; `bumpQuestionMajor`, `bumpQuestionMinor`, `bumpAnswerMajor`, `bumpAnswerMinor`; `INITIAL_VERSION` (`1.0.0.0`). |
+| `src/lib/questions/parse.ts` | Files (meta.yaml, prompt, type-specific) → `ParsedQuestion`. Used when reading from storage. |
+| `src/lib/questions/validate.ts` | Validate meta, options, type-specific files, prompt presence; `validateMultipleChoicePayload` for API payloads; `validateQuestionUpload` for file uploads. |
+| `src/lib/questions/serialize.ts` | `ParsedQuestion` or payload → files (meta.yaml, prompt.md, options.yaml for multiple_choice). Used when creating or saving a new version. |
+| `src/lib/questions/store.ts` | Store interface: `list()`, `get(logicalId, version)`, `write(logicalId, version, files)`, `has(logicalId, version)`. |
+| `src/lib/questions/store-fs.ts` | Filesystem implementation: versioned path `questions/{logical_id}/{version}/`. |
+| `src/lib/questions/store-supabase.ts` | Supabase Storage implementation: same versioned path layout. |
+| `src/lib/questions/store-db.ts` | DB layer for `question_versions`: insert, list by owner, get by (logical_id, version), get latest version, ownership check. |
+| `src/lib/questions/get-store.ts` | Returns the appropriate store (FS or Supabase) based on env `QUESTIONS_STORAGE`. |
+| `src/lib/questions/db-meta-fs.ts` | Read/write optional `db_meta.yaml` (owner_id, status, proposed_by) per version folder. |
+| `src/lib/questions/write-to-fs.ts` | Write a full version (content files + db_meta.yaml) to a given FS root (dual-write and sync). |
+| `src/lib/questions/dual-write.ts` | After DB insert/update/approve, write db_meta to FS and optionally full version to backup root. |
+| `src/lib/questions/sync-questions.ts` | Sync FS with DB: import FS-only, DB wins on conflict (move to _conflicts, write DB version). |
+| `src/lib/questions/index.ts` | Re-exports public types and functions. |
+
+---
+
+## Storage layout
+
+- **Path pattern:** `{root}/{logical_id}/{version}/` (e.g. `questions/550e8400-e29b-41d4-a716-446655440000/1.0.0.0/`).
+- **Contents per version folder:** `meta.yaml`, `prompt.md` (or `prompt.txt`), and type-specific files (e.g. `options.yaml` for multiple_choice). Optionally **db_meta.yaml** (owner_id, status, proposed_by) for app metadata; see SPEC-DB-FS-QUESTION-SYNC.
+- **Immutability:** Each (logical_id, version) is written once; no overwrite of existing version folders. New versions are new folders. Reserved path `_conflicts/` holds FS copies that were overwritten when DB won during sync.
+
+---
+
+## Database
+
+- **Table:** `question_versions` (see migrations `00002`–`00004`).
+- **Columns:** `id`, `logical_id`, `version`, `owner_id`, `type`, `title`, `domain`, `storage_path`, `status`, `proposed_by`, `created_at`. Unique on `(logical_id, version)`.
+- **Status:** `approved` = official version (used in tests and as "latest"); `pending` = proposed by a non-owner, not yet approved. Only the question owner can approve pending versions.
+- **RLS:** Read for all authenticated; any authenticated can insert (app sets `owner_id` and `proposed_by`); owner can update (e.g. approve) and delete.
+- **Usage:** Create question → insert row (owner_id = user, status = approved) and write to storage. New version by owner → status = approved. New version by non-owner → status = pending, proposed_by = user. List "my questions" → approved rows by owner_id, latest per logical_id. List "pending your approval" → rows where owner_id = user and status = pending. Resolve "latest" for tests → approved only, order by version desc.
+
+---
+
+## API
+
+| Method / path | Auth | Purpose |
+|---------------|------|--------|
+| `POST /api/questions` | Any authenticated | Create new question (body: type, title?, domain?, prompt, options). Returns `{ logicalId, version, status }`. |
+| `POST /api/questions/[logicalId]/versions` | Any authenticated | Create new version (body: same + `versionBump`). If caller is owner → status = approved; else status = pending. Returns `{ logicalId, version, status }`. |
+| `POST /api/questions/[logicalId]/versions/[version]/approve` | Owner only | Approve a pending version (sets status = approved). |
+| `GET /api/questions/[id]?version=` | Any authenticated | Get question by logical_id. If `version` omitted, latest **approved** from DB then load from storage. |
+| `GET /api/questions/my` | Any authenticated | List current user's questions (latest approved version per logical_id) from DB. |
+| `GET /api/questions/pending` | Any authenticated | List pending versions that the current user (as owner) can approve. |
+| `GET /api/questions` | Any authenticated | List all questions from DB (latest approved per logical_id). When storage is FS and QUESTION_SYNC_OWNER_ID is set, sync runs first (import FS-only, DB wins on conflict), then list. |
+| `POST /api/questions/upload` | Any authenticated | Upload files for a version (form: folderName=logicalId, version, files). New question → approved; new version by non-owner → pending. No overwrite. |
+
+---
+
+## Adding a new question type
+
+1. **types.ts:** Add the type to `QUESTION_TYPES` and add a payload type (e.g. `ShortAnswerPayload`) and extend `QuestionPayload`.
+2. **parse.ts:** In `parseQuestion`, add a branch for the new type to load type-specific files into `ParsedQuestion`.
+3. **validate.ts:** In `validateTypeSpecificFiles` add required files for the type; add a `validateXPayload` if the type is creatable via API.
+4. **serialize.ts:** Add `serializeX` and call it from `serializeQuestion` for the new type.
+5. **API:** In POST create/versions, allow the new type in the payload and call the new validator/serializer.
+6. **UI:** Add form fields and submit shape for the new type in the create/new-version forms.
+
+---
+
+## When QUESTION-FORMAT changes
+
+1. Update **QUESTION-FORMAT-0.0.1.qmd** (or a new format version doc) with the new layout, fields, or rules.
+2. Update **types.ts** (and optionally a shared schema) so that ParsedQuestion, MetaYaml, and payload types match the format.
+3. Update **parse.ts** and **serialize.ts** so that file → in-memory and in-memory → file stay in sync with the format.
+4. Update **validate.ts** so that validation rules match the format (e.g. new required field, new version pattern).
+5. Run tests and update this spec if the module layout or API changed.
+
+---
+
+## Question sets and take-as-test flow
+
+- **Question sets** are defined in the database and/or on the filesystem (see [SPEC-QUESTION-SETS-0.0.2.qmd](SPEC-QUESTION-SETS-0.0.2.qmd) and [QUESTION-SET-FORMAT-0.0.2.qmd](QUESTION-SET-FORMAT-0.0.2.qmd)). When a user takes a set as a test, the client calls `POST /api/question-sets/[id]/start`, receives `questionIds` (logical_ids), and fetches each via `GET /api/questions/[id]`, which returns the **latest approved version** (from DB) for that logical_id. On submit, the client sends `questionId` and `version` per answer so the server grades the same version the student saw and stores it in `answers.question_id` and `answers.question_version`. Test sessions store `set_id` (uuid) referencing `question_sets.id`.

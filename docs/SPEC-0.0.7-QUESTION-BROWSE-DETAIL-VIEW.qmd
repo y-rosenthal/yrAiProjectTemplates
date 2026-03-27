@@ -1,0 +1,113 @@
+<!--
+DOC STRUCTURE RULES
+- Exactly one H1 (#) heading at the top
+- All other headings must be ## or deeper
+- Do NOT hard-code section numbers
+- Do NOT put title in YAML header (Quarto uses first H1)
+-->
+# SPEC: Question browser detail view and keyboard navigation (v0.0.7)
+
+This spec extends the questions browser (SPEC-0.0.6) and the create-set question picker so that users can **view the full text and metadata of a question** when browsing or selecting questions. Today only metadata (id, title, type, domain, tags) is shown; the **prompt** (question body) and type-specific content (options, solution script, etc.) are not visible. This spec adds a **detail panel** that shows the complete question when the user selects a question from the list, and supports **arrow-key navigation** and **click-to-select** in both the Browse questions page and the Create set question picker.
+
+---
+
+## Purpose and goals
+
+- **User goal:** When browsing questions or picking questions for a set, the user can click a question (or move selection with arrow keys) and see the **full question text** (prompt) and all **related metadata and type-specific fields** in a detail view.
+- **Scope:** Applies to (1) **Browse questions** page (`/questions/browse`) and (2) **Create question set** form ("Questions to include" list). No new API; reuse `GET /api/questions/[id]` with optional `?version=...` to load full `ParsedQuestion` content.
+- **Interaction:** Clicking a row/item selects that question and shows its detail. Arrow Up/Down move the selection and update the detail panel. The selected row/item is visually highlighted.
+
+---
+
+## Relevant existing code (do not reimplement)
+
+- **API:** `src/app/api/questions/route.ts` — GET returns list with `id`, `version`, `type`, `title`, `domain`, `tags`. `src/app/api/questions/[id]/route.ts` — GET returns full `ParsedQuestion` (prompt, options, solutionScript, scriptSource, expected, etc.); accepts optional `?version=...`.
+- **Types:** `src/lib/questions/types.ts` — `ParsedQuestion` has `prompt`, `promptFormat`, `options`, `correctId`, `solutionScript`, `tests`, `scriptSource`, `expected`, `tags`, etc.
+- **Browse:** `src/app/questions/browse/browse-questions-client.tsx` — table of metadata only; no selection or detail.
+- **Create set:** `src/app/question-sets/new/create-set-form.tsx` — list of checkboxes with metadata; no detail view or arrow-key nav.
+- **Take set:** `src/app/question-sets/[id]/take/take-set-client.tsx` — uses `ReactMarkdown` for prompt; same pattern for rendering prompt in the detail panel.
+
+---
+
+## Part A: Shared question detail panel
+
+### A.1 Component
+
+- **Create** a reusable component, e.g. `src/app/components/question-detail-panel.tsx`.
+- **Props:** `questionId: string | null`, `version: string | undefined`. When `questionId` is null, render an empty state (e.g. "Select a question to view details").
+- **When** `questionId` is set, fetch `GET /api/questions/${encodeURIComponent(questionId)}${version ? `?version=${encodeURIComponent(version)}` : ""}`.
+- **While loading:** Show "Loading…" for that question.
+- **On success:** Render:
+  - **Prompt:** Full question text. Use `ReactMarkdown` if `promptFormat === "md"`, otherwise plain text (e.g. `<pre>` or white-space preserved div).
+  - **Metadata:** id, type, version, title, domain, tags (same as list row).
+  - **Type-specific:** For `multiple_choice`: options list (and correct id if present). For `bash`: solution script (collapsed or truncated if long), tests summary. For `bash_predict_output`: script source, expected output. Keep layout compact and readable.
+- **Styling:** Consistent with app (e.g. card or bordered panel, zinc palette). Optional: scrollable area if content is long.
+
+### A.2 Export and reuse
+
+- Export the component so both Browse and Create-set can import it (e.g. `@/app/components/question-detail-panel`).
+
+---
+
+## Part B: Browse questions page
+
+### B.1 Layout
+
+- **Layout:** Two-area layout: **table** (left or top) and **detail panel** (right or bottom). When no question is selected, detail panel shows empty state. When a question is selected, detail panel shows that question's full content.
+
+### B.2 Selection state and click
+
+- **State:** Add `selectedIndex: number | null` (or `selectedId: string | null`). When user clicks a table row, set selection to that question (by index or id) and pass `id` + `version` to `QuestionDetailPanel`.
+- **Table rows:** Make each row clickable (`onClick` on `<tr>` or wrap content). Add `aria-selected={selectedId === q.id}` and a distinct style for the selected row (e.g. background `bg-zinc-100` or ring).
+
+### B.3 Keyboard navigation
+
+- **Focus:** The table (or a wrapper div that contains the table) should be focusable: `tabIndex={0}` so it can receive keyboard focus.
+- **Arrow keys:** When the table has focus, `ArrowDown` increments selected index (or move to next row), `ArrowUp` decrements. Clamp to `[0, questions.length - 1]`. Update selection and scroll the selected row into view if needed (`scrollIntoView`). Prevent default for these keys so the page does not scroll.
+- **Optional:** When questions load, auto-select first question (`selectedIndex = 0`) so detail is visible immediately. Or leave null until first click/key.
+
+---
+
+## Part C: Create set form (question picker)
+
+### C.1 Layout
+
+- **Layout:** "Questions to include" section: list of questions (left or top) and **detail panel** (right or bottom). Same `QuestionDetailPanel` component; pass selected question's `id` and `version` from the list.
+
+### C.2 Detail selection state
+
+- **State:** Add `detailIndex: number | null` (or `detailQuestionId: string | null`). This is independent of checkbox selection: it indicates which question's **detail** is shown. Checkbox state (`selectedIds`) continues to control which questions are included in the set.
+- **Click:** Clicking a list item (e.g. the row or a "View" area, but not only the checkbox) sets the detail selection to that question so the detail panel updates. Checkbox still toggles include-in-set; click on row can set detail and optionally not toggle checkbox (recommended: row click = set detail only; checkbox click = toggle include).
+
+### C.3 Keyboard navigation
+
+- **Focus:** The list container (e.g. `<ul>`) or a wrapper should be focusable (`tabIndex={0}`).
+- **Arrow Up/Down:** When the list has focus, ArrowDown/ArrowUp change `detailIndex` and update the detail panel. Clamp to valid indices; optionally scroll the focused item into view.
+
+---
+
+## Part D: Accessibility and UX
+
+- **Focus and aria:** Selected row/item should have `aria-selected="true"` and a visible focus ring or background so the user knows which question is shown in the detail panel.
+- **Escape (optional):** In either view, Escape could clear the selection (set selected/detail index to null) so the detail panel shows the empty state. Not required by this spec.
+
+---
+
+## Part E: Files to create or modify (checklist)
+
+| Action | Path | Description |
+|--------|------|-------------|
+| Create | `docs/SPEC-0.0.7-QUESTION-BROWSE-DETAIL-VIEW.qmd` | This spec |
+| Edit | `docs/_quarto.yml` | Add SPEC-0.0.7 to the SPEC files section |
+| Create | `src/app/components/question-detail-panel.tsx` | Reusable panel: fetch by id+version, render prompt (ReactMarkdown when md), metadata, type-specific fields |
+| Edit | `src/app/questions/browse/browse-questions-client.tsx` | Two-column layout; selectedIndex state; row click and arrow keys; QuestionDetailPanel |
+| Edit | `src/app/question-sets/new/create-set-form.tsx` | detailIndex state; list item click for detail; arrow keys; QuestionDetailPanel |
+
+---
+
+## Summary
+
+- **Part A:** A shared `QuestionDetailPanel` component that fetches full question via existing API and displays prompt (with markdown when applicable), metadata, and type-specific content.
+- **Part B:** Browse questions page: table + detail panel; click row or use Arrow Up/Down to select and view detail.
+- **Part C:** Create set form: question list + detail panel; click item or use Arrow Up/Down to view detail; checkbox behavior unchanged.
+- No API or backend changes; use existing `GET /api/questions/[id]` with optional `?version=...`.

@@ -1,0 +1,38 @@
+# Quarto book configuration 
+# See docs/QUARTO-DOC-GUIDE.qmd for how to install Quarto and render this book.
+
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "TODO: PROJECT TITLE GOES HERE"
+  description: "TODO: PROJECT DESCRIPTION GOES HERE"
+  chapters:
+    - index.qmd
+#    - README.qmd
+    - part: "Guide to the documentation"
+      chapters:
+        - DOC-GUIDE-v001.qmd
+        - DOC-AUTHORING-GUIDE.qmd
+        - QUARTO-DOC-GUIDE.qmd
+    - part: "TODO: SPECIFY PART1 TITLE"
+      chapters:
+        - sampleFile1.qmd
+        - sampleFile2.qmd
+        - sampleFile3.qmd
+    - part: "TODO: SPECIFY PART2 TITLE"
+      chapters:
+        - sampleFile4.qmd
+        - sampleFile5.qmd
+        - sampleFile6.qmd
+
+format:
+  html:
+    theme: cosmo
+    css: sidebar-parts.css
+    toc: true
+    toc-depth: 3
+    toc-title: "Contents"
+    code-fold: false
+    include-after-body: collapse-sections.html

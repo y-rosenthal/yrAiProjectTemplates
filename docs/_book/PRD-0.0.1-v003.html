@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Tutorial &amp; Testing System — specs, setup, and reference.">
+
+<title>5&nbsp; PRD-0.0.1-v003.qmd – yrS3 Documentation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./PRD-0.0.1-v002.html" rel="next">
+<link href="./QUARTO-DOC-GUIDE.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-12250bc6d41324f970c4c53c607dc95b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="sidebar-parts.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./PRD-0.0.1-v003.html">PRD files (vision documents)</a></li><li class="breadcrumb-item"><a href="./PRD-0.0.1-v003.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v003.qmd</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">yrS3 Documentation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Intro</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Guide to the documentation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DOC-GUIDE-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">DOC-GUIDE-v001.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DOC-AUTHORING-GUIDE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">DOC-AUTHORING-GUIDE.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUARTO-DOC-GUIDE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">QUARTO-DOC-GUIDE.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">PRD files (vision documents)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v003.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v003.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v002.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v002.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v001.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">SPEC files for different releases</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.9-DUPLICATE-UI-TAG-MERGE-TUTORIAL-SYNC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SPEC: AI duplicate UI, override logging, tag merge, tutorial sync (v0.0.9)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.8-HIERARCHICAL-TAGS-AND-CANONICAL-FACTS.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">SPEC: Hierarchical tags and canonical facts (v0.0.8)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.7-QUESTION-BROWSE-DETAIL-VIEW.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">SPEC: Question browser detail view and keyboard navigation (v0.0.7)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">SPEC: Question tags and questions browser (v0.0.6)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.5-DEFAULT-OWNER-AND-SYSTEM-LOGGING.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">SPEC: Default question sync owner and system message logging (v0.0.5)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.4-IMPLEMENT-BASH-QUESTIONS-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">SPEC 0.0.4 — Implement Bash Questions (v001)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-QUESTION-SETS-0.0.2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">SPEC-QUESTION-SETS-0.0.2.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-DB-FS-QUESTION-SYNC-0.0.3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">SPEC: Database–Filesystem Question Sync (v0.0.3)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">SPEC-0.0.1.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">How to setup and run the system</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SETUP-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">SETUP-0.0.1-v001.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Developer guide</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DEVELOPER-GUIDE-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Developer Guide (v0.0.1)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./AUTOMATED-TESTS-GUIDE-0.0.3-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Automated Tests Guide (v0.0.3)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Technical reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./TECH-STACK-0.0.3-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Technical Stack (v0.0.3)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Question Format Specification</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-MODULE-SPEC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">QUESTION-MODULE-SPEC</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-FORMAT-0.0.1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">QUESTION-FORMAT-0.0.1.qmd”</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-SET-FORMAT-0.0.2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Question Set Format — File-based storage (v0.0.2)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Tags and facts format (SPEC-0.0.8)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./TAGS-FORMAT-0.0.8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Tags taxonomy — filesystem format (SPEC-0.0.8)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./FACTS-FORMAT-0.0.8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Canonical facts — filesystem format (SPEC-0.0.8)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul>
+  <li><a href="#tutorial-testing-system-v0.0.1" id="toc-tutorial-testing-system-v0.0.1" class="nav-link active" data-scroll-target="#tutorial-testing-system-v0.0.1"><span class="header-section-number">5.1</span> Tutorial &amp; Testing System — v0.0.1</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">5.2</span> Overview</a></li>
+  <li><a href="#goals-non-goals" id="toc-goals-non-goals" class="nav-link" data-scroll-target="#goals-non-goals"><span class="header-section-number">5.3</span> Goals &amp; Non-Goals</a>
+  <ul class="collapse">
+  <li><a href="#goals-v0.1" id="toc-goals-v0.1" class="nav-link" data-scroll-target="#goals-v0.1"><span class="header-section-number">5.3.1</span> Goals (v0.1)</a></li>
+  <li><a href="#system-goals-all-assets" id="toc-system-goals-all-assets" class="nav-link" data-scroll-target="#system-goals-all-assets"><span class="header-section-number">5.3.2</span> System goals (all assets)</a></li>
+  <li><a href="#non-goals-v0.1" id="toc-non-goals-v0.1" class="nav-link" data-scroll-target="#non-goals-v0.1"><span class="header-section-number">5.3.3</span> Non-Goals (v0.1)</a></li>
+  </ul></li>
+  <li><a href="#target-users" id="toc-target-users" class="nav-link" data-scroll-target="#target-users"><span class="header-section-number">5.4</span> Target Users</a></li>
+  <li><a href="#scope-knowledge-domains-initial" id="toc-scope-knowledge-domains-initial" class="nav-link" data-scroll-target="#scope-knowledge-domains-initial"><span class="header-section-number">5.5</span> Scope: Knowledge Domains (Initial)</a></li>
+  <li><a href="#functional-requirements" id="toc-functional-requirements" class="nav-link" data-scroll-target="#functional-requirements"><span class="header-section-number">5.6</span> Functional Requirements</a>
+  <ul class="collapse">
+  <li><a href="#authentication" id="toc-authentication" class="nav-link" data-scroll-target="#authentication"><span class="header-section-number">5.6.1</span> Authentication</a></li>
+  <li><a href="#testing-flow" id="toc-testing-flow" class="nav-link" data-scroll-target="#testing-flow"><span class="header-section-number">5.6.2</span> Testing Flow</a></li>
+  </ul></li>
+  <li><a href="#question-types-evaluation-modules" id="toc-question-types-evaluation-modules" class="nav-link" data-scroll-target="#question-types-evaluation-modules"><span class="header-section-number">5.7</span> Question Types &amp; Evaluation Modules</a>
+  <ul class="collapse">
+  <li><a href="#supported-question-types-v0.1" id="toc-supported-question-types-v0.1" class="nav-link" data-scroll-target="#supported-question-types-v0.1"><span class="header-section-number">5.7.1</span> Supported Question Types (v0.1)</a></li>
+  </ul></li>
+  <li><a href="#system-architecture" id="toc-system-architecture" class="nav-link" data-scroll-target="#system-architecture"><span class="header-section-number">5.8</span> System Architecture</a>
+  <ul class="collapse">
+  <li><a href="#frontend" id="toc-frontend" class="nav-link" data-scroll-target="#frontend"><span class="header-section-number">5.8.1</span> Frontend</a></li>
+  <li><a href="#backend-infrastructure" id="toc-backend-infrastructure" class="nav-link" data-scroll-target="#backend-infrastructure"><span class="header-section-number">5.8.2</span> Backend &amp; Infrastructure</a></li>
+  </ul></li>
+  <li><a href="#modularity-ai-assisted-development" id="toc-modularity-ai-assisted-development" class="nav-link" data-scroll-target="#modularity-ai-assisted-development"><span class="header-section-number">5.9</span> Modularity &amp; AI-Assisted Development</a>
+  <ul class="collapse">
+  <li><a href="#core-modules" id="toc-core-modules" class="nav-link" data-scroll-target="#core-modules"><span class="header-section-number">5.9.1</span> Core Modules</a></li>
+  </ul></li>
+  <li><a href="#high-level-system-flow" id="toc-high-level-system-flow" class="nav-link" data-scroll-target="#high-level-system-flow"><span class="header-section-number">5.10</span> High-Level System Flow</a></li>
+  <li><a href="#scoring-evaluation-rules" id="toc-scoring-evaluation-rules" class="nav-link" data-scroll-target="#scoring-evaluation-rules"><span class="header-section-number">5.11</span> Scoring &amp; Evaluation Rules</a>
+  <ul class="collapse">
+  <li><a href="#deterministic-ai-scoring" id="toc-deterministic-ai-scoring" class="nav-link" data-scroll-target="#deterministic-ai-scoring"><span class="header-section-number">5.11.1</span> Deterministic AI Scoring</a></li>
+  </ul></li>
+  <li><a href="#sandbox-isolation-minimum-viable-level" id="toc-sandbox-isolation-minimum-viable-level" class="nav-link" data-scroll-target="#sandbox-isolation-minimum-viable-level"><span class="header-section-number">5.12</span> Sandbox Isolation (Minimum Viable Level)</a></li>
+  <li><a href="#database-schema-initial" id="toc-database-schema-initial" class="nav-link" data-scroll-target="#database-schema-initial"><span class="header-section-number">5.13</span> Database Schema (Initial)</a>
+  <ul class="collapse">
+  <li><a href="#users" id="toc-users" class="nav-link" data-scroll-target="#users"><span class="header-section-number">5.13.1</span> users</a></li>
+  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests"><span class="header-section-number">5.13.2</span> tests</a></li>
+  <li><a href="#questions" id="toc-questions" class="nav-link" data-scroll-target="#questions"><span class="header-section-number">5.13.3</span> questions</a></li>
+  <li><a href="#test_sessions" id="toc-test_sessions" class="nav-link" data-scroll-target="#test_sessions"><span class="header-section-number">5.13.4</span> test_sessions</a></li>
+  <li><a href="#answers" id="toc-answers" class="nav-link" data-scroll-target="#answers"><span class="header-section-number">5.13.5</span> answers</a></li>
+  </ul></li>
+  <li><a href="#user-stories-v0.1" id="toc-user-stories-v0.1" class="nav-link" data-scroll-target="#user-stories-v0.1"><span class="header-section-number">5.14</span> User Stories (v0.1)</a>
+  <ul class="collapse">
+  <li><a href="#authentication-1" id="toc-authentication-1" class="nav-link" data-scroll-target="#authentication-1"><span class="header-section-number">5.14.1</span> Authentication</a></li>
+  <li><a href="#test-taking" id="toc-test-taking" class="nav-link" data-scroll-target="#test-taking"><span class="header-section-number">5.14.2</span> Test Taking</a></li>
+  <li><a href="#administration" id="toc-administration" class="nav-link" data-scroll-target="#administration"><span class="header-section-number">5.14.3</span> Administration</a></li>
+  </ul></li>
+  <li><a href="#open-items-todos" id="toc-open-items-todos" class="nav-link" data-scroll-target="#open-items-todos"><span class="header-section-number">5.15</span> Open Items / TODOs</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./PRD-0.0.1-v003.html">PRD files (vision documents)</a></li><li class="breadcrumb-item"><a href="./PRD-0.0.1-v003.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v003.qmd</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v003.qmd</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>See the <a href="./DOC-GUIDE-v001.html">DOC-GUIDE-v001.qmd</a> file for a description of the naming scheme for documentation files in this project.</p>
+<section id="tutorial-testing-system-v0.0.1" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="tutorial-testing-system-v0.0.1"><span class="header-section-number">5.1</span> Tutorial &amp; Testing System — v0.0.1</h2>
+<hr>
+</section>
+<section id="overview" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="overview"><span class="header-section-number">5.2</span> Overview</h2>
+<p>This project aims to build a web-based tutorial and testing system focused initially on <strong>knowledge assessment</strong>. Version 0.0.1 prioritizes the <strong>testing component</strong>, with extensibility toward tutorials in later versions.</p>
+<p>The system is designed to be <strong>modular and componentized</strong> to support AI-assisted design and implementation, allowing each component to be developed, tested, and validated independently.</p>
+<hr>
+</section>
+<section id="goals-non-goals" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="goals-non-goals"><span class="header-section-number">5.3</span> Goals &amp; Non-Goals</h2>
+<section id="goals-v0.1" class="level3" data-number="5.3.1">
+<h3 data-number="5.3.1" class="anchored" data-anchor-id="goals-v0.1"><span class="header-section-number">5.3.1</span> Goals (v0.1)</h3>
+<ul>
+<li>Deliver a functional testing platform</li>
+<li>Support multiple question types with automated and AI-assisted grading</li>
+<li>Enable secure user authentication</li>
+<li>Establish a scalable, modular architecture compatible with AI coding assistants</li>
+</ul>
+</section>
+<section id="system-goals-all-assets" class="level3" data-number="5.3.2">
+<h3 data-number="5.3.2" class="anchored" data-anchor-id="system-goals-all-assets"><span class="header-section-number">5.3.2</span> System goals (all assets)</h3>
+<ul>
+<li><strong>Filesystem persistence:</strong> All main assets (questions, question sets, tags, facts, tutorial content) should be persistable on the filesystem in a human-editable form, so that editors and content creators can create and edit content either via the UI or directly in the filesystem. This is already the case for questions and question sets; the same principle applies to tags, facts, and tutorials.</li>
+<li><strong>Decentralized use (long-term):</strong> The system should eventually support decentralized use: content creators may store content in GitHub or similar systems, and an offline or local UI may be pointed at filesystem or git repositories of content, without requiring a central server for authoring.</li>
+</ul>
+</section>
+<section id="non-goals-v0.1" class="level3" data-number="5.3.3">
+<h3 data-number="5.3.3" class="anchored" data-anchor-id="non-goals-v0.1"><span class="header-section-number">5.3.3</span> Non-Goals (v0.1)</h3>
+<ul>
+<li>Full tutorial authoring workflows</li>
+<li>Advanced analytics or reporting</li>
+<li>Social or collaborative features</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="target-users" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="target-users"><span class="header-section-number">5.4</span> Target Users</h2>
+<ul>
+<li>Learners testing technical knowledge</li>
+<li>Internal educational or training use</li>
+<li>Early adopters comfortable with AI-assisted grading</li>
+</ul>
+<hr>
+</section>
+<section id="scope-knowledge-domains-initial" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="scope-knowledge-domains-initial"><span class="header-section-number">5.5</span> Scope: Knowledge Domains (Initial)</h2>
+<p>The system will support testing in the following areas: - Bash commands and scripting - R coding - Regular Expressions in the following environments * Base R functions, e.g.&nbsp;grep, grepl, etc * Calling grep from Bash - Excel formulas - Excel pivot tables - Excel charts - HTML - CSS</p>
+<p>Each domain may reuse shared infrastructure but can define domain-specific evaluation logic.</p>
+<hr>
+</section>
+<section id="functional-requirements" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="functional-requirements"><span class="header-section-number">5.6</span> Functional Requirements</h2>
+<section id="authentication" class="level3" data-number="5.6.1">
+<h3 data-number="5.6.1" class="anchored" data-anchor-id="authentication"><span class="header-section-number">5.6.1</span> Authentication</h3>
+<p>v0.0.1 supports <strong>modular authentication</strong>: the tech team can implement one or more of the following, independently. Implementations are described so that options can be added incrementally (e.g.&nbsp;email/password first, then OAuth).</p>
+<ul>
+<li><strong>Email/password (primary for v0.0.1)</strong>
+<ul>
+<li>Full <strong>email confirmation workflow</strong>: sign up → confirmation email → user confirms → sign in.<br>
+</li>
+<li>Session management and user records handled by <strong>Supabase</strong>.<br>
+</li>
+<li>Recommended to implement first; no third-party OAuth setup required.</li>
+</ul></li>
+<li><strong>Google OAuth (optional)</strong>
+<ul>
+<li>Sign in with Google via Supabase Auth.<br>
+</li>
+<li>Can be added after or alongside email/password; each provider is configured and implemented separately.</li>
+</ul></li>
+<li><strong>GitHub OAuth (optional)</strong>
+<ul>
+<li>Sign in with GitHub via Supabase Auth.<br>
+</li>
+<li>Can be added after or alongside email/password; each provider is configured and implemented separately.</li>
+</ul></li>
+</ul>
+<p>All auth options use the same Supabase Auth backend; the app treats authenticated users uniformly regardless of which provider they used to sign in.</p>
+<hr>
+</section>
+<section id="testing-flow" class="level3" data-number="5.6.2">
+<h3 data-number="5.6.2" class="anchored" data-anchor-id="testing-flow"><span class="header-section-number">5.6.2</span> Testing Flow</h3>
+<ul>
+<li>Users can:
+<ul>
+<li>Log in</li>
+<li>Select a test</li>
+<li>Answer questions</li>
+<li>Submit a test</li>
+<li>Receive scores and detailed feedback</li>
+</ul></li>
+<li>Tests may be:
+<ul>
+<li>Timed or untimed (configurable per test)</li>
+<li>Single-attempt or multi-attempt (configurable per test)</li>
+</ul></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="question-types-evaluation-modules" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="question-types-evaluation-modules"><span class="header-section-number">5.7</span> Question Types &amp; Evaluation Modules</h2>
+<p>Each question type is implemented as a <strong>separate module</strong> with: - A defined input schema - Evaluation logic - Feedback output</p>
+<section id="supported-question-types-v0.1" class="level3" data-number="5.7.1">
+<h3 data-number="5.7.1" class="anchored" data-anchor-id="supported-question-types-v0.1"><span class="header-section-number">5.7.1</span> Supported Question Types (v0.1)</h3>
+<ol type="1">
+<li><strong>Multiple Choice</strong>
+<ul>
+<li>Deterministic grading</li>
+</ul></li>
+<li><strong>Short Answer</strong>
+<ul>
+<li>AI-graded</li>
+<li>Compared against expected answer</li>
+<li>Deterministic scoring (see Section 10)</li>
+</ul></li>
+<li><strong>Long Answer</strong>
+<ul>
+<li>AI-graded</li>
+<li>Rubric- or expectation-based</li>
+<li>Deterministic scoring (see Section 10)</li>
+</ul></li>
+<li><strong>R Coding Questions</strong>
+<ul>
+<li>Expected answer provided as working R code</li>
+<li>System generates multiple test inputs</li>
+<li>Submitted code executed and outputs compared</li>
+<li>Discrepancies returned as structured feedback</li>
+</ul></li>
+<li><strong>Bash Commands</strong>
+<ul>
+<li>Similar to R coding questions</li>
+<li>Output comparison across generated inputs</li>
+</ul></li>
+<li><strong>Excel Formulas</strong>
+<ul>
+<li>Formula evaluated against generated datasets</li>
+<li>Output comparison and mismatch explanation</li>
+</ul></li>
+<li><strong>HTML Code</strong>
+<ul>
+<li>Structural and semantic comparison</li>
+<li>Optional rendering-based validation</li>
+</ul></li>
+<li><strong>CSS Code</strong>
+<ul>
+<li>Style rule comparison</li>
+<li>Optional rendering-based validation</li>
+</ul></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="system-architecture" class="level2" data-number="5.8">
+<h2 data-number="5.8" class="anchored" data-anchor-id="system-architecture"><span class="header-section-number">5.8</span> System Architecture</h2>
+<section id="frontend" class="level3" data-number="5.8.1">
+<h3 data-number="5.8.1" class="anchored" data-anchor-id="frontend"><span class="header-section-number">5.8.1</span> Frontend</h3>
+<ul>
+<li><strong>Next.js</strong> web application</li>
+<li>Component-based UI aligned with question modules</li>
+</ul>
+</section>
+<section id="backend-infrastructure" class="level3" data-number="5.8.2">
+<h3 data-number="5.8.2" class="anchored" data-anchor-id="backend-infrastructure"><span class="header-section-number">5.8.2</span> Backend &amp; Infrastructure</h3>
+<ul>
+<li><strong>Supabase</strong>
+<ul>
+<li>Authentication</li>
+<li>Database</li>
+</ul></li>
+<li><strong>Vercel</strong>
+<ul>
+<li>Hosting</li>
+<li>Serverless functions</li>
+</ul></li>
+<li>Secure execution environment for code-based questions</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="modularity-ai-assisted-development" class="level2" data-number="5.9">
+<h2 data-number="5.9" class="anchored" data-anchor-id="modularity-ai-assisted-development"><span class="header-section-number">5.9</span> Modularity &amp; AI-Assisted Development</h2>
+<p>The system is decomposed into small, testable components:</p>
+<section id="core-modules" class="level3" data-number="5.9.1">
+<h3 data-number="5.9.1" class="anchored" data-anchor-id="core-modules"><span class="header-section-number">5.9.1</span> Core Modules</h3>
+<ul>
+<li><strong>Auth Module</strong>
+<ul>
+<li>Email/password with email confirmation via Supabase (primary); optionally Google and/or GitHub OAuth via Supabase. Each auth method is implemented and configured independently so the team can ship email/password first and add OAuth later.</li>
+<li>Exposes: <code>getUser()</code>, <code>requireAuth()</code></li>
+</ul></li>
+<li><strong>Test Engine</strong>
+<ul>
+<li>Manages test sessions and submissions</li>
+<li>Exposes: <code>startTest()</code>, <code>submitTest()</code></li>
+</ul></li>
+<li><strong>Question Registry</strong>
+<ul>
+<li>Maps question types to evaluator modules</li>
+<li>Exposes: <code>getEvaluator(type)</code></li>
+</ul></li>
+<li><strong>Evaluation Modules (one per question type)</strong>
+<ul>
+<li>Input: question definition + user answer</li>
+<li>Output: score, pass/fail, feedback</li>
+</ul></li>
+<li><strong>Execution Sandbox</strong>
+<ul>
+<li>Secure runtime for executing user-submitted code</li>
+<li>Exposes: <code>run(code, inputs)</code></li>
+</ul></li>
+<li><strong>Feedback Generator</strong>
+<ul>
+<li>Normalizes evaluator output into user-facing explanations</li>
+</ul></li>
+</ul>
+<p>Each module: - Can be designed independently - Can be tested in isolation - Is integrated via clearly defined interfaces</p>
+<hr>
+</section>
+</section>
+<section id="high-level-system-flow" class="level2" data-number="5.10">
+<h2 data-number="5.10" class="anchored" data-anchor-id="high-level-system-flow"><span class="header-section-number">5.10</span> High-Level System Flow</h2>
+<pre><code>User
+ → Next.js UI
+   → Auth Module (Supabase)
+   → Test Engine
+     → Question Registry
+       → Evaluator Module
+         → (optional) Execution Sandbox
+     → Feedback Generator
+ → UI renders results</code></pre>
+<hr>
+</section>
+<section id="scoring-evaluation-rules" class="level2" data-number="5.11">
+<h2 data-number="5.11" class="anchored" data-anchor-id="scoring-evaluation-rules"><span class="header-section-number">5.11</span> Scoring &amp; Evaluation Rules</h2>
+<section id="deterministic-ai-scoring" class="level3" data-number="5.11.1">
+<h3 data-number="5.11.1" class="anchored" data-anchor-id="deterministic-ai-scoring"><span class="header-section-number">5.11.1</span> Deterministic AI Scoring</h3>
+<p>Deterministic scoring means: - Given the same question, expected answer, and user response - The system always produces the same score and feedback - No randomness, temperature, or probabilistic variation is allowed in grading</p>
+<hr>
+</section>
+</section>
+<section id="sandbox-isolation-minimum-viable-level" class="level2" data-number="5.12">
+<h2 data-number="5.12" class="anchored" data-anchor-id="sandbox-isolation-minimum-viable-level"><span class="header-section-number">5.12</span> Sandbox Isolation (Minimum Viable Level)</h2>
+<p>Minimum viable sandbox isolation level refers to the lowest acceptable security boundary that: - Prevents user-submitted code from accessing: - Host filesystem - Network - Environment secrets - Enforces: - CPU and memory limits - Execution timeouts - Allows safe execution of R, Bash, or formula logic</p>
+<p>TODO: Decide on sandbox implementation strategy (e.g., container-based vs WASM vs managed service).</p>
+<hr>
+</section>
+<section id="database-schema-initial" class="level2" data-number="5.13">
+<h2 data-number="5.13" class="anchored" data-anchor-id="database-schema-initial"><span class="header-section-number">5.13</span> Database Schema (Initial)</h2>
+<section id="users" class="level3" data-number="5.13.1">
+<h3 data-number="5.13.1" class="anchored" data-anchor-id="users"><span class="header-section-number">5.13.1</span> users</h3>
+<ul>
+<li>id (uuid, PK)</li>
+<li>email</li>
+<li>name</li>
+<li>created_at</li>
+</ul>
+</section>
+<section id="tests" class="level3" data-number="5.13.2">
+<h3 data-number="5.13.2" class="anchored" data-anchor-id="tests"><span class="header-section-number">5.13.2</span> tests</h3>
+<ul>
+<li>id (uuid, PK)</li>
+<li>title</li>
+<li>description</li>
+<li>is_timed (boolean)</li>
+<li>time_limit_seconds (nullable)</li>
+<li>allow_multiple_attempts (boolean)</li>
+<li>created_at</li>
+</ul>
+</section>
+<section id="questions" class="level3" data-number="5.13.3">
+<h3 data-number="5.13.3" class="anchored" data-anchor-id="questions"><span class="header-section-number">5.13.3</span> questions</h3>
+<ul>
+<li>id (uuid, PK)</li>
+<li>test_id (FK)</li>
+<li>type (enum)</li>
+<li>prompt</li>
+<li>config_json (expected answer, rubric, etc.)</li>
+</ul>
+</section>
+<section id="test_sessions" class="level3" data-number="5.13.4">
+<h3 data-number="5.13.4" class="anchored" data-anchor-id="test_sessions"><span class="header-section-number">5.13.4</span> test_sessions</h3>
+<ul>
+<li>id (uuid, PK)</li>
+<li>user_id (FK)</li>
+<li>test_id (FK)</li>
+<li>attempt_number</li>
+<li>started_at</li>
+<li>submitted_at</li>
+<li>score</li>
+</ul>
+</section>
+<section id="answers" class="level3" data-number="5.13.5">
+<h3 data-number="5.13.5" class="anchored" data-anchor-id="answers"><span class="header-section-number">5.13.5</span> answers</h3>
+<ul>
+<li>id (uuid, PK)</li>
+<li>session_id (FK)</li>
+<li>question_id (FK)</li>
+<li>answer_text</li>
+<li>evaluation_json</li>
+<li>score</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="user-stories-v0.1" class="level2" data-number="5.14">
+<h2 data-number="5.14" class="anchored" data-anchor-id="user-stories-v0.1"><span class="header-section-number">5.14</span> User Stories (v0.1)</h2>
+<section id="authentication-1" class="level3" data-number="5.14.1">
+<h3 data-number="5.14.1" class="anchored" data-anchor-id="authentication-1"><span class="header-section-number">5.14.1</span> Authentication</h3>
+<ul>
+<li>As a user, I want to sign up with email and password and confirm my email before signing in.</li>
+<li>As a user, I want to sign in with email/password (and optionally with Google or GitHub, if the team enables those providers).</li>
+<li>As a user, I want my test history associated with my account.</li>
+</ul>
+</section>
+<section id="test-taking" class="level3" data-number="5.14.2">
+<h3 data-number="5.14.2" class="anchored" data-anchor-id="test-taking"><span class="header-section-number">5.14.2</span> Test Taking</h3>
+<ul>
+<li>As a user, I want to take timed or untimed tests.</li>
+<li>As a user, I want to retry tests when allowed.</li>
+<li>As a user, I want clear feedback explaining incorrect answers.</li>
+</ul>
+</section>
+<section id="administration" class="level3" data-number="5.14.3">
+<h3 data-number="5.14.3" class="anchored" data-anchor-id="administration"><span class="header-section-number">5.14.3</span> Administration</h3>
+<ul>
+<li>As an admin, I want to define question types and expected answers.</li>
+<li>As an admin, I want to configure test timing and attempts.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="open-items-todos" class="level2" data-number="5.15">
+<h2 data-number="5.15" class="anchored" data-anchor-id="open-items-todos"><span class="header-section-number">5.15</span> Open Items / TODOs</h2>
+<p>TODO: Define API contracts for all core modules TODO: Draft example question configuration JSON per question type TODO: Specify sandbox security constraints in detail TODO: Define evaluator output schema (score, feedback, diagnostics) TODO: Decide on logging and error-handling strategy TODO: Define initial test authoring workflow (admin-only vs UI-based)</p>
+<hr>
+
+
+</section>
+
+</main> <!-- /main -->
+<style>
+  .collapse-section-buttons { margin-bottom: 1em; }
+  .collapse-section-buttons button { margin-right: 0.5em; }
+  details.collapsible-section { margin-top: 0.5em; }
+  details.collapsible-section > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.25em; }
+  details.collapsible-section > summary::-webkit-details-marker { display: none; }
+  details.collapsible-section > summary::before { content: "▸"; display: inline-block; transition: transform 0.2s; }
+  details.collapsible-section[open] > summary::before { transform: rotate(90deg); }
+  details.collapsible-section .section-content { margin-left: 1em; margin-top: 0.25em; }
+</style>
+<script>
+(function() {
+  function initCollapsibleSections() {
+    const main = document.getElementById("quarto-document-content");
+    if (!main) return;
+
+    function wrapSection(section) {
+      const id = section.id;
+      const heading = section.querySelector("h2, h3, h4");
+      if (!heading) return;
+
+      const levelClass = section.classList.contains("level4") ? "level4" : section.classList.contains("level3") ? "level3" : "level2";
+      const details = document.createElement("details");
+      details.className = "collapsible-section " + levelClass;
+      if (id) details.id = id;
+      details.open = true;
+
+      const summary = document.createElement("summary");
+      summary.appendChild(heading);
+
+      const content = document.createElement("div");
+      content.className = "section-content";
+      while (section.childNodes.length > 0) {
+        const child = section.childNodes[0];
+        if (child === heading) {
+          section.removeChild(child);
+          continue;
+        }
+        content.appendChild(section.childNodes[0]);
+      }
+
+      details.appendChild(summary);
+      details.appendChild(content);
+      section.parentNode.replaceChild(details, section);
+    }
+
+    // Process innermost sections first (level4, then level3, then level2)
+    [].slice.call(main.querySelectorAll("section.level4")).forEach(wrapSection);
+    [].slice.call(main.querySelectorAll("section.level3")).forEach(wrapSection);
+    [].slice.call(main.querySelectorAll("section.level2")).forEach(wrapSection);
+
+    // Insert Expand all / Collapse all buttons before first collapsible section
+    const firstDetails = main.querySelector("details.collapsible-section");
+    if (firstDetails) {
+      const btnWrap = document.createElement("div");
+      btnWrap.className = "collapse-section-buttons";
+      btnWrap.innerHTML = "<button type=\"button\" class=\"btn btn-sm btn-outline-secondary\" id=\"expand-all-sections\">Expand all</button> <button type=\"button\" class=\"btn btn-sm btn-outline-secondary\" id=\"collapse-all-sections\">Collapse all</button>";
+      main.insertBefore(btnWrap, firstDetails);
+
+      document.getElementById("expand-all-sections").onclick = function() {
+        main.querySelectorAll("details.collapsible-section").forEach(function(d) { d.open = true; });
+      };
+      document.getElementById("collapse-all-sections").onclick = function() {
+        main.querySelectorAll("details.collapsible-section").forEach(function(d) { d.open = false; });
+      };
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCollapsibleSections);
+  } else {
+    initCollapsibleSections();
+  }
+})();
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./QUARTO-DOC-GUIDE.html" class="pagination-link" aria-label="QUARTO-DOC-GUIDE.qmd">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">QUARTO-DOC-GUIDE.qmd</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./PRD-0.0.1-v002.html" class="pagination-link" aria-label="PRD-0.0.1-v002.qmd">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v002.qmd</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

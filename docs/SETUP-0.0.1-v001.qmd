@@ -1,0 +1,572 @@
+# SETUP-0.0.1-v001.qmd
+
+This document describes how to set up and run the Tutorial & Testing System MVP locally (Ubuntu KDE) and deploy to Vercel and Supabase. It is versioned for **SPEC 0.0.1** (see DOC-GUIDE-v001.qmd).
+
+**Configuration preference:** Use the **CLI as the primary way** to configure and set up the app (Supabase CLI for auth config, migrations, env; Vercel CLI for deploy and env). Where the CLI cannot perform a step (e.g. creating a hosted Supabase project or enabling auth providers on hosted), the document gives **manual/Dashboard** instructions as the alternative.
+
+You will need: a **Supabase** account (for auth and optional storage) and, for local code-question grading, **Bash** (normally available on Ubuntu). For **email/password** auth (recommended first), no extra accounts are needed. For **optional** Google or GitHub OAuth, you will need a Google Cloud project and/or a GitHub account to create OAuth apps.
+
+# Setup and run
+
+## Quick setup (after a new release) {#sec-quick-setup}
+
+If you are already developing the system and have your environment set up, use this checklist when you pull or receive a new release. You do **not** need to reinstall Node, Docker, or the Supabase CLI unless a release explicitly requires a newer version.
+
+1. **Get the latest code** — e.g. `git pull`.
+2. **Install or update dependencies** — `npm install`.
+3. **Local Supabase** — If using local Supabase, run `supabase start` (and `supabase stop` when done).
+4. **Database**
+   - **Local Supabase:** If the release includes new migrations or seed changes, run `supabase db reset` to apply migrations and re-run the seed (this wipes local DB data). To apply only new migrations without wiping, use `supabase db push`.
+   - **Hosted Supabase:** When there are new migrations, run `supabase db push` from the project root (with the project linked).
+5. **Environment** — Ensure `.env.local` exists and has any new variables; compare with `.env.example` and add or update keys as needed (see @sec-environment-variables).
+6. **Start the dev server** — `npm run dev`.
+7. Open [http://localhost:3000](http://localhost:3000).
+
+For full first-time setup or when you change machine or stack, see the sections below.
+
+## Installing required software (Ubuntu / Plasma KDE) {#sec-installing-software}
+
+Install the following on your machine. These steps assume Ubuntu (or a similar Debian-based distribution) with Plasma KDE.
+
+### Node.js 20+ and npm {#sec-nodejs}
+
+Supabase CLI and the app require Node.js 20 or later. Use the NodeSource repository:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -v   # should be v20.x or higher
+npm --version
+```
+
+Alternatively, use [nvm](https://github.com/nvm-sh/nvm): `nvm install 20 && nvm use 20`.
+
+### Git {#sec-git}
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git
+git --version
+```
+
+### Docker (optional, for local Supabase stack) {#sec-docker}
+
+Only needed if you run Supabase **locally** with `supabase start` (see @sec-running-supabase-locally). For using a **hosted** Supabase project (recommended for this app), you can skip Docker.
+
+**Install Docker Engine on Ubuntu**
+
+Official method using Docker’s apt repository:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+```
+
+Allow your user to run Docker without `sudo` (optional but convenient):
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Log out and back in (or run `newgrp docker`) so the group change takes effect.
+
+Verify Docker:
+
+```bash
+docker run hello-world
+```
+
+If that runs successfully, Docker is installed. For more options (e.g. other distros), see [Install Docker Engine](https://docs.docker.com/engine/install/).
+
+### Supabase CLI {#sec-supabase-cli}
+
+**Global npm install is not supported.** The Supabase CLI blocks `npm install -g supabase` by design. Use one of the methods below.
+
+**Option A — Linux binary (recommended on Ubuntu)**
+
+Download the latest binary and put it on your `PATH`:
+
+```bash
+curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
+sudo mv supabase /usr/local/bin/
+supabase --version
+```
+
+For ARM64 (e.g. some ARM boards), use `supabase_linux_arm64.tar.gz` from the [releases page](https://github.com/supabase/cli/releases) instead.
+
+**Option B — Homebrew (if you use Homebrew on Linux)**
+
+```bash
+brew install supabase/tap/supabase
+supabase --version
+```
+
+If you don’t have Homebrew: [Install Homebrew](https://docs.brew.sh/Homebrew-on-Linux), then run the command above.
+
+**Option C — npx (no global install)**
+
+From the project directory (or any directory) you can run the CLI without installing it:
+
+```bash
+npx supabase --version
+```
+
+Use `npx supabase` instead of `supabase` for every command (e.g. `npx supabase login`, `npx supabase link --project-ref XXX`, `npx supabase db push`).
+
+You will use the CLI to log in, link a hosted project, and push migrations. A [personal access token](https://supabase.com/dashboard/account/tokens) is required for `supabase login` (create one in the Dashboard once).
+
+### Vercel CLI (optional, for deploy from the terminal) {#sec-vercel-cli}
+
+Only needed if you want to deploy and manage environment variables from the command line instead of the Vercel website.
+
+**Option A — Homebrew (if you use Homebrew)**
+
+```bash
+brew install vercel-cli
+vercel --version
+```
+
+Same approach as Supabase CLI if you installed that via Homebrew (@sec-supabase-cli, Option B). The formula is maintained in Homebrew and may lag the npm release slightly.
+
+**Option B — npm (global)**
+
+```bash
+npm install -g vercel
+vercel --version
+```
+
+Vercel still supports global npm install (unlike Supabase CLI). Use this if you don’t use Homebrew.
+
+### Running Supabase locally (optional) {#sec-running-supabase-locally}
+
+If you want a **fully local** Supabase backend (no hosted project), you need **Docker** (@sec-docker) and the **Supabase CLI** (@sec-supabase-cli). The CLI does not “install” Supabase as a system service; it starts the Supabase stack (Postgres, Auth, Studio, etc.) in Docker containers.
+
+**Start the local stack**
+
+From your project root (where `supabase/` lives, or where you will run `supabase init`):
+
+```bash
+# Create supabase/ and config if you don’t have them yet
+supabase init
+
+# Start all services (Postgres, Auth, Studio, Storage, etc.). First run downloads images.
+supabase start
+```
+
+This can take a few minutes the first time. When it finishes, the CLI prints **API URL**, **anon key**, **Studio URL**, and other values.
+
+**Use local credentials in the app**
+
+Export env vars or put them in `.env.local`:
+
+```bash
+supabase status -o env
+```
+
+Copy the `API URL` and `anon key` (or the whole block) into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Studio is usually at `http://127.0.0.1:54323` (see `supabase status`).
+
+**Apply migrations**
+
+```bash
+supabase db reset
+```
+
+This applies all migrations in `supabase/migrations/` to the local database.
+
+**Email/password with email confirmation (local Auth) — implement first**
+
+The **CLI is the primary way** to configure local auth: `supabase init` creates `supabase/config.toml`, which controls all auth behavior. There are no CLI subcommands to toggle individual auth options; you edit `config.toml` and restart with `supabase stop` then `supabase start`.
+
+1. **Enable email/password and confirmation (CLI config):**  
+   Edit `supabase/config.toml`:
+   - Under `[auth]`: ensure `enable_signup = true`.
+   - Under `[auth.email]`: set `enable_signup = true` and **`enable_confirmations = true`** (default is `false`; this is required for the full confirmation workflow).
+   - Optional: under `[auth.email.template.confirmation]` you can set `subject` and `content_path` to customize the confirmation email.
+
+2. **Where confirmation emails go (local):**  
+   When you run Supabase locally, the app still “sends” auth-related emails (sign-up confirmation, password reset, magic links, etc.). Instead of delivering them to real mailboxes, the local stack uses a **mail catcher**: a tool that intercepts those messages so you can test the full flow without configuring real SMTP or hitting real users’ inboxes. Supabase used to ship **Inbucket** for this; it has been replaced by **Mailpit**. Both are local email-testing tools that provide a web UI where you can open each captured message and use the links or codes inside (e.g. to confirm an account). The local stack now uses Mailpit for that. In `config.toml`, the email testing server is still configured under the **`[inbucket]`** section—Supabase kept the same section name for backward compatibility, so existing configs and CLI tooling continue to work. After `supabase start`, run:
+   ```bash
+   supabase status
+   ```
+   The CLI output lists **Mailpit** and its URL (e.g. `http://127.0.0.1:54324`). Open that URL in a browser to see all captured emails; use the confirmation link (or OTP) from a message to complete sign-up or reset flows. For production-style SMTP instead (real delivery), configure `[auth.email.smtp]` in `config.toml` (manual step; see [Supabase Auth config](https://supabase.com/docs/guides/cli/config)).
+
+3. **Apply and restart:**  
+   `supabase stop` then `supabase start` so auth changes take effect.
+
+4. **App implementation:**  
+   No OAuth app or external credentials are needed. Implement sign-up and sign-in with `supabase.auth.signUp()` and `supabase.auth.signInWithPassword()`; use the confirmation link or token from the email (or from Mailpit, which replaced Inbucket for local dev, when running locally) before allowing full access.
+
+This option can be implemented and tested on its own before adding any OAuth provider.
+
+**GitHub OAuth (local Auth) — optional; implement individually**
+
+The CLI helps for local OAuth in two ways: (1) the same `supabase/config.toml` (from `supabase init`) is where you enable and configure GitHub; (2) `supabase status` gives you the API URL, so the callback URL is that base + `/auth/v1/callback`. There is no CLI command (e.g. `supabase auth enable github`); you edit `config.toml` and restart. For **hosted** projects, OAuth is configured only in the Dashboard. Implement this **only if** you want GitHub sign-in in addition to (or instead of) email/password.
+
+1. **Get your local Auth callback URL** (CLI):
+
+   ```bash
+   supabase status
+   ```
+
+   Note the **API URL** (e.g. `http://127.0.0.1:54321`). The callback URL is that base + `/auth/v1/callback`, e.g. `http://127.0.0.1:54321/auth/v1/callback`.
+
+2. **Create a GitHub OAuth App** at [GitHub → Settings → Developer settings → OAuth Apps](https://github.com/settings/developers):
+   - Homepage URL: `http://127.0.0.1:3000` (or your app URL)
+   - Authorization callback URL: the value from step 1 (e.g. `http://127.0.0.1:54321/auth/v1/callback`)
+   - Copy the Client ID and generate a Client Secret.
+
+3. **Configure in `supabase/config.toml`** under `[auth.external.github]`:
+
+   ```toml
+   [auth.external.github]
+   enabled = true
+   client_id = "env(GITHUB_CLIENT_ID)"
+   secret = "env(GITHUB_SECRET)"
+   ```
+
+   In your project root (or in `supabase/.env`), set `GITHUB_CLIENT_ID` and `GITHUB_SECRET` so the config can read them. Do not commit secrets to git.
+
+4. Restart the stack if it was already running: `supabase stop` then `supabase start`.
+
+**Google OAuth (local Auth) — optional; implement individually**
+
+Same idea as GitHub: no CLI command; use `config.toml` and a Google OAuth client. Implement this **only if** you want Google sign-in in addition to (or instead of) email/password.
+
+1. **Callback URL** — same as above: from `supabase status`, use API URL + `/auth/v1/callback`.
+
+2. **Create a Google OAuth client** in [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (APIs & Services → Credentials → Create Credentials → OAuth client ID). Use application type “Web application”, add the callback URL from step 1 to “Authorized redirect URIs”, and note the Client ID and Client Secret.
+
+3. **Configure in `supabase/config.toml`** under `[auth.external.google]`:
+
+   ```toml
+   [auth.external.google]
+   enabled = true
+   client_id = "env(GOOGLE_CLIENT_ID)"
+   secret = "env(GOOGLE_CLIENT_SECRET)"
+   ```
+
+   Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the environment (or `supabase/.env`). Restart with `supabase stop` then `supabase start`.
+
+**Reference:** [Supabase: Managing config and secrets](https://supabase.com/docs/guides/local-development/managing-config).
+
+**Stop the stack**
+
+```bash
+supabase stop
+```
+
+Use `supabase stop --no-backup` to stop the stack and **discard** local database and other local data (no backup is kept). If you are **not** using the local Supabase stack and instead use a **hosted** Supabase project for day-to-day development, skip @sec-running-supabase-locally and go to @sec-supabase-project-setup to link and use your hosted project.
+
+---
+
+## Local development (Ubuntu KDE) {#sec-local-development}
+
+### Clone and install {#sec-clone-install}
+
+```bash
+cd /path/to/yrS3
+npm install
+```
+
+### Environment variables {#sec-environment-variables}
+
+Copy the example env file and fill in your Supabase values:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local`:
+
+- `NEXT_PUBLIC_SUPABASE_URL` — your Supabase project URL (see @sec-supabase-project-setup)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anon key (see @sec-supabase-project-setup)
+
+Leave `QUESTIONS_STORAGE` unset so the app uses the **filesystem** for questions (recommended for local dev).
+
+Optional:
+
+- `QUESTIONS_ROOT` — directory for question folders (default: `./questions`)
+- `QUESTION_SETS_ROOT` — directory for file-based question sets (default: `./question-sets`). See QUESTION-SET-FORMAT-0.0.2.qmd.
+- `QUESTION_SYNC_OWNER_ID` — optional when using the seeded default question owner (e.g. after `supabase db reset`); if set, overrides the default. For out-of-the-box FS question import, run `supabase db reset` and copy `supabase status -o env` into `.env.local`. Default question owner for local login: email `default-question-owner@system.local`, password `default-question-owner-password`. See SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd.
+- `QUESTIONS_FS_BACKUP_ROOT` — when `QUESTIONS_STORAGE=supabase`, optional local path to mirror each version for backup.
+
+### Supabase project setup (CLI-first where possible) {#sec-supabase-project-setup}
+
+If you prefer a **fully local** backend (including auth), see @sec-running-supabase-locally. Otherwise, you need a **hosted** Supabase project for auth and (optionally) question storage. The CLI cannot create a new project; that is done once in the Dashboard. After that, use the CLI for linking and migrations. For **separate dev, test, and production** environments using multiple hosted projects (no Docker), see @sec-separate-environments.
+
+#### One-time: create project and auth settings (Dashboard — no CLI)
+
+For a **hosted** Supabase project, the CLI **cannot** create the project or configure auth (providers, email confirmation, redirect URLs). Those steps are done only in the [Supabase Dashboard](https://supabase.com/dashboard). Use the CLI for everything else (link, migrations, `supabase status -o env`).
+
+Auth is **modular**: implement email/password first (no OAuth setup), then add Google and/or GitHub only if needed. Each provider is configured separately.
+
+1. Create a project: Dashboard → **New project**. Note the **project ref** (e.g. `abcdefghijklmnop`) from the project URL or settings.
+2. Get URL and anon key: **Project Settings** → **API** → **Project URL** and **anon** (public) key. Put these in `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.  
+   Project URL format: `https://<project-ref>.supabase.co`.
+3. **Email/password (implement first):** **Authentication** → **Providers** → **Email** → turn **Enable Email provider** on and, for the full confirmation workflow, turn **Confirm email** on (this is the hosted equivalent of `auth.email.enable_confirmations = true` in local `config.toml`). Under **Authentication** → **Email Templates**, configure the confirmation email if desired. **Authentication** → **URL Configuration** → **Site URL** = `http://localhost:3000`; **Redirect URLs** add `http://localhost:3000/auth/callback` (and, if you use email confirmation links that redirect back, e.g. `http://localhost:3000/auth/confirm` or your app’s confirmation route).
+4. **Google OAuth (optional):** **Authentication** → **Providers** → **Google** → enable and set your Google OAuth client id/secret. Only if implementing Google sign-in.
+5. **GitHub OAuth (optional):** **Authentication** → **Providers** → **GitHub** → enable and set your GitHub OAuth App client id/secret. Only if implementing GitHub sign-in.
+
+#### Link project and push migrations (CLI)
+
+From the repo root:
+
+```bash
+# Log in (you will be prompted for a personal access token; create one at https://supabase.com/dashboard/account/tokens)
+supabase login
+
+# Link this repo to your hosted project (use the project ref from the Dashboard)
+supabase link --project-ref YOUR_PROJECT_REF
+# When prompted, you can enter your database password or leave blank to skip DB validation; linking still works for db push.
+
+# Push migrations so tables and storage bucket exist
+supabase db push
+```
+
+If you prefer not to use the CLI, run the SQL in `supabase/migrations/00001_initial.sql` manually in the Dashboard **SQL Editor**.
+
+#### (Any user can create questions; no author setup required)
+
+
+(Apply migrations via Dashboard SQL Editor or `supabase db push`; no author table.)
+
+For a **fully local** Supabase backend instead of a hosted project, see @sec-running-supabase-locally.
+
+### Create questions directory (filesystem mode) {#sec-questions-directory}
+
+```bash
+mkdir -p questions
+```
+
+Add at least one question so tests have content. Example for a multiple-choice question:
+
+**questions/q-mult-001/meta.yaml**
+
+```yaml
+id: q-mult-001
+type: multiple_choice
+version: "1"
+title: Sample multiple choice
+```
+
+**questions/q-mult-001/prompt.md**
+
+```markdown
+What is 2 + 2?
+```
+
+**questions/q-mult-001/options.yaml**
+
+```yaml
+- id: a
+  text: "3"
+- id: b
+  text: "4"
+  correct: true
+- id: c
+  text: "5"
+```
+
+### Question sets
+
+Question sets are stored in the database (and optionally on the filesystem). After running migrations, a seed may create one sample set; or create sets via the UI at **Question sets** → **Create question set**, or add folders under `question-sets/` with a `set.yaml` per set (see QUESTION-SET-FORMAT-0.0.2.qmd).
+
+### Run the app {#sec-run-the-app}
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Sign in (email/password after confirming email, or with Google/GitHub if you enabled those providers), then:
+
+- **Question sets**: use "Question sets" to list sets, then "Take as test" on a set to answer and submit. Create sets via "Create question set".
+- **Questions**: use "My questions" or "Upload questions (files)" to create and manage questions. Any user can propose a new version; the version is pending until the question owner approves it.
+
+---
+
+## Deploy to Vercel and Supabase {#sec-deploy}
+
+### Supabase (production)
+
+Auth redirects must be updated for your production URL. This is not configurable via the Supabase CLI; use the **Dashboard** once:
+
+1. **Authentication** → **URL Configuration** → **Site URL**: set to your Vercel URL (e.g. `https://your-app.vercel.app`).
+2. **Redirect URLs**: add `https://your-app.vercel.app/auth/callback`.
+3. Ensure migrations are applied (you already ran `supabase db push` in @sec-supabase-project-setup; the same linked project is used for production).
+
+### Vercel (CLI or Dashboard)
+
+You can deploy and set environment variables either with the **Vercel CLI** or the Vercel website.
+
+#### Option A — Vercel CLI
+
+From the repo root:
+
+```bash
+# Log in (opens browser once)
+vercel login
+
+# Link to an existing Vercel project (or run `vercel` without link to create a new project on first deploy)
+vercel link
+# When prompted, choose your scope and select an existing project, or cancel and run `vercel` to create one.
+
+# Add environment variables (repeat for each; use production, preview, or development as needed)
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+vercel env add QUESTIONS_STORAGE production
+# When prompted for value, enter: supabase
+
+# Optional
+vercel env add QUESTIONS_BUCKET production
+vercel env add QUESTION_SETS_ROOT production
+vercel env add NEXT_PUBLIC_APP_URL production
+```
+
+Set values when prompted (for secrets, paste and press Enter). For `QUESTIONS_STORAGE` use the value `supabase` so questions are stored in Supabase Storage on Vercel.
+
+Deploy:
+
+```bash
+vercel --prod
+```
+
+Subsequent deploys: `vercel --prod` or push to your linked Git branch for automatic deploys.
+
+To pull env vars into a local `.env.local` (e.g. for testing production config locally):
+
+```bash
+vercel env pull .env.local
+```
+
+#### Option B — Vercel Dashboard
+
+1. Push the repo to GitHub and import the project at [Vercel](https://vercel.com) → **Add New** → **Project**.
+2. **Project** → **Settings** → **Environment Variables**. Add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `QUESTIONS_STORAGE` = `supabase`
+   - Optionally `QUESTIONS_BUCKET`, `QUESTION_SETS_ROOT`, `QUESTION_SYNC_OWNER_ID`, `QUESTIONS_FS_BACKUP_ROOT`, `NEXT_PUBLIC_APP_URL`
+3. Deploy (automatic on push, or **Deployments** → **Redeploy**).
+
+### Questions on Vercel
+
+With `QUESTIONS_STORAGE=supabase`, question files are read/written to the Supabase Storage bucket created by the migration. Users upload via the app; the app does not use a local `questions` folder in production.
+
+### Separate dev, test, and production environments (hosted Supabase) {#sec-separate-environments}
+
+When you are **not** using Docker and local Supabase, you can still keep **dev**, **test** (staging), and **production** separate by using multiple **hosted** Supabase projects and Vercel environments.
+
+**Overview**
+
+- **Dev** — Local app (`npm run dev`) and/or Vercel “Development” env; points at a **dev** Supabase project.
+- **Test** — Preview deployments (e.g. PRs, `vercel` without `--prod`); points at a **test** Supabase project.
+- **Production** — Live app (`vercel --prod` or main branch); points at a **production** Supabase project.
+
+Each Supabase project has its own database, auth users, and storage. That way test and prod data stay isolated.
+
+**1. Create three Supabase projects**
+
+In the [Supabase Dashboard](https://supabase.com/dashboard), create three projects (e.g. `yrS3-dev`, `yrS3-test`, `yrS3-prod`). For each:
+
+- Note the **project ref** and the **Project URL** and **anon key** (Project Settings → API).
+- Enable **Email** (and optionally **Google** and/or **GitHub**) under Authentication → Providers per environment; each auth option can be enabled independently.
+- Set **Authentication** → **URL Configuration**:
+  - **Dev project:** Site URL `http://localhost:3000`; Redirect URLs: `http://localhost:3000/auth/callback`.
+  - **Test project:** Site URL your Vercel preview URL (e.g. `https://yrS3-*.vercel.app` or a fixed preview domain); Redirect URLs: `https://*.vercel.app/auth/callback` or your exact preview URL plus `/auth/callback`.
+  - **Production project:** Site URL your production URL; Redirect URLs: `https://your-app.vercel.app/auth/callback`.
+
+**2. Push migrations to each project**
+
+From the repo root, link and push to each project in turn:
+
+```bash
+supabase login
+supabase link --project-ref DEV_PROJECT_REF
+supabase db push
+supabase link --project-ref TEST_PROJECT_REF
+supabase db push
+supabase link --project-ref PROD_PROJECT_REF
+supabase db push
+```
+
+Your local repo is “linked” to whichever project you ran last; that’s fine. Each project now has the same schema.
+
+**3. Local development (dev)**
+
+In `.env.local` use the **dev** Supabase project URL and anon key. Run `npm run dev`. Sign-in and data stay in the dev project.
+
+**4. Vercel environments (test and production)**
+
+In Vercel, configure environment variables **per environment** (Production, Preview, Development):
+
+- **Production:**  
+  `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` = **production** Supabase project.  
+  `QUESTIONS_STORAGE` = `supabase`, and optionally `NEXT_PUBLIC_APP_URL` = production URL.
+
+- **Preview (test):**  
+  Same variables but with the **test** Supabase project URL and anon key.  
+  `NEXT_PUBLIC_APP_URL` = your preview base URL if needed.
+
+- **Development (optional):**  
+  Can point at the **dev** Supabase project for Vercel “dev” deployments.
+
+**CLI:** Add vars per environment:
+
+```bash
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+vercel env add NEXT_PUBLIC_SUPABASE_URL preview
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview
+# ... same for development if you use it
+```
+
+**Dashboard:** Project → Settings → Environment Variables → for each variable choose Production, Preview, and/or Development and set the value for each.
+
+**5. (Optional) Verify question permissions**
+
+Any authenticated user can create questions and propose new versions. No separate role or table is required.
+
+**Summary**
+
+| Environment | App runs on        | Supabase project | Vercel env   |
+|-------------|--------------------|------------------|--------------|
+| Dev        | localhost          | dev              | —            |
+| Test       | Vercel preview URL | test             | Preview      |
+| Production | Vercel prod URL    | production       | Production   |
+
+---
+
+## Summary of environment variables {#sec-env-vars}
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | — | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | — | Supabase anon key |
+| `QUESTIONS_STORAGE` | No | (filesystem) | Set to `supabase` for Vercel |
+| `QUESTIONS_ROOT` | No | `./questions` | Local path for question folders |
+| `QUESTIONS_BUCKET` | No | `questions` | Supabase Storage bucket name |
+| `QUESTION_SETS_ROOT` | No | `./question-sets` | Local path for file-based question sets (set.yaml per folder) |
+| `QUESTION_SYNC_OWNER_ID` | No | (seeded default) | When using FS for questions: UUID of user for FS-only import. Optional after `supabase db reset` (seed creates default question owner). If set, overrides the default. See SPEC-DB-FS-QUESTION-SYNC. |
+| `QUESTIONS_FS_BACKUP_ROOT` | No | — | When `QUESTIONS_STORAGE=supabase`: local path to mirror each question version for backup (content + db_meta.yaml). |
+| `NEXT_PUBLIC_APP_URL` | No | — | App URL for redirects |
+| `LOG_FILE_PATH` | No | `logs/app.log` | System log file path (SPEC 0.0.5). |
+| `SYSTEM_MESSAGE_STORE_SIZE` | No | 1000 | Max system messages kept in memory; older messages load from log file. |
+| `SYSTEM_MESSAGE_LOAD_OLDER_BATCH` | No | 100 | Number of older messages loaded per "Load older" on /logs page. |
+| `NEXT_PUBLIC_LOGS_REFRESH_INTERVAL_MS` | No | 4000 | System log page auto-refresh interval (ms). |
+
+See `.env.example` in the repo root for full comments on all options.
+
+---
+
+## Related documents {#sec-related-docs}
+
+- **DOC-GUIDE-v001.qmd** — Documentation and versioning
+- **SPEC-0.0.1.qmd** — MVP scope and behaviour
+- **SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd** — DB–FS question sync, dual-write, and backup
+- **QUESTION-FORMAT-0.0.1.qmd** — Question folder layout, validation rules, and optional db_meta.yaml

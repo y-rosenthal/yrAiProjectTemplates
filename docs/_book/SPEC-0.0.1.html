@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Tutorial &amp; Testing System — specs, setup, and reference.">
+
+<title>10&nbsp; SPEC-0.0.1.qmd – yrS3 Documentation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./SETUP-0.0.1-v001.html" rel="next">
+<link href="./SPEC-DB-FS-QUESTION-SYNC-0.0.3.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-12250bc6d41324f970c4c53c607dc95b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="sidebar-parts.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SPEC-QUESTION-SETS-0.0.2.html">SPEC files for different releases</a></li><li class="breadcrumb-item"><a href="./SPEC-0.0.1.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">SPEC-0.0.1.qmd</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">yrS3 Documentation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Intro</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Guide to the documentation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DOC-GUIDE-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">DOC-GUIDE-v001.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DOC-AUTHORING-GUIDE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">DOC-AUTHORING-GUIDE.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUARTO-DOC-GUIDE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">QUARTO-DOC-GUIDE.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">PRD files (vision documents)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v003.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v003.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v002.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v002.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./PRD-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">PRD-0.0.1-v001.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">SPEC files for different releases</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-QUESTION-SETS-0.0.2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SPEC-QUESTION-SETS-0.0.2.qmd</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-DB-FS-QUESTION-SYNC-0.0.3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">SPEC: Database–Filesystem Question Sync (v0.0.3)</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SPEC-0.0.1.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">SPEC-0.0.1.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">How to setup and run the system</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./SETUP-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">SETUP-0.0.1-v001.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Developer guide</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./DEVELOPER-GUIDE-0.0.1-v001.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Developer Guide (v0.0.1)</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Question Format Specification</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-MODULE-SPEC.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">QUESTION-MODULE-SPEC</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-FORMAT-0.0.1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">QUESTION-FORMAT-0.0.1.qmd”</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./QUESTION-SET-FORMAT-0.0.2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">QUESTION-SET-FORMAT-0.0.2.qmd</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul>
+  <li><a href="#mvp-scope-summary" id="toc-mvp-scope-summary" class="nav-link active" data-scroll-target="#mvp-scope-summary"><span class="header-section-number">10.1</span> MVP Scope Summary</a>
+  <ul class="collapse">
+  <li><a href="#in-scope-mvp" id="toc-in-scope-mvp" class="nav-link" data-scroll-target="#in-scope-mvp"><span class="header-section-number">10.1.1</span> In scope (MVP)</a></li>
+  <li><a href="#out-of-scope-mvp" id="toc-out-of-scope-mvp" class="nav-link" data-scroll-target="#out-of-scope-mvp"><span class="header-section-number">10.1.2</span> Out of scope (MVP)</a></li>
+  </ul></li>
+  <li><a href="#questions-storage-and-database" id="toc-questions-storage-and-database" class="nav-link" data-scroll-target="#questions-storage-and-database"><span class="header-section-number">10.2</span> Questions: Storage and database</a>
+  <ul class="collapse">
+  <li><a href="#rationale" id="toc-rationale" class="nav-link" data-scroll-target="#rationale"><span class="header-section-number">10.2.1</span> Rationale</a></li>
+  <li><a href="#layout-and-metadata" id="toc-layout-and-metadata" class="nav-link" data-scroll-target="#layout-and-metadata"><span class="header-section-number">10.2.2</span> Layout and metadata</a></li>
+  <li><a href="#question-workflow" id="toc-question-workflow" class="nav-link" data-scroll-target="#question-workflow"><span class="header-section-number">10.2.3</span> Question workflow</a></li>
+  </ul></li>
+  <li><a href="#authentication" id="toc-authentication" class="nav-link" data-scroll-target="#authentication"><span class="header-section-number">10.3</span> Authentication</a>
+  <ul class="collapse">
+  <li><a href="#emailpassword-primary-implement-first" id="toc-emailpassword-primary-implement-first" class="nav-link" data-scroll-target="#emailpassword-primary-implement-first"><span class="header-section-number">10.3.1</span> Email/password (primary; implement first)</a></li>
+  <li><a href="#google-oauth-optional" id="toc-google-oauth-optional" class="nav-link" data-scroll-target="#google-oauth-optional"><span class="header-section-number">10.3.2</span> Google OAuth (optional)</a></li>
+  <li><a href="#github-oauth-optional" id="toc-github-oauth-optional" class="nav-link" data-scroll-target="#github-oauth-optional"><span class="header-section-number">10.3.3</span> GitHub OAuth (optional)</a></li>
+  <li><a href="#roles-and-behavior-all-providers" id="toc-roles-and-behavior-all-providers" class="nav-link" data-scroll-target="#roles-and-behavior-all-providers"><span class="header-section-number">10.3.4</span> Roles and behavior (all providers)</a></li>
+  </ul></li>
+  <li><a href="#frontend-question-creation-and-management" id="toc-frontend-question-creation-and-management" class="nav-link" data-scroll-target="#frontend-question-creation-and-management"><span class="header-section-number">10.4</span> Frontend — Question creation and management</a></li>
+  <li><a href="#frontend-students-learners" id="toc-frontend-students-learners" class="nav-link" data-scroll-target="#frontend-students-learners"><span class="header-section-number">10.5</span> Frontend — Students (Learners)</a></li>
+  <li><a href="#sandboxed-execution-coding-questions" id="toc-sandboxed-execution-coding-questions" class="nav-link" data-scroll-target="#sandboxed-execution-coding-questions"><span class="header-section-number">10.6</span> Sandboxed Execution (Coding Questions)</a></li>
+  <li><a href="#student-progress-and-storage" id="toc-student-progress-and-storage" class="nav-link" data-scroll-target="#student-progress-and-storage"><span class="header-section-number">10.7</span> Student Progress and Storage</a></li>
+  <li><a href="#logging" id="toc-logging" class="nav-link" data-scroll-target="#logging"><span class="header-section-number">10.8</span> Logging</a></li>
+  <li><a href="#technical-stack-mvp" id="toc-technical-stack-mvp" class="nav-link" data-scroll-target="#technical-stack-mvp"><span class="header-section-number">10.9</span> Technical Stack (MVP)</a></li>
+  <li><a href="#question-types-in-mvp" id="toc-question-types-in-mvp" class="nav-link" data-scroll-target="#question-types-in-mvp"><span class="header-section-number">10.10</span> Question Types in MVP</a></li>
+  <li><a href="#open-items-todos" id="toc-open-items-todos" class="nav-link" data-scroll-target="#open-items-todos"><span class="header-section-number">10.11</span> Open Items / TODOs</a></li>
+  <li><a href="#related-documents" id="toc-related-documents" class="nav-link" data-scroll-target="#related-documents"><span class="header-section-number">10.12</span> Related Documents</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./SPEC-QUESTION-SETS-0.0.2.html">SPEC files for different releases</a></li><li class="breadcrumb-item"><a href="./SPEC-0.0.1.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">SPEC-0.0.1.qmd</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">SPEC-0.0.1.qmd</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Read DOC-GUIDE-v001.qmd for documentation navigation and version numbering.<br>
+Refer to the latest PRD for the full system vision. This spec defines the <strong>initial MVP</strong> only—a subset of the full system.</p>
+<hr>
+<section id="mvp-scope-summary" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="mvp-scope-summary"><span class="header-section-number">10.1</span> MVP Scope Summary</h2>
+<section id="in-scope-mvp" class="level3" data-number="10.1.1">
+<h3 data-number="10.1.1" class="anchored" data-anchor-id="in-scope-mvp"><span class="header-section-number">10.1.1</span> In scope (MVP)</h3>
+<ul>
+<li><strong>Question storage</strong>: Database is the source of truth for listing, ownership, and status; question content is stored on the filesystem (local) or in Supabase Storage. When using the filesystem, the app can mirror metadata in an optional <code>db_meta.yaml</code> per version and sync FS with DB (import FS-only, DB wins on conflict). See SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd.</li>
+<li><strong>Question creation</strong>: Users create and upload new questions or modifications via the app. Any user can propose a new version of any question; the version is <strong>pending</strong> until the question owner approves it. Only approved versions are used in tests.</li>
+<li><strong>Authentication</strong>: Email/password with full email confirmation workflow via Supabase (learners and creators). Optionally Google and/or GitHub OAuth via Supabase; each auth option is implemented and documented separately so the team can ship email/password first and add OAuth later if desired.</li>
+<li><strong>Student experience</strong>: Take tests, answer questions (including coding in a sandboxed environment), submit, and see feedback.</li>
+<li><strong>Question management</strong>: Create and upload new questions; propose or upload new versions (owner’s versions are approved automatically; others are pending until owner approves); view metadata (e.g.&nbsp;created/modified).</li>
+<li><strong>Progress and integrity</strong>: Store student progress (attempts, timestamps, question id/version, timing); basic anti-cheat (keystroke timing, copy/paste controls); comprehensive logging.</li>
+</ul>
+</section>
+<section id="out-of-scope-mvp" class="level3" data-number="10.1.2">
+<h3 data-number="10.1.2" class="anchored" data-anchor-id="out-of-scope-mvp"><span class="header-section-number">10.1.2</span> Out of scope (MVP)</h3>
+<ul>
+<li>(Question metadata and listing are database-backed; content lives in FS or Supabase Storage; FS can mirror with sync. See SPEC-DB-FS-QUESTION-SYNC.)</li>
+<li>Full tutorial authoring or tutorial flows.</li>
+<li>Advanced analytics, reporting, or social features.</li>
+<li>None; all listed auth options (email/password, Google OAuth, GitHub OAuth) are in scope for v0.0.1, but each is optional and can be implemented independently.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="questions-storage-and-database" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="questions-storage-and-database"><span class="header-section-number">10.2</span> Questions: Storage and database</h2>
+<section id="rationale" class="level3" data-number="10.2.1">
+<h3 data-number="10.2.1" class="anchored" data-anchor-id="rationale"><span class="header-section-number">10.2.1</span> Rationale</h3>
+<p>Question <strong>content</strong> is stored on the <strong>filesystem</strong> (local dev) or in <strong>Supabase Storage</strong> (e.g.&nbsp;Vercel). The <strong>database</strong> (<code>question_versions</code> table) is the source of truth for listing, ownership, status, and which version is “latest.” This allows: - Users to develop and version questions on their own machine (e.g.&nbsp;with Git) when using FS. - The app to have a single source of truth (DB) for who owns what and what is approved. - An optional FS mirror with sync: FS-only versions can be imported into the DB; when both exist and differ, DB wins. See <strong>SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd</strong> for dual-write, <code>db_meta.yaml</code>, and sync behaviour.</p>
+</section>
+<section id="layout-and-metadata" class="level3" data-number="10.2.2">
+<h3 data-number="10.2.2" class="anchored" data-anchor-id="layout-and-metadata"><span class="header-section-number">10.2.2</span> Layout and metadata</h3>
+<ul>
+<li><strong>One folder per question version.</strong><br>
+See <strong>docs/QUESTION-FORMAT-0.0.1.qmd</strong> for the canonical folder layout, file names, metadata schema, and <strong>all edge cases</strong> (e.g.&nbsp;prompt file when both <code>prompt.md</code> and <code>prompt.txt</code> exist, id/type/version validation, type-specific required files, multiple-choice correctness). Implementations MUST follow that document. An optional <strong>db_meta.yaml</strong> in each version folder stores app metadata (owner_id, status, proposed_by) for sync; question content stays in meta.yaml and type-specific files only.</li>
+<li><strong>Required metadata</strong> (per question, in meta.yaml and DB):
+<ul>
+<li><strong>Unique id</strong> (e.g.&nbsp;UUID or slug) — stable across versions.</li>
+<li><strong>Question type</strong> — e.g.&nbsp;multiple choice, short answer, long answer, R coding, Bash, Excel formula, HTML, CSS (subset as needed for MVP).</li>
+<li><strong>Version</strong> — so modifications can be tracked and linked to student attempts.</li>
+</ul></li>
+<li><strong>Optional metadata</strong>: title, domain, difficulty, rubric reference, etc., as defined in the question format doc.</li>
+</ul>
+</section>
+<section id="question-workflow" class="level3" data-number="10.2.3">
+<h3 data-number="10.2.3" class="anchored" data-anchor-id="question-workflow"><span class="header-section-number">10.2.3</span> Question workflow</h3>
+<ul>
+<li>User creates/edits the question folder and files locally (no need to be connected to the system).</li>
+<li>User <strong>uploads</strong> via the app:
+<ul>
+<li><strong>New question</strong>: upload a folder (or archive) that conforms to the question format; system assigns or validates id and stores under the configured questions root. Version is <strong>approved</strong> (owner is the uploader).</li>
+<li><strong>Modification to existing question</strong>: upload updated files for an existing id; system stores a new version. If the uploader is the question owner, the version is <strong>approved</strong>; otherwise it is <strong>pending</strong> until the owner approves it. Only approved versions are used in tests.</li>
+</ul></li>
+<li>System logs <strong>when</strong> each question was created and when it was last modified (and by whom, if auth provides it).</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="authentication" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="authentication"><span class="header-section-number">10.3</span> Authentication</h2>
+<p>Authentication in v0.0.1 is <strong>modular</strong>: the tech team may implement one or more of the following. Each option is specified and documented so it can be implemented <strong>individually</strong>; if the team cannot implement all in v0.0.1, they can pick and choose. Most likely, <strong>email/password</strong> is implemented first, then OAuth providers as needed.</p>
+<section id="emailpassword-primary-implement-first" class="level3" data-number="10.3.1">
+<h3 data-number="10.3.1" class="anchored" data-anchor-id="emailpassword-primary-implement-first"><span class="header-section-number">10.3.1</span> Email/password (primary; implement first)</h3>
+<ul>
+<li><strong>Provider</strong>: Supabase Auth email/password.</li>
+<li><strong>Email confirmation</strong>: Full workflow — user signs up → system sends confirmation email → user clicks link (or enters code) → account is confirmed → user can sign in. Confirmation is required before the user can access protected flows.</li>
+<li><strong>Backend</strong>: Supabase Auth (session management, user records). No third-party OAuth app setup required.</li>
+<li><strong>Behavior</strong>: Users sign up, confirm email, then sign in; session is used for all subsequent requests; student progress and logs are tied to the authenticated user.</li>
+</ul>
+</section>
+<section id="google-oauth-optional" class="level3" data-number="10.3.2">
+<h3 data-number="10.3.2" class="anchored" data-anchor-id="google-oauth-optional"><span class="header-section-number">10.3.2</span> Google OAuth (optional)</h3>
+<ul>
+<li><strong>Provider</strong>: Google OAuth via Supabase Auth. Can be added alongside or after email/password.</li>
+<li><strong>Backend</strong>: Same Supabase Auth; enable Google in Supabase Dashboard (or local config) and implement the Google sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.</li>
+</ul>
+</section>
+<section id="github-oauth-optional" class="level3" data-number="10.3.3">
+<h3 data-number="10.3.3" class="anchored" data-anchor-id="github-oauth-optional"><span class="header-section-number">10.3.3</span> GitHub OAuth (optional)</h3>
+<ul>
+<li><strong>Provider</strong>: GitHub OAuth via Supabase Auth. Can be added alongside or after email/password.</li>
+<li><strong>Backend</strong>: Same Supabase Auth; enable GitHub in Supabase Dashboard (or local config) and implement the GitHub sign-in flow in the app. Documented separately in SETUP so it can be implemented on its own.</li>
+</ul>
+</section>
+<section id="roles-and-behavior-all-providers" class="level3" data-number="10.3.4">
+<h3 data-number="10.3.4" class="anchored" data-anchor-id="roles-and-behavior-all-providers"><span class="header-section-number">10.3.4</span> Roles and behavior (all providers)</h3>
+<ul>
+<li><strong>Roles</strong>: All authenticated users can take tests, create questions, and propose new versions. There is no separate “author” role; question <strong>ownership</strong> is per question (the user who created the first approved version). Only the owner can approve pending versions proposed by others.</li>
+<li><strong>Unified behavior</strong>: Regardless of which provider a user signed in with, the app treats them as the same authenticated user; progress and logs are tied to the Supabase user id.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="frontend-question-creation-and-management" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="frontend-question-creation-and-management"><span class="header-section-number">10.4</span> Frontend — Question creation and management</h2>
+<ul>
+<li><strong>Create/upload new questions</strong>: Any authenticated user can create questions (form or file upload). Server validates per QUESTION-FORMAT-0.0.1.qmd. If validation fails, upload is <strong>rejected</strong> with clear errors; if it passes, the question is stored and the version is <strong>approved</strong> (uploader is owner).</li>
+<li><strong>Propose new versions</strong>: Any user can propose a new version of any question (form or upload). If the user is the question owner, the version is <strong>approved</strong>; otherwise it is <strong>pending</strong> until the owner approves it. Owner sees “Pending your approval” and can approve or ignore.</li>
+<li><strong>Upload modifications</strong>: UI to select an existing question (by id) and upload updated files; server validates per format. Non-owner uploads create a <strong>pending</strong> version; owner uploads create an <strong>approved</strong> version.</li>
+<li><strong>Metadata display</strong>: List or detail view of questions showing at least: question id, type, version, status (approved/pending), when created and when last modified.</li>
+<li><strong>Logging</strong>: All upload and metadata-view actions are logged (who, when, which question id/version).</li>
+</ul>
+<hr>
+</section>
+<section id="frontend-students-learners" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="frontend-students-learners"><span class="header-section-number">10.5</span> Frontend — Students (Learners)</h2>
+<ul>
+<li><strong>Question set selection</strong>: List of available question sets (from DB and/or filesystem; see SPEC-QUESTION-SETS-0.0.2) (tests can be defined in config or filesystem; which tests are “active” is MVP-defined).</li>
+<li><strong>Taking a set as test</strong>:
+<ul>
+<li>Student selects a question set and chooses “Take as test”; the app starts a session and presents questions (order can be fixed or randomized per MVP choice).</li>
+<li>For each question: prompt and any assets are shown; student answers (text, choice, or code as appropriate).</li>
+</ul></li>
+<li><strong>Coding questions</strong>: For R, Bash, or other code-based types, the student is presented with a <strong>sandboxed coding and execution environment</strong> (e.g.&nbsp;in-browser or backed by a secure runner). Student writes code, runs it, and submits the final answer; execution is constrained per “Sandbox isolation” below.</li>
+<li><strong>Submission</strong>: Student submits the test; answers are evaluated (per question type) and feedback is shown.</li>
+<li><strong>Logging</strong>: All student actions are logged (session start/end, question view, answer edit, run code, submit) for auditing and anti-cheat.</li>
+</ul>
+<hr>
+</section>
+<section id="sandboxed-execution-coding-questions" class="level2" data-number="10.6">
+<h2 data-number="10.6" class="anchored" data-anchor-id="sandboxed-execution-coding-questions"><span class="header-section-number">10.6</span> Sandboxed Execution (Coding Questions)</h2>
+<ul>
+<li><strong>Purpose</strong>: Run user-submitted code (e.g.&nbsp;R, Bash) safely for grading.</li>
+<li><strong>Minimum viable isolation</strong> (aligned with PRD):
+<ul>
+<li>No access to host filesystem, network, or environment secrets.</li>
+<li>CPU and memory limits and execution timeouts.</li>
+</ul></li>
+<li><strong>MVP implementation</strong>: To be chosen (e.g.&nbsp;container-based, serverless runner, or managed service); the interface used by the app is “run this code with these inputs” and “return stdout/stderr and exit code.”</li>
+<li><strong>Logging</strong>: Every execution (question id, version, user, code hash or length, inputs, result) is logged for security and debugging.</li>
+</ul>
+<hr>
+</section>
+<section id="student-progress-and-storage" class="level2" data-number="10.7">
+<h2 data-number="10.7" class="anchored" data-anchor-id="student-progress-and-storage"><span class="header-section-number">10.7</span> Student Progress and Storage</h2>
+<p>Student progress is stored in <strong>database and/or filesystem</strong> (MVP can choose one or both). The following must be recorded:</p>
+<ul>
+<li><strong>Per attempt (per session)</strong>:
+<ul>
+<li>User id, session/set id, question id, <strong>question version</strong>.</li>
+<li>Date/time when the question was presented and when the answer was submitted.</li>
+<li>Time between presentation and submission (and optionally time per question).</li>
+</ul></li>
+<li><strong>Anti-cheat and integrity</strong>:
+<ul>
+<li><strong>Keystroke timing</strong>: Average (or distribution of) time between keystrokes where applicable (e.g.&nbsp;text/code answers) to help detect pasted content or automated input.</li>
+<li><strong>Copy/paste controls</strong>: Ability to <strong>discourage or prevent</strong> copy/paste of question text or answers (e.g.&nbsp;disable paste in code/text areas, or log paste events). Exact UX (prevent vs warn vs log-only) is an MVP decision.</li>
+</ul></li>
+<li><strong>Stored data</strong>: At minimum, question id, version, timestamps, answer (or reference to it), evaluation result (score/feedback), and any keystroke/paste metrics agreed for MVP.</li>
+</ul>
+<hr>
+</section>
+<section id="logging" class="level2" data-number="10.8">
+<h2 data-number="10.8" class="anchored" data-anchor-id="logging"><span class="header-section-number">10.8</span> Logging</h2>
+<ul>
+<li><strong>Principle</strong>: Log everything that is needed for security, auditing, and debugging.</li>
+<li><strong>Scope</strong> (non-exhaustive):
+<ul>
+<li><strong>Auth</strong>: sign-in, sign-out, failures.</li>
+<li><strong>Questions</strong>: uploads (new question / modification), metadata views, approval of pending versions (by owner).</li>
+<li><strong>Students</strong>: test start/stop, question view, answer change, code run, submit; optional: keystroke/paste events if collected.</li>
+<li><strong>System</strong>: sandbox runs (inputs/outputs hashed or truncated if large), evaluator errors, upload validation failures.</li>
+</ul></li>
+<li><strong>Format and retention</strong>: Logs should be structured (e.g.&nbsp;JSON) and stored in a dedicated store or filesystem; retention period is an MVP/deployment decision.</li>
+</ul>
+<hr>
+</section>
+<section id="technical-stack-mvp" class="level2" data-number="10.9">
+<h2 data-number="10.9" class="anchored" data-anchor-id="technical-stack-mvp"><span class="header-section-number">10.9</span> Technical Stack (MVP)</h2>
+<ul>
+<li><strong>Frontend</strong>: Next.js.</li>
+<li><strong>Auth &amp; DB</strong>: Supabase (email/password with email confirmation; optionally Google and/or GitHub OAuth; user tables, question_versions, question_sets, test_sessions, answers). Each auth method is configured and implemented independently per SETUP.</li>
+<li><strong>Hosting</strong>: Vercel (or equivalent) for Next.js and serverless/API routes.</li>
+<li><strong>Questions</strong>: Database is source of truth for listing and ownership; content in filesystem (configured root) or Supabase Storage. Format and metadata as in QUESTION-FORMAT-0.0.1.qmd; optional db_meta.yaml and sync per SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd.</li>
+<li><strong>Execution</strong>: Sandbox implementation TBD (containers, serverless, or managed service).</li>
+</ul>
+<hr>
+</section>
+<section id="question-types-in-mvp" class="level2" data-number="10.10">
+<h2 data-number="10.10" class="anchored" data-anchor-id="question-types-in-mvp"><span class="header-section-number">10.10</span> Question Types in MVP</h2>
+<p>Support a <strong>subset</strong> of the PRD question types to keep MVP shippable. Recommended minimum:</p>
+<ol type="1">
+<li><strong>Multiple choice</strong> — deterministic.</li>
+<li><strong>Short answer</strong> — AI or rule-based grading; deterministic scoring.</li>
+<li><strong>At least one code type</strong> — e.g.&nbsp;<strong>R</strong> or <strong>Bash</strong> — using the sandbox; output comparison for grading.</li>
+</ol>
+<p>Additional types (long answer, Excel, HTML, CSS) can be added incrementally; each requires an evaluator module and, for code/formula, sandbox or equivalent.</p>
+<hr>
+</section>
+<section id="open-items-todos" class="level2" data-number="10.11">
+<h2 data-number="10.11" class="anchored" data-anchor-id="open-items-todos"><span class="header-section-number">10.11</span> Open Items / TODOs</h2>
+<ul class="task-list">
+<li><label><input type="checkbox">Finalize question folder layout and metadata schema in QUESTION-FORMAT-0.0.1.qmd.</label></li>
+<li><label><input type="checkbox">Finalize API contracts for upload, question-set listing, and submission (see SPEC-QUESTION-SETS and implemented routes).</label></li>
+<li><label><input type="checkbox">Choose sandbox implementation and document security constraints.</label></li>
+<li><label><input type="checkbox">Define evaluator output schema (score, pass/fail, feedback) for each supported type.</label></li>
+<li><label><input type="checkbox">Student progress: stored in DB (test_sessions, answers); see migrations.</label></li>
+<li><label><input type="checkbox">Question sets (“tests”) are composed via question_sets and question_set_items (DB) and/or set.yaml (filesystem); see SPEC-QUESTION-SETS-0.0.2.</label></li>
+<li><label><input type="checkbox">Specify log format, storage, and retention.</label></li>
+</ul>
+<hr>
+</section>
+<section id="related-documents" class="level2" data-number="10.12">
+<h2 data-number="10.12" class="anchored" data-anchor-id="related-documents"><span class="header-section-number">10.12</span> Related Documents</h2>
+<ul>
+<li><strong>DOC-GUIDE-v001.qmd</strong> — Documentation and versioning.</li>
+<li><strong>PRD-0.0.1-v003.qmd</strong> — Full product vision and requirements.</li>
+<li><strong>QUESTION-FORMAT-0.0.1.qmd</strong> — Question folder layout, metadata schema, and optional db_meta.yaml.</li>
+<li><strong>SPEC-QUESTION-SETS-0.0.2.qmd</strong> — Question sets (DB + file-based), take as test.</li>
+<li><strong>SPEC-DB-FS-QUESTION-SYNC-0.0.3.qmd</strong> — DB–FS question sync, dual-write, and backup.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<style>
+  .collapse-section-buttons { margin-bottom: 1em; }
+  .collapse-section-buttons button { margin-right: 0.5em; }
+  details.collapsible-section { margin-top: 0.5em; }
+  details.collapsible-section > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.25em; }
+  details.collapsible-section > summary::-webkit-details-marker { display: none; }
+  details.collapsible-section > summary::before { content: "▸"; display: inline-block; transition: transform 0.2s; }
+  details.collapsible-section[open] > summary::before { transform: rotate(90deg); }
+  details.collapsible-section .section-content { margin-left: 1em; margin-top: 0.25em; }
+</style>
+<script>
+(function() {
+  function initCollapsibleSections() {
+    const main = document.getElementById("quarto-document-content");
+    if (!main) return;
+
+    function wrapSection(section) {
+      const id = section.id;
+      const heading = section.querySelector("h2, h3, h4");
+      if (!heading) return;
+
+      const levelClass = section.classList.contains("level4") ? "level4" : section.classList.contains("level3") ? "level3" : "level2";
+      const details = document.createElement("details");
+      details.className = "collapsible-section " + levelClass;
+      if (id) details.id = id;
+      details.open = true;
+
+      const summary = document.createElement("summary");
+      summary.appendChild(heading);
+
+      const content = document.createElement("div");
+      content.className = "section-content";
+      while (section.childNodes.length > 0) {
+        const child = section.childNodes[0];
+        if (child === heading) {
+          section.removeChild(child);
+          continue;
+        }
+        content.appendChild(section.childNodes[0]);
+      }
+
+      details.appendChild(summary);
+      details.appendChild(content);
+      section.parentNode.replaceChild(details, section);
+    }
+
+    // Process innermost sections first (level4, then level3, then level2)
+    [].slice.call(main.querySelectorAll("section.level4")).forEach(wrapSection);
+    [].slice.call(main.querySelectorAll("section.level3")).forEach(wrapSection);
+    [].slice.call(main.querySelectorAll("section.level2")).forEach(wrapSection);
+
+    // Insert Expand all / Collapse all buttons before first collapsible section
+    const firstDetails = main.querySelector("details.collapsible-section");
+    if (firstDetails) {
+      const btnWrap = document.createElement("div");
+      btnWrap.className = "collapse-section-buttons";
+      btnWrap.innerHTML = "<button type=\"button\" class=\"btn btn-sm btn-outline-secondary\" id=\"expand-all-sections\">Expand all</button> <button type=\"button\" class=\"btn btn-sm btn-outline-secondary\" id=\"collapse-all-sections\">Collapse all</button>";
+      main.insertBefore(btnWrap, firstDetails);
+
+      document.getElementById("expand-all-sections").onclick = function() {
+        main.querySelectorAll("details.collapsible-section").forEach(function(d) { d.open = true; });
+      };
+      document.getElementById("collapse-all-sections").onclick = function() {
+        main.querySelectorAll("details.collapsible-section").forEach(function(d) { d.open = false; });
+      };
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCollapsibleSections);
+  } else {
+    initCollapsibleSections();
+  }
+})();
+</script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./SPEC-DB-FS-QUESTION-SYNC-0.0.3.html" class="pagination-link" aria-label="SPEC: Database–Filesystem Question Sync (v0.0.3)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">SPEC: Database–Filesystem Question Sync (v0.0.3)</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./SETUP-0.0.1-v001.html" class="pagination-link" aria-label="SETUP-0.0.1-v001.qmd">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">SETUP-0.0.1-v001.qmd</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
