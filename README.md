@@ -8,7 +8,7 @@ type of project. As of right now, there is only one "genericTemplate" template
 which is intended to be used for all types of projects (e.g. websites, other
 software development, writing books, etc.)
 
-Within each subfolder are folders for differen versions of that template
+Within each subfolder are folders for different versions of that template
 e.g. genericTemplate/v0.0.1.
 This facilitates each perusal of different versions of the templates
 without needing to rely on git commands.

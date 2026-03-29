@@ -33,4 +33,3 @@ format:
     toc-depth: 3
     toc-title: "Contents"
     code-fold: false
-    include-after-body: collapse-sections.html
