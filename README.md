@@ -10,7 +10,7 @@ software development, writing books, etc.)
 
 Within each subfolder are folders for different versions of that template
 e.g. genericTemplate/v0.0.1.
-This facilitates each perusal of different versions of the templates
+This makes it easy to browse different versions of the templates
 without needing to rely on git commands.
 
 ## README.md

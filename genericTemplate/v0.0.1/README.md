@@ -8,7 +8,7 @@ DESCRIBE HOW TO USE THE PROJECT AND HOW TO GET IT RUNNING.
 
 ## docs folder
 
-Project docs are in the **`docs/`** folder and are built as a Quarto book. 
+Project docs are in the **`docs/`** folder and are built as a Quarto book,
 rendered to HTML. The rendered HTML can be found in the **`docs/_book/`** subfolder.
 
 To rebuild the docs book, run the following from the `docs/` directory:
@@ -27,7 +27,7 @@ for the project. It is most helpful if the documentation for a project follows s
 to allow the AI to understand your project based on other projects that it has seen while the AI 
 was being trained. 
 
-To this end, this template puts all documentation in a "docs" subfolder of the mvim ain project.
+To this end, this template puts all documentation in a `docs` subfolder of the main project.
 The README.md file in the project's main folder is also commonly used to explain the purpose
 and general knowledge needed for working with the project. This README.md file is also
 displayed by default on the main page of a github repo. The root README.md is linked into 

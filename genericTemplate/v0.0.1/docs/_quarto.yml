@@ -1,5 +1,5 @@
-# Quarto book configuration 
-# See docs/QUARTO-DOC-GUIDE.qmd for how to install Quarto and render this book.
+# Quarto book configuration
+# See documentationGuides/QUARTO-DOC-GUIDE.qmd for how to install Quarto and render this book.
 
 project:
   type: book
