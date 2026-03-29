@@ -17,7 +17,7 @@ To rebuild the docs book, run the following from the `docs/` directory:
 quarto render
 ```
 
-See `docs/documentationGuildes/QUARTO-DOC-GUIDE.qmd` for Quarto installation and usage.
+See `docs/documentationGuides/QUARTO-DOC-GUIDE.qmd` for Quarto installation and usage.
 
 
 It is generally very helpful for AIs to have access to complete up to date 

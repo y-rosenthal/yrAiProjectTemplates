@@ -12,9 +12,9 @@ book:
     - index.qmd
     - part: "Guide to the documentation"
       chapters:
-        - docs/DOC-GUIDE-v001.qmd
-        - docs/DOC-AUTHORING-GUIDE.qmd
-        - docs/QUARTO-DOC-GUIDE.qmd
+        - documentationGuides/DOC-GUIDE-v001.qmd
+        - documentationGuides/DOC-AUTHORING-GUIDE.qmd
+        - documentationGuides/QUARTO-DOC-GUIDE.qmd
     - part: "TODO"
       chapters:
         - sampleFile1.qmd
@@ -29,7 +29,6 @@ book:
 format:
   html:
     theme: cosmo
-    css: sidebar-parts.css
     toc: true
     toc-depth: 3
     toc-title: "Contents"

@@ -30,7 +30,6 @@ book:
 format:
   html:
     theme: cosmo
-    css: sidebar-parts.css
     toc: true
     toc-depth: 3
     toc-title: "Contents"
