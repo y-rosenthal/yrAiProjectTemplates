@@ -1,0 +1,80 @@
+# DOC-AUTHORING-GUIDE.qmd
+
+This guide explains how to write and maintain documentation for this system. Follow these conventions so the docs stay consistent, render correctly as a Quarto book, and remain easy to navigate and update.
+
+# DOC-AUTHORING-GUIDE.qmd {#doc-authoring-guide}
+
+## Document format: use Quarto (`.qmd`)
+
+- Write all documentation in **Quarto** format using the `.qmd` extension.
+- `.qmd` files support standard Markdown plus Quarto features (cross-references, code execution, conditional content, and a single YAML header for metadata).
+- Use a YAML header at the top of each document with at least a `title`:
+
+  ```yaml
+  ---
+  title: "Your document title"
+  ---
+  ```
+
+- To include a doc in the rendered book, add it to `docs/_quarto.yml` in the desired order. See [QUARTO-DOC-GUIDE.qmd](QUARTO-DOC-GUIDE.qmd) for how to build the book.
+
+## Version numbering
+
+Follow the version numbering scheme described in [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd):
+
+- Use the **-v001**-style suffix in document names when you want to track versions (e.g. `SETUP-0.0.1-v001.qmd`, `DOC-GUIDE-v001.qmd`).
+- SPEC documents are versioned to match releases (e.g. SPEC-0.0.1).
+- PRD and other living docs can carry both a SPEC version and a secondary version in the filename when they are updated.
+
+Do not encode version numbers in the body of the document (e.g. avoid “see Section 2.3”); use cross-references instead so numbers stay correct when sections change.
+
+## README and the book
+
+The **repository README** is `README.md` in the project root (for GitHub). It is the **single source of truth** for the project overview. The book includes it via `docs/Overview.qmd`; **edit only the root README** so the repo and the book stay in sync. The Overview chapter is an **exception**: it has no level-1 heading in the `.qmd` file; the page title and single level-1 heading come **only** from the included `README.md` (e.g. `# yrS3 — Tutorial & Testing System`). The sidebar shows “README” (from the YAML `title` in `Overview.qmd`) so readers know the chapter is the repo README.
+
+## One top-level heading per document (Quarto book standard)
+
+- Each document should have **exactly one** level-1 heading (`#`). That heading is the document’s main title (or the main title is set in the YAML `title` and the single `#` is the same or a short form).
+- All other sections should use `##` (level 2), `###` (level 3), and so on. Do not add a second `#` in the same file.
+- This matches Quarto book authoring practice: the first heading level defines the document’s top-level structure, and having a single `#` keeps numbering and navigation consistent when the book is built.
+
+## Do not use hardcoded section numbers
+
+- **Do not** put section numbers in headings (e.g. avoid `## 2. Local development` or `### 1.1 Node.js`). Quarto will number sections automatically when the book is rendered.
+- **Do not** refer to sections by hand-typed numbers in the text (e.g. “see Section 2.3” or “as in Section 1.6”). Those numbers go out of date when you add, remove, or reorder sections.
+
+## Use Quarto cross-references for sections
+
+- Give each section that you might want to reference a **label** (ID) in the heading using the `{#sec-id}` syntax:
+
+  ```markdown
+  ## Local development {#sec-local-development}
+  ### Supabase project setup (CLI-first where possible) {#sec-supabase-project-setup}
+  ```
+
+- Use **short, stable, descriptive IDs** (e.g. `#sec-supabase-cli`, `#sec-configure-tests`). Avoid spaces; use hyphens. The `sec-` prefix is the Quarto convention for section labels.
+- In the text, refer to that section with `@sec-id`. Quarto will replace it with the correct section number and, in HTML, a clickable link:
+
+  ```markdown
+  For a hosted project, see @sec-supabase-project-setup.
+  If you run Supabase locally, follow @sec-running-supabase-locally.
+  ```
+
+- Rendered output will show the correct number (e.g. “Section 2.3”) and link to the section. When you add or reorder sections, only the labels need to stay the same; the numbers update automatically.
+
+## Other Quarto book authoring practices
+
+- **Links to other docs:** Prefer relative links to other `.qmd` files in the repo (e.g. `[DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd)`) so links work in both the source and the built book.
+- **Code blocks:** Use fenced code blocks with a language identifier (e.g. ` ```bash `, ` ```toml `) for syntax highlighting.
+- **Consistency:** Use the same heading hierarchy and naming style across documents so the book table of contents and cross-references stay predictable.
+- **Building the book:** After changing docs, rebuild with `quarto render` from the `docs/` directory (or as described in [QUARTO-DOC-GUIDE.qmd](QUARTO-DOC-GUIDE.qmd)) and check that cross-references and numbering look correct in `docs/_book/`.
+
+## Summary checklist
+
+When writing or editing a doc:
+
+1. Use `.qmd` with a YAML `title`.
+2. Follow the version numbering in [DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd) for filenames.
+3. Use exactly one `#` (top-level) heading per document; use `##`, `###`, etc. for subsections.
+4. Do not hardcode section numbers in headings or in the text.
+5. Add `{#sec-id}` to headings you might reference; use `@sec-id` in the text to refer to them.

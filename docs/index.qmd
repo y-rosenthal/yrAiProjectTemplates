@@ -1,17 +1,4 @@
-# Intro
-
-Welcome to the **yrS3** documentation. This book gathers the project’s specs, setup instructions, and reference material in one place.
-
-**How to use this book**
-
-- Start with <DOC-GUIDE-v001.qmd> to understand document types and version numbering.
-- For the MVP scope and technical spec, see [SPEC — Initial MVP](SPEC-0.0.1.html).
-- For question tags and the questions browser, see [SPEC-0.0.6 — Question tags and browse](SPEC-0.0.6-QUESTION-TAGS-AND-BROWSE.html).
-- For DB–FS question sync, dual-write, and backup, see [SPEC-DB-FS-QUESTION-SYNC](SPEC-DB-FS-QUESTION-SYNC-0.0.3.html).
-- For setup and deployment, see [Setup & Run](SETUP-0.0.1-v001.html).
-- To rebuild this HTML book after editing the docs, see [Quarto doc guide](QUARTO-DOC-GUIDE.html).
-
-All source files live in the `docs/` folder. The rendered HTML is in `docs/_book/`.
+# ../README.md
 
 ***Below is the contents of the README.md that gets displayed on github.com***
 ---
