@@ -30,7 +30,9 @@ Do not encode version numbers in the body of the document (e.g. avoid “see Sec
 
 ## README and the book
 
-The **repository README** is `README.md` in the project root (for GitHub). It is the **single source of truth** for the project overview. The book includes it via `docs/Overview.qmd`; **edit only the root README** so the repo and the book stay in sync. The Overview chapter is an **exception**: it has no level-1 heading in the `.qmd` file; the page title and single level-1 heading come **only** from the included `README.md` (e.g. `# yrS3 — Tutorial & Testing System`). The sidebar shows “README” (from the YAML `title` in `Overview.qmd`) so readers know the chapter is the repo README.
+The **repository README** is `README.md` in the project root (for GitHub). It is the **single source of truth** for the high-level overview. In **this meta repository**, the book includes it via **`docs/index.qmd`** using Quarto’s `include` shortcode. **Edit the root `README.md`** so the GitHub landing page and the book’s opening chapter stay aligned.
+
+Downstream projects created from **`genericTemplate`** may use the same pattern (`docs/index.qmd` including `../README.md`); match whatever layout that template version defines.
 
 ## One top-level heading per document (Quarto book standard)
 

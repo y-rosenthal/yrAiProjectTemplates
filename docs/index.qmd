@@ -1,7 +1,5 @@
-# ../README.md
-
-***Below is the contents of the README.md that gets displayed on github.com***
+---
+title: "Overview"
 ---
 
 {{< include ../README.md >}}
-

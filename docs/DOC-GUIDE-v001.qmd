@@ -7,7 +7,7 @@ version numbering scheme.
 
 The documentation in `docs/` can be rendered as a single **Quarto book** (HTML) for easier reading. To build or rebuild the book after documentation changes, see **[QUARTO-DOC-GUIDE.qmd](QUARTO-DOC-GUIDE.qmd)**. That guide explains how to install the Quarto tools (if needed) and how to regenerate the book. The built book is in `docs/_book/`; open `docs/_book/index.html` in a browser to read it.
 
-In the book, the sidebar (table of contents) lists each chapter, and the page title is usually the same as the document’s heading or filename. **Exception:** the chapter that displays the repository README is built from `Overview.qmd`, which only includes `README.md`. In the sidebar it appears as **README**; on the webpage, the top-level heading is taken directly from `README.md` (e.g. “yrS3 — Tutorial & Testing System”), not from the Overview filename. Edit only `README.md` to change that content; the book updates automatically when rebuilt.
+In the book, the sidebar (table of contents) lists each chapter, and the page title is usually the same as the document’s heading or filename. **Exception:** the opening chapter is built from `docs/index.qmd`, which includes the **repository root** `README.md` via Quarto’s `include` shortcode. The top-level heading on that page comes from `README.md`. Edit the root `README.md` to change that content; rebuild the book to refresh HTML.
 
 ## v001 version format
 
@@ -24,6 +24,8 @@ Each incremental development phase will be versioned in 0.0.1 style.
 Each incremental development phase will have a spec document named SPEC-v0.0.1.md
 or something similar, where the version number for the spec matches the 
 version number of the release.
+
+For **this meta repository** (`yrAiProjectTemplates`), the normative specification for templates, placeholders, shared content, CI, and the `yraiproject` CLI is **[META-SPEC-v0.1.0.qmd](META-SPEC-v0.1.0.qmd)**. Future revisions should add a new file (e.g. `META-SPEC-v0.2.0.qmd`) and update `docs/_quarto.yml` so the book lists the current SPEC.
 
 ## PRD documents
 

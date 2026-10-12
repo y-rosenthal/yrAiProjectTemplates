@@ -1,0 +1,212 @@
+---
+title: "META-SPEC v0.1.0 — yrAiProjectTemplates"
+subtitle: "Specification for the meta repository, CLI, templates, and shared content"
+---
+
+This document is the authoritative **specification** for the **yrAiProjectTemplates** meta repository: how templates are versioned, how optional **shared** content is merged, how **continuous integration** validates documentation, how **placeholders** are structured for machine-assisted verification, and how the **`yraiproject` CLI** installs and checks projects.
+
+# Goals and scope
+
+The meta repository serves two audiences:
+
+1. **Maintainers** of the template library (this repo).
+2. **Downstream projects** that instantiate a template and want a repeatable way to record which template version they use and whether their tree still matches that template.
+
+This SPEC is version **0.1.0**. Future revisions should use a new filename (e.g. `META-SPEC-v0.2.0.qmd`) and update cross-references in the meta book.
+
+# Repository layout (normative)
+
+## Meta project vs template trees
+
+| Area | Purpose |
+|------|---------|
+| **Repository root `README.md`** | Describes the meta repository (what templates exist, how versions are organized). |
+| **`docs/`** (this book) | Documentation **for the meta project** only: authoring guides, Quarto usage, this SPEC, vendor-neutral conventions for assisted development. |
+| **`shared/`** | Optional files merged into **every** template install before the versioned template overlay (see [Shared content](#shared-content)). |
+| **`genericTemplate/<version>/`** | A **versioned template** intended to be copied into a new or existing project directory. |
+
+The **`docs/`** folder at the repository root is **not** a copy of a downstream project’s `docs/`; it documents **yrAiProjectTemplates** itself. Downstream projects created from `genericTemplate` carry their own `docs/` layout as defined by that template version.
+
+## Continuous integration (CI) for the meta repository
+
+**CI suggestion:** run an automated job on every push and pull request that **renders the Quarto book** from `docs/` and **fails the build** if Quarto reports an error.
+
+**Why this helps:**
+
+- **`_quarto.yml` must stay valid** — broken YAML or a missing chapter file breaks the book immediately.
+- **Documentation stays buildable** — contributors cannot merge broken links or Quarto syntax errors without noticing.
+- **No manual “did someone run `quarto render`?”** — the HTML artifact can remain gitignored (`_book/`, `.quarto/`) while CI proves the sources render.
+
+**What CI does not replace:** editorial review, correctness of prose, or testing of downstream template projects. It is a **smoke test** for the meta documentation pipeline.
+
+The meta repository includes a GitHub Actions workflow (see `.github/workflows/`) that implements this check.
+
+# Shared content between templates {#shared-content}
+
+## Problem
+
+Several template families may need the **same** files (for example a common `.editorconfig`, a shared snippet of AI guidance, or a common license stub). Copying those files into every template version by hand causes **drift**.
+
+## Recommended approach: `shared/` overlay
+
+1. Maintain canonical copies under **`shared/`** at the **meta repository root**.
+2. When **`yraiproject install`** runs, it **first** copies **`shared/`** into the target directory (respecting directory structure), then copies the selected **template version** on top. The file **`shared/README.md`** is **never** copied: it is maintainer-only documentation for the meta repo.
+3. **Precedence:** template files **override** shared files when both define the same relative path.
+
+**Rules:**
+
+- Only include material in `shared/` that is truly **common to all** (or almost all) installs. Template-specific content stays in the versioned template folder.
+- Do not use symlinks from templates into `shared/` for distribution to end users; symlinks behave poorly across OSes and zip archives. The **install tool** performs a **materialized copy**.
+- Document any new `shared/` entry in this book (short subsection or changelog in the meta README) so maintainers know what is global.
+
+**Optional future extension:** a `shared/<profile>/` layout and a `--shared-profile` flag on the CLI. That is **out of scope** for v0.1.0 unless added in a later SPEC.
+
+# Placeholder convention {#placeholders}
+
+Templates contain text that the **human or tool** is expected to replace. To support **automated conformance checks**, replaceable spans must be **machine-detectable** and **namespaced**.
+
+## Syntax
+
+| Form | Meaning |
+|------|---------|
+| `{{YRAI:KEY}}` | **Scalar** placeholder. `KEY` is `UPPER_SNAKE_CASE` (regex: `[A-Z][A-Z0-9_]*`). |
+| `{{YRAI:BEGIN:SECTION_NAME}}` … `{{YRAI:END:SECTION_NAME}}` | **Region** placeholder. `SECTION_NAME` uses the same character class as `KEY`. The entire region, including delimiters, is considered replaceable. |
+
+**Constraints:**
+
+- Do not nest region markers.
+- Use **one** region name per pair; the `BEGIN` and `END` names must match exactly.
+- Outside placeholders, template text is **literal** for verification purposes: if the downstream file diverges from literal text not covered by a placeholder, `yraiproject verify` reports a **content conflict**.
+
+**Examples:**
+
+```markdown
+# {{YRAI:PROJECT_NAME}}
+
+{{YRAI:PROJECT_DESCRIPTION}}
+
+## License
+
+{{YRAI:BEGIN:LICENSE_BLURB}}
+TODO: Add license text.
+{{YRAI:END:LICENSE_BLURB}}
+```
+
+## Template manifest
+
+Each versioned template **may** ship a **`yraiproject.template.yml`** file at the **root of that template directory** (same folder as the template’s `README.md`). It is **not** copied into the target project by default (the **instance manifest** below is used instead). Fields (v0.1.0):
+
+```yaml
+schemaVersion: 1
+templateId: genericTemplate
+templateVersion: "0.0.1"
+# Optional: explicit list of paths to include in verify (default: all files under template root except manifest)
+include:
+  - README.md
+  - docs/**
+exclude:
+  - "**/.DS_Store"
+```
+
+If `include` is omitted, the CLI walks the template directory and excludes `yraiproject.template.yml` and VCS metadata.
+
+# Instance metadata: `.yrAiProjectTemplate/` {#instance-metadata}
+
+Every install performed by **`yraiproject install`** creates (or updates) a directory **`.yrAiProjectTemplate/`** at the **root of the target project** with at least:
+
+| File | Purpose |
+|------|---------|
+| `manifest.json` | Records which template and version were applied, when, and by which CLI version. |
+
+**`manifest.json` schema (v0.1.0):**
+
+```json
+{
+  "schemaVersion": 1,
+  "templateId": "genericTemplate",
+  "templateVersion": "0.0.1",
+  "metaSpecVersion": "0.1.0",
+  "installedAt": "2026-03-29T12:00:00Z",
+  "installer": {
+    "name": "yraiproject",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "metaRepoRoot": "/optional/absolute/path/to/yrAiProjectTemplates",
+    "templateSource": "genericTemplate/v0.0.1",
+    "sharedApplied": true
+  }
+}
+```
+
+The **`installedAt`** field is set by the CLI at install time (UTC, ISO-8601 compact form with a `Z` suffix).
+
+- **`metaRepoRoot`:** optional; filled when `--repo-root` is passed or auto-detected.
+- **`sharedApplied`:** true if `shared/` was present and applied for this install.
+
+Downstream projects **should commit** `.yrAiProjectTemplate/manifest.json` so that collaborators and CI know which template baseline applies.
+
+# CLI: `yraiproject` {#cli}
+
+The reference implementation lives under **`tools/yraiproject/`** in the meta repository (Python 3.10+, stdlib only). Install with `pip install -e ./tools/yraiproject` from the meta repo root (preferably inside a **virtual environment** if your OS uses PEP 668), or run `python -m yraiproject` from `tools/yraiproject` after setting `PYTHONPATH` appropriately.
+
+Place flags on the **subcommand**, for example: `yraiproject install --repo-root /path/to/yrAiProjectTemplates /path/to/target`. After a `pip install -e`, you can also run `python -m yraiproject` with the same subcommands.
+
+## Command: `install`
+
+**Purpose:** Copy `shared/` (if present) and the selected template version into a target directory, and write `.yrAiProjectTemplate/manifest.json`.
+
+**Arguments:**
+
+- **`TARGET`** — Destination directory (created if missing).
+
+**Flags:**
+
+| Flag | Behavior |
+|------|----------|
+| `--repo-root PATH` | Root of the yrAiProjectTemplates clone (defaults: search parents of cwd for `genericTemplate/`). |
+| `--template NAME` | Template id (default: `genericTemplate`). |
+| `--version VER` | Template version directory name (default: `v0.0.1`). |
+| `--strict-empty` | Require a **fully** empty target; a lone `.git` directory still counts as **non-empty**. Default behavior allows **`.git` only** (typical `git init` workflow). |
+| `--allow-non-empty-safe` | Allow a non-empty target **only if** no install path would **overwrite** an existing file. If any destination path already exists, abort with error. |
+| `--dry-run` | Print actions without writing files. |
+
+**Default empty-directory rule:** If the target exists and is **not** effectively empty, print an **error** and **exit with non-zero status**. **Effectively empty** means: no entries, or **only** a `.git` directory (so `git init` then install is supported). Pass **`--strict-empty`** to require **zero** entries (even `.git` is rejected). If **`--allow-non-empty-safe`** is set, the target may contain other files as long as **no install path would overwrite** an existing file.
+
+**Order of operations:** create target if needed → copy `shared/` → copy template → write manifest.
+
+## Command: `verify`
+
+**Purpose:** Compare a target directory against the template (and shared overlay rules) recorded in or implied by the manifest.
+
+**Arguments:**
+
+- **`TARGET`** — Project root to inspect (must contain `.yrAiProjectTemplate/manifest.json` **or** use `--template` / `--version` with `--repo-root` for a hypothetical check).
+
+**Flags:**
+
+| Flag | Behavior |
+|------|----------|
+| `--repo-root PATH` | Same as `install`. |
+| `--template` / `--version` | Override manifest values for “expected baseline” (optional). |
+| `--check-content` | After path checks, run **placeholder-aware** content matching for text files (UTF-8). |
+
+**Verify behavior (v0.1.0):**
+
+1. Load `manifest.json` from `TARGET/.yrAiProjectTemplate/manifest.json`.
+2. Build the **expected path set** from the template version on disk (plus `shared/` overlay semantics: union of paths; template wins on name collision for *expected* layout — verification compares to **merged** expectation).
+3. Report **missing files** (expected but absent), **extra files** (informational; optional flag in future SPEC to treat as errors).
+4. If `--check-content`: for each expected text file, read template source and build a **regular expression** by splitting on `{{YRAI:...}}` markers (literals escaped; placeholders become non-greedy wildcards). If the target file does not match, report **content conflict** with path and a short hint.
+
+Binary files: only path presence is checked unless a future SPEC adds checksums.
+
+# Security and safety notes
+
+- **`--allow-non-empty-safe` does not delete** anything; it only **adds** files. Users remain responsible for merges.
+- **`verify`** reads files only; it does not modify the target.
+- Do not put **secrets** in templates or `shared/`; placeholders are for **non-secret** project metadata.
+
+# Relationship to other documents
+
+- **[META-PROJECT-CONVENTIONS.qmd](META-PROJECT-CONVENTIONS.qmd)** — Vendor-neutral file and folder practices for repositories that may be edited with automated assistants.
+- **[DOC-GUIDE-v001.qmd](DOC-GUIDE-v001.qmd)** — Versioning conventions for docs in this meta repo.

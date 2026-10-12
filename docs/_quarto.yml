@@ -1,4 +1,4 @@
-# Quarto book configuration 
+# Quarto book: yrAiProjectTemplates (meta repository)
 # See docs/QUARTO-DOC-GUIDE.qmd for how to install Quarto and render this book.
 
 project:
@@ -6,26 +6,19 @@ project:
   output-dir: _book
 
 book:
-  title: "TODO: PROJECT TITLE GOES HERE"
-  description: "TODO: PROJECT DESCRIPTION GOES HERE"
+  title: "yrAiProjectTemplates — meta documentation"
+  description: "Templates, SPEC, shared content, CLI, and vendor-neutral conventions for assisted development"
   chapters:
     - index.qmd
-#    - README.qmd
     - part: "Guide to the documentation"
       chapters:
         - DOC-GUIDE-v001.qmd
         - DOC-AUTHORING-GUIDE.qmd
         - QUARTO-DOC-GUIDE.qmd
-    - part: "TODO: SPECIFY PART1 TITLE"
+    - part: "Meta project — specification and tooling"
       chapters:
-        - sampleFile1.qmd
-        - sampleFile2.qmd
-        - sampleFile3.qmd
-    - part: "TODO: SPECIFY PART2 TITLE"
-      chapters:
-        - sampleFile4.qmd
-        - sampleFile5.qmd
-        - sampleFile6.qmd
+        - META-SPEC-v0.1.0.qmd
+        - META-PROJECT-CONVENTIONS.qmd
 
 format:
   html:

@@ -1,6 +1,6 @@
 # QUARTO-DOC-GUIDE.qmd
 
-This document explains how to build and regenerate the **HTML documentation book** for this project. The book is built with [Quarto](https://quarto.org/) and turns the markdown files in `docs/` into a single navigable HTML site.
+This document explains how to build and regenerate the **HTML documentation book** for **yrAiProjectTemplates** (the **meta** repository). The book is built with [Quarto](https://quarto.org/) and turns the markdown files in **`docs/`** into a single navigable HTML site. Downstream projects created from **`genericTemplate`** have their **own** `docs/` trees; this guide applies to **this** repo’s meta documentation unless you adapt paths for a child project.
 
 ## What gets built
 

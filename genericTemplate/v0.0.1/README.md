@@ -1,10 +1,12 @@
-# PROJECT NAME GOES HERE
+# {{YRAI:PROJECT_NAME}}
 
-PROJECT DESCRIPTION GOES HERE
+{{YRAI:PROJECT_DESCRIPTION}}
 
 ## Getting started
 
+{{YRAI:BEGIN:GETTING_STARTED}}
 DESCRIBE HOW TO USE THE PROJECT AND HOW TO GET IT RUNNING.
+{{YRAI:END:GETTING_STARTED}}
 
 ## docs folder
 
@@ -46,4 +48,3 @@ Search online for Quarto for more info about how to use it. Quarto is used to re
   by changes the AI makes. 
 
 - **Ask AI to update automated test cases after every change to the repo**.
-
