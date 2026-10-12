@@ -1,0 +1,15 @@
+---
+title: "About this project"
+---
+
+::: {.callout-important}
+## Set up by yrAiProject.sh
+
+`yrAiProject.sh` (yrAiProjectTemplates) installed the rules for AI agents, the skills and the settings of this
+project, and it updates them. Before you change one of those files, read [Project setup](PROJECT-SETUP.qmd).
+:::
+
+This book holds the project documents: the SPECs, the guides and the plans. The text below is the
+project's `README.md`.
+
+{{< include ../README.md >}}

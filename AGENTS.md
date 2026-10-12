@@ -8,7 +8,7 @@ These rules are for every collaborator and every coding agent. `CLAUDE.md` impor
   new projects from `templates/VERSION/{shared,TYPE}` (`new`), reports the state of a project (`status`), and sets
   up or updates existing projects (`update`), with the shared rules (`rules/AGENTS.md`). `README.md` gives the
   layout.
-- `docs/` is the documentation book: `docs/USER-GUIDE-v001.qmd` (how to use it) and `docs/SPEC-v0.3.0.qmd` (what
+- `docs/` is the documentation book: `docs/USER-GUIDE-v001.qmd` (how to use it) and `docs/SPEC-v0.4.0.qmd` (what
   it must do). Read the newest SPEC before you change anything.
 - The command `yrAiProject.sh` is a wrapper in the Dropbox tools folder (`~/Dropbox/tools`, a separate git
   repository); `yrNewAiProject.sh` and `agents-init.sh` there are stubs that print the new command. Keep them in

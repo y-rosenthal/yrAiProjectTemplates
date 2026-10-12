@@ -54,12 +54,22 @@ The parts of a project:
                 (the line @AGENTS.md). Every project
   pending-work  the pending-work skill (.claude/skills/pending-work/): things to do later are GitHub issues, and
                 a SessionStart hook in .claude/settings.json shows how many are open. Default: yes
-  docs          the project-docs Quarto book in docs/ (SPECs, guides, TODO) and the new-doc skill. New projects
+  docs          the project-docs Quarto book in docs/ (SPECs, guides, plans) and the new-doc skill. New projects
                 always; existing folders only with --with-docs
 New projects also get README.md, .gitignore and, for a book, the main Quarto book.
 
-The record: .yrAiProject/manifest.json holds the version, the parts, the filled-in values, and a fingerprint
-(SHA-256) of each file as it was installed. That is how update knows that a file was not changed by hand.
+The record: .yrAiProject/manifest.json holds the version, the parts, the filled-in values, a fingerprint
+(SHA-256) of each file as it was installed, and the history of the runs. That is how update knows that a file was
+not changed by hand.
+
+How a project shows that yrAiProject set it up (new and update write all of these):
+  .yrAiProject/README.md          for people and agents: the version, the parts, each installed file and who
+                                  changes it, the commands, and the history
+  .yrAiProject/session-start.json the one-line notice that a SessionStart hook in .claude/settings.json shows at
+                                  the start of each Claude Code session
+  AGENTS.md                       the block "yrAiProject setup" near the top (every AI agent reads it)
+  README.md                       the block "yrAiProject setup" at the end, if the project has a README
+  docs/PROJECT-SETUP.qmd          (docs part) a chapter of the docs book that shows .yrAiProject/README.md
 
 Exit status: 0 OK (done, nothing to do, or --dry-run); 1 status found something to do, or the answer was no;
 2 bad options, a missing template or a missing tool; 3 new: PATH is not empty; 5 git or gh failed;
@@ -68,7 +78,7 @@ Exit status: 0 OK (done, nothing to do, or --dry-run); 1 status found something 
 Replaces yrNewAiProject.sh and agents-init.sh (they are now stubs that print the new command) and
 bin/setup-computer.sh. No longer supported: template v0.0.1 (type generic), the manifests of the retired
 yraiproject tool and of yrNewAiProject (.yrAiProjectTemplate/), --add-to-existing (use update), --verify (use
-status) and --meta-repo. The full description: docs/USER-GUIDE-v001.qmd and docs/SPEC-v0.3.0.qmd in
+status) and --meta-repo. The full description: docs/USER-GUIDE-v001.qmd and docs/SPEC-v0.4.0.qmd in
 yrAiProjectTemplates. Python 3.8 or later, standard library only; Linux, and Git Bash on Windows.
 """
 import argparse
@@ -84,9 +94,17 @@ import sys
 from pathlib import Path
 
 META = Path(__file__).resolve().parents[1]
-TOOL_VERSION = '0.3.0'
+TOOL_VERSION = '0.4.0'
+REPO_URL = 'https://github.com/y-rosenthal/yrAiProjectTemplates'
 SKIP_NAMES = {'.git', '__pycache__', '.quarto', '_book', '.DS_Store'}
 MANIFEST = Path('.yrAiProject') / 'manifest.json'
+ABOUT = Path('.yrAiProject') / 'README.md'
+NOTICE = Path('.yrAiProject') / 'session-start.json'
+SETUP_BEGIN = '<!-- begin yrAiProject setup: written by yrAiProject.sh; "yrAiProject.sh update" replaces this block -->'
+SETUP_END = '<!-- end yrAiProject setup -->'
+SETUP_BLOCK = re.compile(r'^<!-- begin yrAiProject setup.*?^' + re.escape(SETUP_END) + r'[ \t]*\n?', re.M | re.S)
+DOCS_TOC = 'docs/_quarto.yml'
+SETUP_PAGE = 'PROJECT-SETUP.qmd'
 OLD_MANIFEST = Path('.yrAiProjectTemplate') / 'manifest.json'
 RULES = META / 'rules' / 'AGENTS.md'
 BEGIN = '<!-- begin shared rules: copied by yrAiProject from yrAiProjectTemplates/rules/AGENTS.md; edit there -->'
@@ -163,7 +181,8 @@ def part_of(rel):
 def is_tool_file(rel):
     """A file that update keeps up to date (unless it was changed by hand). The other files (README, the SPEC, the
     _quarto.yml, ...) are starting points that the project owns: update adds them once, then leaves them."""
-    return rel.startswith('.claude/skills/') or bool(re.fullmatch(r'docs/[A-Z][A-Z-]*-GUIDE-v\d+\.qmd', rel))
+    return rel.startswith('.claude/skills/') or rel == 'docs/' + SETUP_PAGE or \
+        bool(re.fullmatch(r'docs/[A-Z][A-Z-]*-GUIDE-v\d+\.qmd', rel))
 
 
 def fill(text, values, yaml=False):
@@ -213,16 +232,81 @@ def shared_block():
     return f'{BEGIN}\n\n{text[i + 1:].strip()}\n\n{END}\n'
 
 
-def new_agents_md(old, name):
-    block = shared_block()
-    if old is None:
-        return f'# Rules for AI coding agents ({name})\n\nProject rules go here. The shared rules below come from yrAiProject.\n\n{block}'
-    m = BLOCK.search(old)
+def parts_text(parts):
+    return ', '.join(p for p in PARTS if p in parts)
+
+
+def setup_block_agents(version, parts):
+    """The block "yrAiProject setup" of AGENTS.md: every AI agent reads it."""
+    return f'''{SETUP_BEGIN}
+## Set up by yrAiProject.sh
+
+`yrAiProject.sh` (yrAiProjectTemplates {version}; parts: {parts_text(parts)}) set up this project. It installed
+files here, and `yrAiProject.sh update` keeps them up to date.
+
+- Before you change a file that it installed, read `.yrAiProject/README.md`. It lists the files, and tells who
+  changes each one.
+- Do not edit this block, the shared-rules block, or the files in `.yrAiProject/`. `yrAiProject.sh update`
+  writes them again.
+- At the start of a session, tell the user in one line that `yrAiProject.sh` set up this project, unless a
+  SessionStart message already told them.
+{SETUP_END}
+'''
+
+
+def setup_block_readme(version, parts):
+    """The block "yrAiProject setup" at the end of README.md: for people."""
+    return f'''{SETUP_BEGIN}
+*Set up by `yrAiProject.sh` (yrAiProjectTemplates {version}; parts: {parts_text(parts)}). It installed the rules
+for AI agents, the skills and the settings, and it updates them. Before you change them, read
+`.yrAiProject/README.md`.*
+{SETUP_END}
+'''
+
+
+def put_setup_block(old, block, where):
+    """old with block replaced, or put in: 'top' (after the # title line) or 'end'."""
+    m = SETUP_BLOCK.search(old)
     if m:
         return old[:m.start()] + block + old[m.end():]
-    if re.search(r'^<!-- begin shared rules', old, re.M):
+    if re.search(r'^<!-- begin yrAiProject setup', old, re.M):
+        raise Fail(2, 'a file has a "begin yrAiProject setup" line but no "end yrAiProject setup" line; fix it by hand')
+    if where == 'end':
+        return old.rstrip('\n') + '\n\n' + block
+    lines = old.split('\n')
+    if lines and lines[0].startswith('# '):
+        return lines[0] + '\n\n' + block + '\n' + '\n'.join(lines[1:]).lstrip('\n')
+    return block + '\n' + old
+
+
+def new_agents_md(old, name, version, parts):
+    block = shared_block()
+    setup = setup_block_agents(version, parts)
+    if old is None:
+        return (f'# Rules for AI coding agents ({name})\n\n{setup}\nProject rules go here. The shared rules below come '
+                f'from yrAiProject.\n\n{block}')
+    m = BLOCK.search(old)
+    if m:
+        old = old[:m.start()] + block + old[m.end():]
+    elif re.search(r'^<!-- begin shared rules', old, re.M):
         raise Fail(2, 'AGENTS.md has a "begin shared rules" line but no "end shared rules" line; fix it by hand')
-    return old.rstrip('\n') + '\n\n' + block
+    else:
+        old = old.rstrip('\n') + '\n\n' + block
+    return put_setup_block(old, setup, 'top')
+
+
+def new_readme(old, version, parts):
+    return None if old is None else put_setup_block(old, setup_block_readme(version, parts), 'end')
+
+
+def new_docs_toc(old):
+    """docs/_quarto.yml with the setup page after index.qmd; old if it lists the page; None if there is no place."""
+    if SETUP_PAGE in old:
+        return old
+    m = re.search(r'^([ \t]*)- index\.qmd[ \t]*\n', old, re.M)
+    if not m:
+        return None
+    return old[:m.end()] + f'{m.group(1)}- {SETUP_PAGE}\n' + old[m.end():]
 
 
 def new_claude_md(old):
@@ -233,9 +317,16 @@ def new_claude_md(old):
     return f'{IMPORT}\n\n{old}'
 
 
-def new_settings(old, template):
-    """settings.json with the SessionStart hook of the template added (old unchanged if a hook runs pending.sh
-    already), or None if old is not JSON that this tool understands."""
+def hook_part(entry):
+    """The part of a SessionStart entry of the template: the setup notice (rules) or the pending count."""
+    text = json.dumps(entry)
+    return 'pending-work' if 'pending.sh' in text else 'rules' if NOTICE.name in text else None
+
+
+def new_settings(old, template, parts):
+    """(settings.json with the template's SessionStart hooks of these parts added, the parts whose hooks were added).
+    A hook that the project has already (its script name is in an entry) is not added again. (None, set()) if old is
+    not JSON that this tool understands."""
     tmpl = json.loads(template)
     if old is None:
         settings = {'$schema': tmpl['$schema']} if '$schema' in tmpl else {}
@@ -243,15 +334,134 @@ def new_settings(old, template):
         try:
             settings = json.loads(old)
         except ValueError:
-            return None
+            return None, set()
     hooks = settings.setdefault('hooks', {}) if isinstance(settings, dict) else None
     entries = hooks.setdefault('SessionStart', []) if isinstance(hooks, dict) else None
     if not isinstance(entries, list):
-        return None
-    if 'pending.sh' in json.dumps(entries):
-        return old
-    entries.extend(tmpl['hooks']['SessionStart'])
-    return json.dumps(settings, indent=2) + '\n'
+        return None, set()
+    added = set()
+    for entry in tmpl['hooks']['SessionStart']:
+        part = hook_part(entry)
+        key = 'pending.sh' if part == 'pending-work' else NOTICE.name
+        if part in parts and key not in json.dumps(entries):
+            if part == 'rules':
+                entries.insert(0, entry)
+            else:
+                entries.append(entry)
+            added.add(part)
+    if not added:
+        return old, added
+    return json.dumps(settings, indent=2) + '\n', added
+
+
+# ---- the files about the setup: .yrAiProject/README.md and session-start.json ------------------------------------
+
+def about_text(target, m):
+    """.yrAiProject/README.md: what yrAiProject installed in the project, and who changes each file."""
+    version, parts, files = m.get('version'), m.get('parts', []), m.get('files', {})
+    made = f'`yrAiProject.sh new` (a new {m["projectType"]} project)' if m.get('projectType') else \
+        '`yrAiProject.sh update` (an existing folder)'
+    rows = [('AGENTS.md', 'rules', 'You: the project rules. The tool: only its two blocks, "yrAiProject setup" and '
+             '"shared rules"'),
+            ('CLAUDE.md', 'rules', 'You. The tool only keeps the line `@AGENTS.md`')]
+    if (target / SETTINGS).is_file():
+        rows.append((SETTINGS, 'rules' + (', pending-work' if 'pending-work' in parts else ''),
+                     'You. The tool only adds its SessionStart hooks'))
+    if (target / 'README.md').is_file():
+        rows.append(('README.md', '', 'You. The tool only writes its block "yrAiProject setup" at the end'))
+    for rel in sorted(files):
+        if rel in SPECIAL or rel == 'README.md':
+            continue
+        if is_tool_file(rel):
+            who = 'The tool: `update` replaces it with each new version. If you change it, `update` leaves it alone'
+        elif rel == DOCS_TOC:
+            who = f'You. The tool only adds the line `{SETUP_PAGE}` if it is missing'
+        else:
+            who = 'You. The tool added it once, and does not change it'
+        rows.append((rel, part_of(rel).replace('base', ''), who))
+    rows.append(('.yrAiProject/', '', 'The tool only: `manifest.json` (the record), `README.md` (this page), '
+                 '`session-start.json` (the notice). Do not edit'))
+    about_parts = {
+        'rules': 'the rules for every AI agent: `AGENTS.md`, with a copy of the shared rules (their source is '
+                 '`rules/AGENTS.md` in yrAiProjectTemplates), and `CLAUDE.md`, which imports it. A SessionStart hook '
+                 'shows a one-line notice about this setup at the start of each Claude Code session.',
+        'pending-work': 'work to do later is GitHub issues with the label `pending-work`. The `pending-work` skill '
+                        'manages them, and a SessionStart hook shows how many are open.',
+        'docs': 'the project-docs Quarto book in `docs/` (SPECs, guides, plans), and the `new-doc` skill, which adds '
+                'a document.',
+    }
+    history = m.get('history') or []
+    out = [
+        '<!-- Written by yrAiProject.sh. Do not edit: "yrAiProject.sh update" writes this file again. No "#" title:',
+        f'docs/{SETUP_PAGE} includes this file, and gives the title. -->', '',
+        f'**Project setup by yrAiProject.sh.** `yrAiProject.sh`, the tool of yrAiProjectTemplates ({REPO_URL}), set up '
+        'this project. It installed the '
+        'files below, and `yrAiProject.sh update` keeps them up to date. Read this page before you change one of them.',
+        '',
+        '| | |', '|---|---|',
+        f'| Template version | {version} |',
+        f'| Parts | {parts_text(parts)} |',
+        f'| Set up by | {made} |',
+        f'| Last change | {(m.get("updatedAt") or m.get("createdAt") or "")[:10]} |', '',
+        '## The parts', '',
+    ]
+    out += [f'- **{p}**: {about_parts[p]}' for p in PARTS if p in parts]
+    out += ['', '## The files', '', '| File | Part | Who changes it |', '|---|---|---|']
+    out += [f'| `{rel}` | {part} | {who} |' for rel, part, who in rows]
+    out += [
+        '', '## How to change things', '',
+        '- **Project rules:** edit `AGENTS.md`, outside the two blocks of the tool.',
+        '- **Shared rules:** edit `rules/AGENTS.md` in yrAiProjectTemplates and commit it. Then run '
+        '`yrAiProject.sh update` in this project.',
+        '- **A file of the tool** (a skill, a guide): you can change it. Then `update` leaves it alone, and the file '
+        'gets no newer versions. `yrAiProject.sh status` lists such files.',
+        '- **Without `yrAiProject.sh`** (for example, a collaborator): all these files are ordinary files. Change the '
+        'files of the tool only if you must, and tell the project owner.',
+        '', '## Commands', '',
+        '```bash',
+        'yrAiProject.sh status             # is the project up to date? which files were changed by hand?',
+        'yrAiProject.sh update --dry-run   # what update would change (changes nothing)',
+        'yrAiProject.sh update             # update the project (shows the changes, then asks)',
+        '```', '',
+        '`yrAiProject.sh` is in the Dropbox tools folder of the project owner. `yrAiProject.sh --help` explains it.',
+        '', '## History', '',
+        '| Date | Command | Template | Parts |', '|---|---|---|---|',
+    ]
+    out += [f'| {h.get("date", "")} | {h.get("command", "")} | {h.get("version") or ""} | '
+            f'{parts_text(h.get("parts") or [])} |' for h in history]
+    return '\n'.join(out) + '\n'
+
+
+def notice_text(m):
+    """.yrAiProject/session-start.json: the output of the SessionStart hook of the rules part."""
+    what = f'yrAiProjectTemplates {m.get("version")}; parts: {parts_text(m.get("parts", []))}'
+    user = f'Set up by yrAiProject.sh ({what}). Before you change its files, read .yrAiProject/README.md.'
+    context = (f'This project was set up by yrAiProject.sh ({what}); the user saw a one-line notice about it. '
+               '.yrAiProject/README.md lists the files that the tool installed, and tells who changes each one. Read '
+               'it before you change AGENTS.md, CLAUDE.md, .claude/settings.json, a file in .claude/skills/, or the '
+               'docs guides. Do not edit the tool\'s blocks in AGENTS.md and README.md, or the files in .yrAiProject/: '
+               '"yrAiProject.sh update" writes them again. "yrAiProject.sh status" shows whether the project is up to '
+               'date.')
+    return json.dumps({'systemMessage': user, 'hookSpecificOutput': {'hookEventName': 'SessionStart',
+                                                                      'additionalContext': context}}, indent=2) + '\n'
+
+
+def with_history(m, command):
+    """The record m with one more history entry (and, for a record from before v0.4.0, an entry for its setup)."""
+    history = list(m.get('history') or [])
+    if 'history' not in m and m.get('createdAt'):
+        history.append({'date': m['createdAt'][:10], 'command': 'set up (no history before v0.4.0)',
+                        'version': None, 'parts': []})
+    history.append({'date': datetime.date.today().isoformat(), 'command': command, 'version': m.get('version'),
+                    'parts': list(m.get('parts', []))})
+    return dict(m, history=history)
+
+
+def write_record(target, m):
+    """Write the record and the two files about the setup that come from it."""
+    save_manifest(target, m)
+    write(target, ABOUT.as_posix(), about_text(target, m))
+    write(target, NOTICE.as_posix(), notice_text(m))
 
 
 # ---- the state of a project ------------------------------------------------------------------------------------
@@ -366,25 +576,44 @@ class State:
                 else:
                     note = ''
                 actions.append(Action('add', rel, part, new, src=src, note=note))
-        if 'rules' in self.parts:
-            for rel, make in (('AGENTS.md', lambda old: new_agents_md(old, target.name)), ('CLAUDE.md', new_claude_md)):
-                if (target / rel).is_symlink():
-                    actions.append(Action('keep', rel, 'rules', note='a symlink: replace it with a file'))
-                    continue
-                old = read(target / rel)
-                new = make(old)
+        parts = self.installed | self.parts
+        merged = (('AGENTS.md', lambda old: new_agents_md(old, target.name, self.version, parts),
+                   'the setup notice and the shared rules'),
+                  ('CLAUDE.md', new_claude_md, 'imports AGENTS.md'),
+                  ('README.md', lambda old: new_readme(old, self.version, parts), 'the setup notice at the end'))
+        for rel, make, note in merged:
+            if (target / rel).is_symlink():
+                actions.append(Action('keep', rel, 'rules', note='a symlink: replace it with a file'))
+                continue
+            old = read(target / rel)
+            new = make(old)
+            if new is not None:
                 actions.append(Action('ok' if new == old else ('add' if old is None else 'change'), rel, 'rules',
-                                      new, old, note='the shared rules' if rel == 'AGENTS.md' else 'imports AGENTS.md'))
-        if 'pending-work' in self.parts and SETTINGS in files:
+                                      new, old, note=note))
+        if SETTINGS in files:
             old = read(target / SETTINGS)
-            new = new_settings(old, template_text(files[SETTINGS], self.values))
+            new, added = new_settings(old, template_text(files[SETTINGS], self.values), self.parts)
+            part = 'pending-work' if 'pending-work' in added else 'rules'
             if new is None:
-                actions.append(Action('keep', SETTINGS, 'pending-work', note='not JSON that yrAiProject understands: '
-                                      'add the SessionStart hook by hand (see the template)'))
+                actions.append(Action('keep', SETTINGS, part, note='not JSON that yrAiProject understands: add the '
+                                      'SessionStart hooks by hand (see the template)'))
             else:
-                actions.append(Action('ok' if new == old else ('add' if old is None else 'change'), SETTINGS,
-                                      'pending-work', new, old, note='the SessionStart hook'))
+                actions.append(Action('ok' if new == old else ('add' if old is None else 'change'), SETTINGS, part,
+                                      new, old, note='the SessionStart hook' + ('s' if len(added) > 1 else '')))
+        cur = read(target / DOCS_TOC)
+        if 'docs' in self.parts and 'docs/' + SETUP_PAGE in files and cur is not None:
+            new = new_docs_toc(cur)
+            if new is None:
+                self.notes.append(f'docs: add the line "- {SETUP_PAGE}" to the chapters in {DOCS_TOC} by hand')
+            elif new != cur:
+                actions.append(Action('change', DOCS_TOC, 'docs', new, cur, note=f'lists {SETUP_PAGE}'))
         return actions
+
+    def about_current(self):
+        """Whether .yrAiProject/README.md and session-start.json are what the current record makes."""
+        m = self.manifest
+        return m is not None and read(self.target / ABOUT) == about_text(self.target, m) \
+            and read(self.target / NOTICE) == notice_text(m)
 
     def changes(self):
         return [a for a in self.actions if a.kind in ('add', 'change')]
@@ -392,7 +621,7 @@ class State:
     def record_changes(self):
         """Whether the record (.yrAiProject/manifest.json) must be written."""
         m = self.manifest
-        return bool(self.changes()) or m is None or m.get('version') != self.version \
+        return bool(self.changes()) or m is None or not self.about_current() or m.get('version') != self.version \
             or set(m.get('parts', [])) != self.installed | self.parts or set(m.get('skippedParts', [])) != self.skipped
 
     def describe(self):
@@ -429,6 +658,10 @@ class State:
             if keep:
                 text += f'; {len(keep)} file(s) changed by hand (left alone)'
             print(f'  {part:<13} {text}')
+        if m and not self.about_current():
+            print(f'  setup notice  out of date or missing: update writes {ABOUT.as_posix()} and {NOTICE.name}')
+        elif m:
+            print(f'  about this setup: {ABOUT.as_posix()}')
         for n in self.notes:
             print(f'  note: {n}')
 
@@ -521,7 +754,9 @@ def cmd_update(args):
     print(f'What "update" would do (template {state.version}):')
     for a in changes:
         print(f'  {"+ add   " if a.kind == "add" else "~ change"} {a.rel}' + (f'  ({a.note})' if a.note else ''))
-    print(f'  {"~ change" if state.manifest else "+ add   "} {MANIFEST.as_posix()}  (the record of this setup)')
+    for rel, what in ((MANIFEST, 'the record of this setup'), (ABOUT, 'about this setup, for people and agents'),
+                      (NOTICE, 'the notice at the start of a Claude Code session')):
+        print(f'  {"~ change" if (target / rel).is_file() else "+ add   "} {rel.as_posix()}  ({what})')
     for a in keeps:
         print(f'  = keep   {a.rel}: {a.note}')
     shown = [a for a in changes if a.rel in SPECIAL or a.kind == 'change']
@@ -547,7 +782,7 @@ def cmd_update(args):
         return 1
     for a in changes:
         write(target, a.rel, a.new, a.src)
-    m = state.manifest or {'schemaVersion': 3, 'createdAt': now(), 'projectType': None}
+    m = state.manifest or {'schemaVersion': 3, 'createdAt': now(), 'projectType': None, 'history': []}
     files = dict(m.get('files', {}))
     for a in state.actions:
         if a.kind in ('add', 'change', 'ok') and a.rel not in SPECIAL:
@@ -562,9 +797,10 @@ def cmd_update(args):
         'updatedAt': now(),
         'tool': {'name': 'yrAiProject', 'version': TOOL_VERSION, 'templatesCommit': templates_commit()},
     })
-    save_manifest(target, m)
+    write_record(target, with_history(m, 'update'))
     print(f'Done: {len(changes)} file(s) added or changed, and the record written. Nothing was committed:')
     print('look at the changes (git status, git diff), then commit them.')
+    print(f'What yrAiProject installed, and who changes each file: {ABOUT.as_posix()}')
     if 'pending-work' in state.parts and 'pending-work' not in state.installed:
         print(f'For pending work, once, with a GitHub repository: bash {PENDING_SCRIPT} setup-labels')
     return 0
@@ -591,13 +827,18 @@ def cmd_new(args):
     values = project_values(target, None, args)
     values.update(PROJECT_TYPE=ptype, TEMPLATE_VERSION=version)
     texts = {rel: template_text(src, values) for rel, src in files.items()}
-    texts['AGENTS.md'] = new_agents_md(texts.get('AGENTS.md'), name)
+    parts = sorted({part_of(rel) for rel in texts} & set(PARTS))
+    texts['AGENTS.md'] = new_agents_md(texts.get('AGENTS.md'), name, version, parts)
+    if 'README.md' in texts:
+        texts['README.md'] = new_readme(texts['README.md'], version, parts)
     has_git = (target / '.git').exists()
 
     print(f'"new" would make a {ptype} project {name!r} in {target}, from template {version}:')
     for rel in sorted(texts):
         print(f'  + {rel}')
     print(f'  + {MANIFEST.as_posix()}  (the record of this setup)')
+    print(f'  + {ABOUT.as_posix()}  (about this setup, for people and agents)')
+    print(f'  + {NOTICE.as_posix()}  (the notice at the start of a Claude Code session)')
     print('  then: ' + ('' if has_git else 'git init (branch main), ') + 'commit the files' +
           (f', make the private GitHub repository {name} and push to it, make the pending-work labels'
            if args.github else ''))
@@ -610,27 +851,29 @@ def cmd_new(args):
 
     for rel, text in texts.items():
         write(target, rel, text, files.get(rel))
-    parts = sorted({part_of(rel) for rel in texts} & set(PARTS))
-    save_manifest(target, {
+    write_record(target, with_history({
         'schemaVersion': 3,
         'version': version,
         'projectType': ptype,
         'parts': parts,
         'skippedParts': [],
         'values': values,
+        'history': [],
         'files': {rel: digest(text) for rel, text in sorted(texts.items()) if rel not in SPECIAL},
         'createdAt': now(),
         'updatedAt': now(),
         'tool': {'name': 'yrAiProject', 'version': TOOL_VERSION, 'templatesCommit': templates_commit()},
-    })
-    print(f'made the files ({len(texts) + 1})')
+    }, 'new'))
+    print(f'made the files ({len(texts) + 3})')
     if not has_git:
         code, out = git(target, 'init', '-q', '-b', 'main')
         if code:
             raise Fail(5, f'git init failed:\n{out}')
     code, out = git(target, 'add', '-A')
     if not code:
-        code, out = git(target, 'commit', '-q', '-m', f'Make {name} from yrAiProjectTemplates {version} ({ptype} project)')
+        code, out = git(target, 'commit', '-q', '-m', f'Make {name} from yrAiProjectTemplates {version} ({ptype} project)',
+                        '-m', f'yrAiProject.sh made this project, with the parts {parts_text(parts)}. '
+                        f'{ABOUT.as_posix()} lists the files that it installed, and tells who changes each one.')
     if code:
         raise Fail(5, f'git commit failed (the files are written):\n{out}')
     print('made the git repository and the first commit')
@@ -648,7 +891,8 @@ def cmd_new(args):
     print(f'  cd {target}')
     if ptype == 'book':
         print('  quarto preview          # the main book')
-    print('  quarto preview docs     # the project docs (SPECs, guides, TODO)')
+    print('  quarto preview docs     # the project docs (SPECs, guides, plans)')
+    print(f'What yrAiProject installed, and who changes each file: {ABOUT.as_posix()}')
     return 0
 
 

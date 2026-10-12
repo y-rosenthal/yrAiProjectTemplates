@@ -10,7 +10,8 @@ Usage: python3 tests/selftest.py [--keep] [--no-quarto]
 
 In a scratch folder, it makes work and book projects with "new" and checks the files, the filled-in values, the
 record (.yrAiProject/manifest.json), the shared rules, the first commit and "status" (also after a Quarto render);
-the new-doc script; the output of the pending-work hook; "update" on existing folders (the plan and its diffs,
+the new-doc script; the output of the pending-work hook; the setup notice (.yrAiProject/README.md,
+the SessionStart notice, the blocks in AGENTS.md and README.md, the PROJECT-SETUP page of the docs book); "update" on existing folders (the plan and its diffs,
 --dry-run, the refusal without a terminal, the parts, --with-docs, --no-pending-work, a newer tool file, a file
 changed by hand, a deleted file); setup-computer (with a scratch HOME); and the error cases. Every command runs with
 no terminal (stdin is /dev/null), so nothing waits for an answer. It never uses --github without --dry-run, so it
@@ -27,10 +28,13 @@ from pathlib import Path
 
 META = Path(__file__).resolve().parents[1]
 TOOL = META / 'bin' / 'yrAiProject.py'
-NEWEST = 'v0.3.0'
+NEWEST = 'v0.4.0'
 PENDING = Path('.claude') / 'skills' / 'pending-work' / 'scripts' / 'pending.sh'
 SKILL = Path('.claude') / 'skills' / 'pending-work' / 'SKILL.md'
 MANIFEST = Path('.yrAiProject') / 'manifest.json'
+ABOUT = Path('.yrAiProject') / 'README.md'
+NOTICE = Path('.yrAiProject') / 'session-start.json'
+SETUP_END = '<!-- end yrAiProject setup -->'
 ENV = dict(os.environ, GIT_AUTHOR_NAME='selftest', GIT_AUTHOR_EMAIL='selftest@example.com',
            GIT_COMMITTER_NAME='selftest', GIT_COMMITTER_EMAIL='selftest@example.com')
 failures = []
@@ -215,15 +219,15 @@ def main(argv):
     code, out = tool('update', ex, '--dry-run')
     check(code == 0 and snapshot(ex) == before and '+ add    .claude/skills/pending-work/SKILL.md' in out
           and '~ change .claude/settings.json' in out and '"matcher": "startup|clear"' in out
-          and '+ add    AGENTS.md' in out and 'README.md' not in out.split('What "update"')[1],
-          'update --dry-run: the plan with diffs, changes nothing, no template README', out)
+          and '+ add    AGENTS.md' in out and '+ add    README.md' not in out and '~ change README.md' in out,
+          'update --dry-run: the plan with diffs, changes nothing, no template README (only the setup block)', out)
     code, out = tool('update', ex, '-y')
     s = json.loads((ex / '.claude' / 'settings.json').read_text())
     claude = (ex / 'CLAUDE.md').read_text()
     check(code == 0 and 'Scripts have --help' in (ex / 'AGENTS.md').read_text() and claude.startswith('@AGENTS.md')
           and '# My rules' in claude and s['permissions'] == {'allow': ['Bash(ls)']}
           and 'pending.sh' in json.dumps(s['hooks']) and (ex / PENDING).is_file()
-          and os.access(ex / PENDING, os.X_OK) and (ex / 'README.md').read_text() == '# Mine\n'
+          and os.access(ex / PENDING, os.X_OK) and (ex / 'README.md').read_text().startswith('# Mine\n\n<!-- begin yrAiProject setup')
           and not (ex / 'docs').exists() and manifest(ex)['parts'] == ['pending-work', 'rules'],
           'update -y: the shared rules and pending-work, keeps what is there, no docs', out)
     code, out = tool('status', ex)
@@ -263,8 +267,10 @@ def main(argv):
     np = tmp / 'no-pending'
     np.mkdir()
     code, out = tool('update', np, '--no-pending-work', '-y')
-    check(code == 0 and not (np / '.claude').exists() and manifest(np)['skippedParts'] == ['pending-work'],
-          'update --no-pending-work: only the rules', out)
+    hooks = json.dumps(json.loads((np / '.claude' / 'settings.json').read_text()))
+    check(code == 0 and not (np / '.claude' / 'skills').exists() and 'pending.sh' not in hooks
+          and 'session-start.json' in hooks and manifest(np)['skippedParts'] == ['pending-work'],
+          'update --no-pending-work: only the rules (and the hook of the setup notice)', out)
     code, out = tool('status', np)
     check(code == 0 and 'you chose --no-pending-work' in out, 'status remembers --no-pending-work', out)
     code, out = tool('update', np, '--with-pending-work', '--with-docs', '-y')
@@ -292,6 +298,72 @@ def main(argv):
     check(code == 2, 'update of a folder that does not exist: exit 2', out)
     code, out = tool('update', ex, '--no-pending-work', '--with-pending-work', '-y')
     check(code == 2, 'update --no-pending-work --with-pending-work: exit 2', out)
+
+    print('the setup notice')
+    work = tmp / 'my-work'
+    m = manifest(work)
+    about = (work / ABOUT).read_text()
+    check(all(f'`{rel}`' in about for rel in m['files']) and 'v' + NEWEST[1:] in about and '| new |' in about
+          and len(m['history']) == 1 and not about.startswith('#'),
+          '.yrAiProject/README.md: every installed file, the version, the history; no # title', about[:1500])
+    notice = json.loads((work / NOTICE).read_text())
+    check(NEWEST in notice['systemMessage'] and '.yrAiProject/README.md' in notice['systemMessage']
+          and notice['hookSpecificOutput']['hookEventName'] == 'SessionStart'
+          and 'README.md' in notice['hookSpecificOutput']['additionalContext'], 'session-start.json: the notice')
+    entries = json.loads((work / '.claude' / 'settings.json').read_text())['hooks']['SessionStart']
+    command = entries[0]['hooks'][0]['command']
+    code, out = run(['bash', '-c', command], env=dict(ENV, CLAUDE_PROJECT_DIR=str(work)))
+    check(code == 0 and json.loads(out) == notice and 'pending.sh' in json.dumps(entries[1]),
+          'the first SessionStart hook prints the notice; the second is pending-work', out)
+    code, out = run(['bash', '-c', command], env=dict(ENV, CLAUDE_PROJECT_DIR=str(tmp / 'no-such-folder')))
+    check(code == 0 and out.strip() == '', 'the notice hook prints nothing and does not fail without the file', out)
+    agents = (work / 'AGENTS.md').read_text()
+    check(agents.count('<!-- begin yrAiProject setup') == 1 and agents.index('## Set up by yrAiProject.sh')
+          < agents.index('## The project') and NEWEST in agents.split(SETUP_END)[0], 'AGENTS.md: the setup block at the top')
+    readme = (work / 'README.md').read_text()
+    check(readme.rstrip().endswith(SETUP_END) and readme.count('<!-- begin yrAiProject setup') == 1,
+          'README.md: the setup block at the end')
+    toc = (work / 'docs' / '_quarto.yml').read_text()
+    check('- index.qmd\n    - PROJECT-SETUP.qmd\n' in toc and (work / 'docs' / 'PROJECT-SETUP.qmd').is_file()
+          and 'PROJECT-SETUP.qmd' in (work / 'docs' / 'index.qmd').read_text(),
+          'docs: the PROJECT-SETUP chapter after the home page, and a notice on the home page')
+    code, out = run(['git', 'log', '-1', '--format=%B'], cwd=work)
+    check('.yrAiProject/README.md' in out, 'the first commit names .yrAiProject/README.md', out)
+    if quarto:
+        page = (work / 'docs' / '_book' / 'PROJECT-SETUP.html').read_text()
+        check('Project setup by yrAiProject.sh' in page and 'Who changes it' in page and '{{<' not in page,
+              'quarto: the PROJECT-SETUP page shows .yrAiProject/README.md')
+    (work / ABOUT).write_text('changed\n')
+    code, out = tool('status', work)
+    check(code == 1 and 'setup notice  out of date' in out, 'status sees a changed .yrAiProject/README.md', out)
+    code, out = tool('update', work, '-y')
+    check(code == 0 and (work / ABOUT).read_text() != 'changed\n' and len(manifest(work)['history']) == 2
+          and (work / 'AGENTS.md').read_text() == agents, 'update writes it again, adds to the history, and '
+          'does not add a second setup block', out)
+    run(['git', 'checkout', '-q', '.'], cwd=work)
+    run(['git', 'clean', '-qfd', '.yrAiProject'], cwd=work)
+
+    v3 = tmp / 'from-v030'
+    tool('new', v3, '--version', 'v0.3.0', '-y')
+    m = manifest(v3)
+    del m['history']
+    (v3 / MANIFEST).write_text(json.dumps(m))
+    code, out = tool('update', v3, '-y')
+    toc = (v3 / 'docs' / '_quarto.yml').read_text()
+    hist = manifest(v3)['history']
+    check(code == 0 and 'PROJECT-SETUP.qmd' in toc and (v3 / 'docs' / 'PROJECT-SETUP.qmd').is_file()
+          and [h['command'] for h in hist] == ['set up (no history before v0.4.0)', 'update']
+          and '**/*.quarto_ipynb' not in (v3 / '.gitignore').read_text(),
+          'update of a v0.3.0 project: the setup page in the TOC, the history starts; .gitignore is the owner\'s', out)
+    if quarto:
+        code, out = run(['quarto', 'render', 'docs'], cwd=v3)
+        check(code == 0 and 'Who changes it' in (v3 / 'docs' / '_book' / 'PROJECT-SETUP.html').read_text(),
+              'quarto render docs after the update of a v0.3.0 project', out[-800:])
+    half = tmp / 'half-block'
+    half.mkdir()
+    (half / 'AGENTS.md').write_text('# Mine\n\n<!-- begin yrAiProject setup -->\nno end\n')
+    code, out = tool('update', half, '-y')
+    check(code == 2 and 'by hand' in out, 'a setup block without its end line: exit 2', out)
 
     print('setup-computer')
     home = tmp / 'home'

@@ -1,0 +1,3 @@
+# The Quarto cache of the project-docs book (Quarto adds these lines if they are missing)
+/.quarto/
+**/*.quarto_ipynb

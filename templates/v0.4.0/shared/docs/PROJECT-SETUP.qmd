@@ -1,0 +1,8 @@
+---
+title: "Project setup by yrAiProject.sh"
+---
+
+<!-- yrAiProject.sh installs this page and keeps it up to date. The text comes from .yrAiProject/README.md, which
+"yrAiProject.sh update" writes again at each update. Do not edit either file. -->
+
+{{< include ../.yrAiProject/README.md >}}

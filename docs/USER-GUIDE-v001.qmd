@@ -15,7 +15,9 @@ same places:
   session starts (@sec-pending).
 - `docs/`: the **project-docs Quarto book**: the SPECs, the guides and the plans, with the
   `new-doc` skill that adds a document (@sec-new-doc).
-- `.yrAiProject/manifest.json`: the record of the template version and the parts that the project has.
+- `.yrAiProject/`: the record of the setup. `.yrAiProject/README.md` tells people and agents what the tool
+  installed and who changes each file. A notice at the start of each Claude Code session points to it
+  (@sec-notice).
 
 One command does everything: **`yrAiProject.sh`**.
 
@@ -82,7 +84,7 @@ confirm, the tool:
 1. copies the shared template files, then the files of the type, and fills in the project name, title,
    description, type, date and template version;
 2. copies the shared rules into `AGENTS.md`;
-3. writes the record, `.yrAiProject/manifest.json`;
+3. writes the record, `.yrAiProject/manifest.json`, and the setup notice (@sec-notice);
 4. makes a git repository (branch `main`) and commits the files;
 5. with `--github`: makes a private GitHub repository with the folder name, pushes, and makes the labels for
    pending work.
@@ -128,14 +130,14 @@ made by `yrAiProject.sh new`. It adds only the **parts** that a project needs, n
 
 | Part | What it is | `update` |
 |---|---|---|
-| `rules` | The shared rules in `AGENTS.md`, and `@AGENTS.md` in `CLAUDE.md` | always |
+| `rules` | The shared rules in `AGENTS.md`, `@AGENTS.md` in `CLAUDE.md`, and the setup notice (@sec-notice) | always |
 | `pending-work` | The pending-work skill, and its hook in `.claude/settings.json` | yes; `--no-pending-work` to skip it (remembered) |
 | `docs` | The project-docs Quarto book in `docs/`, and the `new-doc` skill | only with `--with-docs` (then kept up to date) |
 
 What `update` does with the files:
 
-- In `AGENTS.md`, `CLAUDE.md` and `.claude/settings.json`, it changes only the shared-rules block, the import line
-  and the hook. Your own rules and settings stay.
+- In `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, `README.md` and `docs/_quarto.yml`, it changes only its
+  blocks, the import line, its hooks and the line for the setup page. Your own rules, text and settings stay.
 - **Tool files** (the skills in `.claude/skills/`, and the guides in `docs/`) get the newest version, unless you
   changed them by hand: those it leaves alone, and `status` counts them. To take the newest version of such a file,
   delete it (or rename it), then run `update`.
@@ -147,12 +149,32 @@ What `update` does with the files:
 
 After you change the shared rules, or after a new template version, run `yrAiProject.sh update` in each project.
 
+## How a project shows that yrAiProject set it up {#sec-notice}
+
+People and AI agents that change a project must know which files the tool installed, and which ones it can
+replace. So `new` and `update` put a notice in five places:
+
+| Where | Who sees it | What it says |
+|---|---|---|
+| `.yrAiProject/README.md` | People and agents | The version and the parts; each installed file and who changes it; how to change things; the commands; the history of the runs |
+| A message when a Claude Code session starts (and after `/clear`) | You, and the agent | `Set up by yrAiProject.sh (yrAiProjectTemplates v0.4.0; parts: ...). Before you change its files, read .yrAiProject/README.md.` |
+| The block "Set up by yrAiProject.sh" near the top of `AGENTS.md` | Every AI agent (Codex, Cursor and Copilot too) | The same facts. Agents without the hook tell you in one line at the start of a session |
+| A line at the end of `README.md` | People, for example on GitHub | The same facts in one sentence |
+| The docs book: a notice on the home page, and the chapter "Project setup by yrAiProject.sh" | Readers of the book | The text of `.yrAiProject/README.md` |
+
+- Do not edit the blocks between `<!-- begin yrAiProject setup -->` and `<!-- end yrAiProject setup -->`, or the
+  files in `.yrAiProject/`: `update` writes them again. Everything else in `AGENTS.md` and `README.md` is yours.
+- The message at the start of a session comes from a hook in `.claude/settings.json` that prints
+  `.yrAiProject/session-start.json`. To stop it, remove that hook entry.
+- `status` reports a notice that is missing or out of date, and `update` writes it again.
+
 ## Pending work {#sec-pending}
 
 Pending items are things to do later, so that they are not forgotten. You don't use GitHub yourself: tell the agent,
 for example "add a pending item: ...", "list pending", "let's work on #12", or "#12 is no longer needed".
 
-- When a Claude Code session starts (and after `/clear`), a hook shows how many items are open, for example
+- When a Claude Code session starts (and after `/clear`), a hook shows how many items are open (after the setup
+  notice), for example
   `Pending work: 12 pending items (3 high, 5 medium, 4 low)`. The list itself is not loaded, because a long list
   uses up the agent's context. Say "list pending" to see it.
 - Each item is a GitHub issue in the project's repository with the label `pending-work`, a category label and a
@@ -240,11 +262,11 @@ terminal (use `-y` or `--dry-run`).
 
 1. A released template version does not change. A version is released when it has the git tag
    `templates-vX.Y.Z`. Projects record their version, and `status` compares it with the newest.
-2. To change the templates, copy the newest version folder to a new version, for example `templates/v0.4.0/`, and
+2. To change the templates, copy the newest version folder to a new version, for example `templates/v0.5.0/`, and
    change the copy. `yrAiProject.sh` uses the newest version.
-3. Write a SPEC for the new version (`docs/SPEC-v0.4.0.qmd`), and update this guide.
+3. Write a SPEC for the new version (`docs/SPEC-v0.5.0.qmd`), and update this guide.
 4. Run `python3 tests/selftest.py`. It must print `OK`. Then render this book: `quarto render docs`.
-5. Commit, and tag the version: `git tag templates-v0.4.0`.
+5. Commit, and tag the version: `git tag templates-v0.5.0`.
 
 ## Older tools {#sec-retired}
 

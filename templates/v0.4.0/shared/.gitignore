@@ -1,0 +1,19 @@
+# Quarto: rendered books (every book folder) and the cache of the book at the root.
+# Quarto adds the lines /.quarto/ and **/*.quarto_ipynb to a book folder's .gitignore if they are missing.
+_book/
+/.quarto/
+**/*.quarto_ipynb
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# R
+.Rproj.user/
+.Rhistory
+
+# Editors and operating systems
+.DS_Store
+*.swp
+*~

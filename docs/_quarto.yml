@@ -13,6 +13,7 @@ book:
     - USER-GUIDE-v001.qmd
     - part: "Specification"
       chapters:
+        - SPEC-v0.4.0.qmd
         - SPEC-v0.3.0.qmd
         - SPEC-v0.2.0.qmd
         - SPEC-v0.1.0.qmd

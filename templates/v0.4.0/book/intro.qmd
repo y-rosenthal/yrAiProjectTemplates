@@ -1,0 +1,4 @@
+# Introduction {#sec-intro}
+
+TODO: the first chapter. Each chapter is a `.qmd` file with one `#` heading at the top. Add each chapter to
+`book: chapters:` in `_quarto.yml`.
