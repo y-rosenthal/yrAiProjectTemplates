@@ -1,0 +1,222 @@
+---
+title: "SPEC-v0.3.0"
+subtitle: "The templates, the shared rules, pending work and yrNewAiProject, version 0.3.0"
+---
+
+## Purpose {#sec-purpose}
+
+Every new project for AI-assisted work starts from the same base:
+
+- rules that every AI agent and every collaborator reads;
+- a Quarto book of project documents;
+- a skill to add documents;
+- a list of pending work (things to do later), kept as GitHub issues.
+
+There are two types of project: `work` and `book`. One command, `yrNewAiProject.sh`, makes a project, and it
+checks a project against its template. The user guide (`USER-GUIDE-v001.qmd`) tells how to use them. This SPEC
+says what they must do.
+
+## Changes from SPEC-v0.2.0 {#sec-changes}
+
+- Template v0.3.0: every project has the `pending-work` skill and a SessionStart hook in `.claude/settings.json`
+  that shows the user how many pending items are open (@sec-pending). `AGENTS.md` has a "Pending work" section.
+- `yrNewAiProject --github` also makes the labels of the pending-work skill (@sec-tool-make).
+- `agents-init --pending-work` adds the skill and the hook to an existing project (@sec-pending-existing).
+- `yrNewAiProject` is version 0.3.0. Template v0.2.0 does not change.
+
+## Repository layout {#sec-layout}
+
+| Path | Content |
+|---|---|
+| `templates/vX.Y.Z/shared/` | Files for every project of that version |
+| `templates/vX.Y.Z/TYPE/` | Files for one type (`work`, `book`; `generic` in v0.0.1) |
+| `rules/AGENTS.md` | The shared rules: the text from its first `## ` heading on |
+| `bin/yrNewAiProject.py`, `bin/agents_init.py` | The tools (Python 3.8 or later, standard library only) |
+| `bin/setup-computer.sh` | The setup of one computer |
+| `tests/selftest.py` | The tests |
+| `docs/` | This book |
+
+The commands `yrNewAiProject.sh` and `agents-init.sh` are wrappers in the Dropbox tools folder. Each one finds the
+repository by a path relative to its own folder (`../_yrAiCoding/yrAiProjectTemplates`). Each one runs the Python
+script with the first of `python3`, `python` and `py -3` that runs Python 3.8 or later.
+
+## Template versions {#sec-versions}
+
+1. A version folder name is `v` and three numbers. The newest version (highest numbers) is the default.
+2. A version is released when the repository has the git tag `templates-vX.Y.Z`. The files of a released
+   version must not change. A change goes into a new version folder, which has its own SPEC.
+3. The type folders of a version are its types. The `shared` folder is not a type.
+
+## Project contents in v0.3.0 {#sec-contents}
+
+| File | `work` | `book` |
+|---|---|---|
+| `AGENTS.md`, `CLAUDE.md`, `.gitignore` | yes | yes |
+| `README.md` | the work README | the book README |
+| `docs/_quarto.yml`, `docs/index.qmd`, `docs/.gitignore` | yes | yes (the book's `_quarto.yml` also lists the PLANNING document) |
+| `docs/SPEC-v0.1.0.qmd`, `docs/TODO-v001.qmd` | yes | yes |
+| `docs/DOC-GUIDE-v001.qmd`, `docs/QUARTO-GUIDE-v001.qmd` | yes | yes |
+| `docs/PLANNING-v001.qmd` | no | yes |
+| `.claude/skills/pending-work/SKILL.md`, `scripts/pending.sh` | yes | yes |
+| `.claude/settings.json` (the SessionStart hook) | yes | yes |
+| `_quarto.yml`, `index.qmd`, `intro.qmd` (the main book) | no | yes |
+| `.claude/skills/new-doc/SKILL.md`, `new_doc.py` | yes | yes |
+| `.yrAiProjectTemplate/manifest.json` | yes | yes |
+
+Each `.gitignore` of a book folder holds the exact line `/.quarto/`. Without that line, Quarto adds it at the first
+render, and the project would then have an uncommitted change.
+
+## Placeholders {#sec-placeholders}
+
+| Form | Meaning |
+|---|---|
+| `{{YRAI:KEY}}` | A value that the tool fills in. `KEY` is capital letters, digits and `_` |
+| `<!-- YRAI:BEGIN:NAME -->` ... `<!-- YRAI:END:NAME -->` | A region that the user writes. The markers stay in the file |
+| `{{YRAI:BEGIN:NAME}}` ... `{{YRAI:END:NAME}}` | The region form of v0.0.1, still read by `--check-content` |
+
+The tool fills these values:
+
+| Key | Value |
+|---|---|
+| `PROJECT_NAME` | The folder name |
+| `PROJECT_TITLE` | `--title`, or the folder name |
+| `PROJECT_DESCRIPTION` | `--description`, or a TODO line |
+| `PROJECT_TYPE` | The type |
+| `CREATED_DATE` | The date, `YYYY-MM-DD` |
+| `TEMPLATE_VERSION` | The version, `vX.Y.Z` |
+
+1. In `.yml` files, and in the YAML front matter of `.qmd` and `.md` files, a template puts each value in double
+   quotes. The tool escapes `\` and `"` in those values.
+2. A key that the tool does not know stays as it is.
+3. A file that is not UTF-8 text is copied unchanged.
+
+## The shared rules {#sec-rules}
+
+1. The shared block is the text of `rules/AGENTS.md` from its first `## ` heading on.
+2. In a project's `AGENTS.md`, the block is between a line that starts with `<!-- begin shared rules` and the line
+   `<!-- end shared rules -->`. `agents_init.update()` replaces the text between them, and keeps the rest of the
+   file. If the markers are missing, it adds the block at the end.
+3. `agents_init.update()` also makes sure that `CLAUDE.md` has the line `@AGENTS.md`. It adds the line at the top,
+   or creates the file. It does not write through a symlink.
+4. `~/.claude/CLAUDE.md` on the owner's computers imports `rules/AGENTS.md`.
+
+## The manifest {#sec-manifest}
+
+`.yrAiProjectTemplate/manifest.json`, schema 2:
+
+```json
+{
+  "schemaVersion": 2,
+  "templateVersion": "v0.3.0",
+  "projectType": "work",
+  "values": {"PROJECT_NAME": "...", "PROJECT_TITLE": "...", "PROJECT_DESCRIPTION": "...",
+             "PROJECT_TYPE": "work", "CREATED_DATE": "2026-10-12", "TEMPLATE_VERSION": "v0.3.0"},
+  "createdAt": "2026-10-12T18:00:00Z",
+  "addedToExisting": false,
+  "installer": {"name": "yrNewAiProject", "version": "0.3.0"},
+  "metaRepo": {"path": "/home/.../yrAiProjectTemplates", "commit": "abc1234"}
+}
+```
+
+`--verify` also reads schema 1, the manifest of `yraiproject`. It reads that manifest as version
+`v<templateVersion>`, type `generic`, with no values.
+
+## yrNewAiProject {#sec-tool}
+
+### Make a project {#sec-tool-make}
+
+1. The target folder must not exist, or be empty, or hold only `.git`. With `--strict-empty`, `.git` alone is
+   refused. Otherwise: exit 3, and nothing is written.
+2. With `--add-to-existing`, the folder can hold files. If a template file, or the manifest, exists already, the
+   tool lists the files, writes nothing, and exits with status 4.
+3. With `--github`: the tool first checks that `gh` exists and is logged in (else exit 2). `--github` with
+   `--add-to-existing` is refused (exit 2), because there is no first commit to push.
+4. The tool copies the `shared` files, then the type files (a type file replaces a shared file with the same path).
+   It skips `.git`, `__pycache__`, `.quarto`, `_book`, `.DS_Store` and `yraiproject.template.yml`. It fills in the
+   values in text files, and it keeps the file permissions.
+5. It fills in the shared rules (@sec-rules), then writes the manifest.
+6. If the folder has no `.git`, it runs `git init -b main`. Without `--add-to-existing`, it commits all the files
+   ("Make NAME from yrAiProjectTemplates VERSION (TYPE project)"). A git failure: exit 5.
+7. With `--github`, it runs `gh repo create NAME --private --source PATH --remote origin --push`. A failure: exit
+   5. The local project stays. If the project has `.claude/skills/pending-work/scripts/pending.sh`, it then runs
+   `pending.sh setup-labels`. A failure there is a warning, not an error.
+8. `--dry-run` lists the files and the actions, and changes nothing.
+
+### Check a project {#sec-tool-verify}
+
+1. `--verify PATH` reads the manifest (no manifest: exit 2). `--type` and `--version` replace its values.
+2. A template file that is missing is a problem. A file that is not from the template (outside `.git`, the
+   skipped names and the manifest) is a note. Shared rules that are out of date are a note.
+3. With `--check-content`, the tool fills the template file with the manifest values, and compares it with the
+   project file. The YRAI regions, the keys without a value and the shared-rules block can hold any text. Any other
+   difference is a problem. Line ends `\r\n` and `\n` are the same. A binary file must be the same, byte for byte.
+4. Exit 1 if there is a problem, else 0.
+
+### Other {#sec-tool-other}
+
+`--list` lists the versions, newest first, with their types. `-h` and `--help` print the help (the docstring) and
+exit 0. Bad options: exit 2.
+
+## The new-doc skill {#sec-documents}
+
+1. Document types are names in capital letters, digits and hyphens. The default is `SPEC`. There are no PRDs.
+2. A SPEC file is `SPEC-vX.Y.Z.qmd`. The default version is the newest SPEC's version with the last number plus 1,
+   or `0.1.0` if there is no SPEC. `--version` gives another one.
+3. Another type's file is `TYPE-vNNN.qmd`, with the next copy number (`001` first).
+4. The new file is a copy of the newest version of its type, with the new title. With `--blank`, or when there is
+   no older version, it is the outline of the type.
+5. The script lists the file in `docs/_quarto.yml`: above the newest older version of the type; else at the end of
+   its part (`Specification` for SPEC, `Guides` for a name that ends in `GUIDE`, else `Work`, or `--part`); else in
+   a new part at the end of `book: chapters:`.
+6. A file that exists is never replaced.
+
+## Pending work {#sec-pending}
+
+Pending items are things to do later. The user talks to the agent; the agent does the GitHub work.
+
+1. An item is a GitHub issue in the project's repository (the `origin` remote) with the label `pending-work`, one
+   category label (by default `fix`, `improvement`, `decision` or `recheck`) and one priority label
+   (`priority: high`, `priority: medium` or `priority: low`).
+2. `scripts/pending.sh` needs only bash and `gh` (it uses the jq that is built into `gh`), so it also runs in Git
+   Bash on Windows. Its commands:
+
+   | Command | What it does |
+   |---|---|
+   | `session-start` | Prints the JSON for the SessionStart hook (below) |
+   | `list` | The open items, one per line (`#12 [high] Title  (category)`), highest priority first |
+   | `export` | Writes the open items, with their text, to `_pending-work/pendingWork.md` |
+   | `setup-labels` | Makes or updates the labels (safe to repeat) |
+   | `-h`, `--help` | Prints the help and stops |
+
+   The settings at the top of the script, `MIRROR`, `QUEUE` and `CATEGORIES`, may be changed for a project. The
+   folder `_pending-work/` starts with `_`, so Quarto does not render it.
+3. `.claude/settings.json` runs `pending.sh session-start` for the SessionStart sources `startup` and `clear`. The
+   output is JSON with:
+   - `systemMessage`, which the user sees: the count by priority, for example `Pending work: 12 pending items (3
+     high, 5 medium, 4 low). Want to see them? Say "list pending".`, or `Pending work: nothing pending.`;
+   - `hookSpecificOutput.additionalContext`, which the agent gets: the same count and how to answer. **It does not
+     hold the list**, so that the list uses no context until the user asks for it.
+4. When `gh` is missing or not logged in, GitHub cannot be reached, or the project has no GitHub remote,
+   `session-start` and `list` use the saved copy (`_pending-work/pendingWork.md`) and the items that the agent
+   queued in `_pending-work/queue.md` (headings `### [priority] Title`). The output says that the count may be out
+   of date.
+5. `SKILL.md` tells the agent how to show, add, change, work on and close items, and how to handle the queue.
+
+### Add pending work to an existing project {#sec-pending-existing}
+
+`agents-init --pending-work [DIR]`:
+
+1. copies the files of `.claude/skills/pending-work/` from the `shared/` folder of the newest template version
+   that has them. A file that exists is never replaced (the project may have changed the settings in
+   `pending.sh`);
+2. adds the SessionStart entry of that version's `.claude/settings.json` to the project's `.claude/settings.json`,
+   unless a SessionStart entry already runs `pending.sh`. The other settings are kept. A file that is not valid JSON
+   is not changed (the tool stops with a message). If the project has no settings file, it is created;
+3. with `--check`, changes nothing, and exits with status 1 if a skill file or the hook is missing.
+
+## Tests {#sec-tests}
+
+`tests/selftest.py` makes test projects in a scratch folder and checks every function in this SPEC. It also
+checks every error status, that a Quarto render leaves no uncommitted change, the output of
+`pending.sh session-start` (with no GitHub repository, so it needs no network), and `agents-init --pending-work`. GitHub Actions runs it and
+renders this book on each push. It never runs `--github` without `--dry-run`.

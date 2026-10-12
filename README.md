@@ -23,7 +23,9 @@ On a new computer, run `bin/setup-computer.sh` once.
 | `book` | A Quarto book to publish | The main book at the root (`quarto preview`), and the project docs in `docs/` (`quarto preview docs`) |
 
 Every project gets `AGENTS.md` (the rules for every AI agent, with the shared rules), `CLAUDE.md` (it imports
-`AGENTS.md`), `.gitignore`, the project-docs book with a first SPEC, and the `new-doc` skill.
+`AGENTS.md`), `.gitignore`, the project-docs book with a first SPEC, the `new-doc` skill, and the `pending-work`
+skill: things to do later are GitHub issues, and a SessionStart hook shows how many are open. To add the
+pending-work skill to an existing project: `agents-init.sh --pending-work`.
 
 ## Layout
 
@@ -40,7 +42,7 @@ Every project gets `AGENTS.md` (the rules for every AI agent, with the shared ru
 ## Documentation
 
 Read the book: `quarto preview docs`. It has the user guide (`docs/USER-GUIDE-v001.qmd`), the specification
-(`docs/SPEC-v0.2.0.qmd`), and the writing and Quarto guides that every project gets.
+(`docs/SPEC-v0.3.0.qmd`), and the writing and Quarto guides that every project gets.
 
 The `yraiproject` tool of version 0.1.0 is retired; `yrNewAiProject` replaces it. The old tool is in the git tag
 `yraiproject-final`.

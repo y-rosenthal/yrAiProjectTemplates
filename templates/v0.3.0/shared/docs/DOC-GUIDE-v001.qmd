@@ -1,0 +1,55 @@
+---
+title: "DOC-GUIDE-v001"
+subtitle: "How to write the project documents"
+---
+
+The project documents are in `docs/`, a Quarto book. They tell people and AI agents what the project must do, how
+it is made, and what work is still open. Keep them current: an agent that reads current documents makes better
+decisions.
+
+## Document types {#sec-doc-types}
+
+| Type | What it holds |
+|---|---|
+| `SPEC` | What the project must do in one development step: purpose, scope, requirements, design, open questions. The default type. |
+| `USER-GUIDE` | How to use the project, step by step. |
+| `DESIGN-GUIDE` | How the project is made, and why: structure, decisions, rejected alternatives. |
+| `TODO` | The work still to do, and the work done. |
+| `PLANNING` | Plans: goals, steps, risks. In a book project, the plans for the main book. |
+| Other | Any other name in capital letters and hyphens, for example `STYLE-GUIDE` or `RESEARCH-NOTES`. |
+
+There are no PRD documents. A SPEC holds the requirements.
+
+## File names and versions {#sec-doc-names}
+
+- **A SPEC has the version of its development step:** `SPEC-v0.1.0.qmd`, `SPEC-v0.2.0.qmd`, and so on. Each step
+  gets a new SPEC file. Do not change the SPEC of a finished step: it records what that step had to do.
+- **Other documents have a copy number:** `USER-GUIDE-v001.qmd`. Edit that file as the project changes. Make
+  `-v002` only when you want to keep the old copy next to the new one.
+- With the version in the file name, you can compare two versions without git.
+- In `docs/_quarto.yml`, list the newest version of a document first.
+
+## Add a document {#sec-doc-add}
+
+Use the `new-doc` skill. With another agent, or by hand, run its script from the project folder:
+
+```bash
+python3 .claude/skills/new-doc/new_doc.py                 # the next SPEC (a copy of the newest SPEC)
+python3 .claude/skills/new-doc/new_doc.py USER-GUIDE      # USER-GUIDE-v001.qmd, or the next copy
+python3 .claude/skills/new-doc/new_doc.py --help          # all the options
+```
+
+The script makes the file and adds it to `docs/_quarto.yml`. Then write the content, and run `quarto render docs`.
+
+## Writing rules {#sec-doc-writing}
+
+- Put the document name in the YAML `title` (for example `title: "SPEC-v0.2.0"`), and a short description in
+  `subtitle`. Then the table of contents shows the file names.
+- Start the sections at `##`. Do not put a `#` heading in the body: the `title` is the top heading.
+- Do not type section numbers. Quarto numbers the sections. Give a section a label, `## Design {#sec-design}`, and
+  refer to it with `@sec-design`. Quarto writes the number and the link.
+- Link to other documents with relative links: `[the SPEC](SPEC-v0.2.0.qmd)`.
+- Give each code block its language: ```` ```bash ````, ```` ```python ````.
+- Write in ASD-STE100 Simplified Technical English: short sentences, active voice, the imperative for procedures,
+  simple words with one meaning, and the same term each time.
+- Update the documents in the same change as the work that they describe.

@@ -14,6 +14,8 @@ things in the same places:
 - `docs/`: the **project-docs Quarto book**: the SPECs, the guides, the TODO list and the plans. It is the quick
   way to learn what a project holds.
 - `.claude/skills/new-doc/`: the skill that adds a document to `docs/`.
+- `.claude/skills/pending-work/` and `.claude/settings.json`: the **pending work** list, things to do later. They
+  are GitHub issues, and Claude Code shows how many are open when a session starts (@sec-pending).
 - `.yrAiProjectTemplate/manifest.json`: the template that the project was made from.
 
 ## Set up a computer {#sec-setup}
@@ -146,11 +148,37 @@ changed since the project was made.
 ## Put a project on GitHub {#sec-github}
 
 Add `--github` when you make the project. The tool then makes a **private** GitHub repository with the folder name
-(`gh repo create`), and pushes the first commit. To do this later, from the project folder:
+(`gh repo create`), pushes the first commit, and makes the labels of the pending-work skill. To do this later, from
+the project folder:
 
 ```bash
 gh repo create --private --source . --remote origin --push
+bash .claude/skills/pending-work/scripts/pending.sh setup-labels
 ```
+
+## Pending work {#sec-pending}
+
+Pending items are things to do later, so that they are not forgotten. You don't use GitHub yourself: tell the agent,
+for example "add a pending item: ...", "list pending", "let's work on #12", or "#12 is no longer needed".
+
+- When a Claude Code session starts (and after `/clear`), a hook shows how many items are open, for example
+  `Pending work: 12 pending items (3 high, 5 medium, 4 low)`. The list itself is not loaded, because a long list
+  uses up the agent's context. Say "list pending" to see it.
+- Each item is a GitHub issue in the project's repository with the label `pending-work`, a category label and a
+  priority label. `_pending-work/pendingWork.md` is a saved copy, for when GitHub cannot be reached.
+- A project with no GitHub repository yet keeps its items in `_pending-work/queue.md` until it has one.
+- The details: `.claude/skills/pending-work/SKILL.md`, and `bash .claude/skills/pending-work/scripts/pending.sh
+  --help`.
+
+To add pending work to a project that does not have it (one made from an older template, or any other project):
+
+```bash
+agents-init.sh --pending-work PATH
+```
+
+It copies the skill, and adds the hook to `.claude/settings.json` (it keeps the other settings). It never replaces a
+file that exists. With a GitHub repository, then run `bash .claude/skills/pending-work/scripts/pending.sh
+setup-labels` once, and commit the new files.
 
 ## Options of yrNewAiProject {#sec-options}
 
@@ -160,7 +188,7 @@ gh repo create --private --source . --remote origin --push
 | `--title TEXT` | The project title (default: the folder name) |
 | `--description TEXT` | One sentence that says what the project is for (default: a TODO line) |
 | `--version VER` | The template version (default: the newest) |
-| `--github` | Also make a private GitHub repository and push to it |
+| `--github` | Also make a private GitHub repository, push to it, and make the pending-work labels |
 | `--add-to-existing` | Add the template to a folder that has files; never change a file; no commit |
 | `--strict-empty` | Refuse a folder that holds anything, even only `.git` |
 | `--dry-run` | Show what would be done; change nothing |

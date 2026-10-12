@@ -9,7 +9,8 @@ Usage: python3 tests/selftest.py [--keep] [--no-quarto]
 
 In a scratch folder, it makes work and book projects and checks: the files, the filled-in values, the manifest,
 the shared rules in AGENTS.md, the first commit, --verify and --check-content (also after a Quarto render), the
-new-doc script, the template v0.0.1, and every error case (exit statuses 2, 3 and 4). It never uses --github
+new-doc script, the pending-work skill (its hook output, and agents-init --pending-work), the template v0.0.1, and
+every error case (exit statuses 2, 3 and 4). It never uses --github
 without --dry-run, so it makes nothing on GitHub. Prints OK at the end; exit status 1 if a check fails.
 Stdlib only.
 """
@@ -24,6 +25,8 @@ from pathlib import Path
 META = Path(__file__).resolve().parents[1]
 TOOL = META / 'bin' / 'yrNewAiProject.py'
 AGENTS_INIT = META / 'bin' / 'agents_init.py'
+NEWEST = 'v0.3.0'
+PENDING = Path('.claude') / 'skills' / 'pending-work' / 'scripts' / 'pending.sh'
 ENV = dict(os.environ, GIT_AUTHOR_NAME='selftest', GIT_AUTHOR_EMAIL='selftest@example.com',
            GIT_COMMITTER_NAME='selftest', GIT_COMMITTER_EMAIL='selftest@example.com')
 failures = []
@@ -62,11 +65,12 @@ def main(argv):
 
     print('help and list')
     for script in (TOOL, AGENTS_INIT, META / 'bin' / 'setup-computer.sh',
-                   META / 'templates' / 'v0.2.0' / 'shared' / '.claude' / 'skills' / 'new-doc' / 'new_doc.py'):
-        code, out = run([script, '--help'] if script.suffix == '.sh' else [sys.executable, script, '--help'])
+                   META / 'templates' / NEWEST / 'shared' / '.claude' / 'skills' / 'new-doc' / 'new_doc.py',
+                   META / 'templates' / NEWEST / 'shared' / PENDING):
+        code, out = run(['bash', script, '--help'] if script.suffix == '.sh' else [sys.executable, script, '--help'])
         check(code == 0 and 'Usage' in out, f'{script.name} --help')
     code, out = tool('--list')
-    check(code == 0 and 'v0.2.0' in out and 'book' in out and 'work' in out and 'v0.0.1' in out, '--list', out)
+    check(code == 0 and NEWEST in out and 'v0.2.0' in out and 'book' in out and 'work' in out and 'v0.0.1' in out, '--list', out)
 
     print('make projects')
     for ptype in ('work', 'book'):
@@ -74,7 +78,7 @@ def main(argv):
         code, out = tool('--type', ptype, '--title', f'My "{ptype}" project', '--description', 'A test project.', p)
         check(code == 0, f'make a {ptype} project', out)
         man = json.loads((p / '.yrAiProjectTemplate' / 'manifest.json').read_text())
-        check(man['projectType'] == ptype and man['templateVersion'] == 'v0.2.0' and man['schemaVersion'] == 2,
+        check(man['projectType'] == ptype and man['templateVersion'] == NEWEST and man['schemaVersion'] == 2,
               f'{ptype}: manifest')
         check(not scalars_left(p), f'{ptype}: every {{{{YRAI:...}}}} value is filled in', str(scalars_left(p)))
         agents = (p / 'AGENTS.md').read_text()
@@ -117,6 +121,50 @@ def main(argv):
     if quarto:
         code, out = run(['quarto', 'render', 'docs'], cwd=book)
         check(code == 0, 'quarto render docs after new_doc.py', out[-800:])
+
+    print('pending-work')
+    work = tmp / 'my-work'
+    settings = json.loads((work / '.claude' / 'settings.json').read_text())
+    check('pending.sh' in json.dumps(settings['hooks']['SessionStart']), 'a new project has the SessionStart hook')
+    code, out = run(['bash', PENDING, 'session-start'], cwd=work)
+    try:
+        hook = json.loads(out)
+    except ValueError:
+        hook = {}
+    check(code == 0 and hook.get('systemMessage') == 'Pending work: nothing pending.'
+          and hook.get('hookSpecificOutput', {}).get('hookEventName') == 'SessionStart',
+          'session-start with no GitHub repository: valid hook JSON, nothing pending', out)
+    queue = work / '_pending-work' / 'queue.md'
+    queue.parent.mkdir()
+    queue.write_text('### [high] First thing\nbody\n\n### [low] Second thing\nbody\n')
+    code, out = run(['bash', PENDING, 'session-start'], cwd=work)
+    try:
+        hook = json.loads(out)
+    except ValueError:
+        hook = {}
+    context = hook.get('hookSpecificOutput', {}).get('additionalContext', '')
+    check(code == 0 and '2 pending items (1 high, 1 low)' in hook.get('systemMessage', '')
+          and 'First thing' not in context, 'session-start gives the count by priority, not the list', out)
+    code, out = run(['bash', PENDING, 'list'], cwd=work)
+    check(code == 0 and 'First thing' in out and 'Second thing' in out, 'list shows the queued items', out)
+    shutil.rmtree(queue.parent)
+    old = tmp / 'old-project'
+    (old / '.claude').mkdir(parents=True)
+    (old / '.claude' / 'settings.json').write_text(json.dumps({'permissions': {'allow': ['Bash(ls)']}}))
+    code, out = run([sys.executable, AGENTS_INIT, old, '--check', '--pending-work'])
+    check(code == 1 and 'missing' in out, 'agents-init --check --pending-work reports a missing skill', out)
+    code, out = run([sys.executable, AGENTS_INIT, old, '--pending-work'])
+    s = json.loads((old / '.claude' / 'settings.json').read_text())
+    check(code == 0 and (old / PENDING).is_file() and s['permissions'] == {'allow': ['Bash(ls)']}
+          and 'pending.sh' in json.dumps(s['hooks']['SessionStart']),
+          'agents-init --pending-work adds the skill and the hook, and keeps the other settings', out)
+    (old / PENDING).write_text('# changed by the project\n')
+    before = (old / '.claude' / 'settings.json').read_text()
+    code, out = run([sys.executable, AGENTS_INIT, old, '--pending-work'])
+    code2, out2 = run([sys.executable, AGENTS_INIT, old, '--check', '--pending-work'])
+    check(code == 0 and code2 == 0 and (old / PENDING).read_text() == '# changed by the project\n'
+          and (old / '.claude' / 'settings.json').read_text() == before,
+          'agents-init --pending-work again: replaces no file, adds no second hook', out + out2)
 
     print('verify finds problems')
     work = tmp / 'my-work'

@@ -12,7 +12,9 @@ yrNewAiProject.sh is the command in the Dropbox tools folder; it runs this file,
 What a new project gets:
   every type   AGENTS.md (the rules for every AI agent, with the owner's shared rules), CLAUDE.md (imports
                AGENTS.md), .gitignore, the project-docs Quarto book in docs/ (a first SPEC, a TODO list, a
-               writing guide and a Quarto guide) and the new-doc skill (.claude/skills/new-doc/)
+               writing guide and a Quarto guide) and the new-doc skill (.claude/skills/new-doc/). From template
+               v0.3.0 on, also the pending-work skill (.claude/skills/pending-work/): things to do later are
+               GitHub issues, and a SessionStart hook (.claude/settings.json) shows how many are open
   work         a README for any kind of work. Preview the docs book: quarto preview docs
   book         also the main Quarto book (the book to publish) at the project root, and a PLANNING document in
                docs/. Preview the main book: quarto preview; the docs book: quarto preview docs
@@ -26,8 +28,9 @@ Options to make a project:
   --title TEXT          the project title (default: the folder name)
   --description TEXT    one sentence that says what the project is for (default: a TODO line to replace)
   --version VER         the template version, for example v0.2.0 (default: the newest)
-  --github              also make a private GitHub repository with the folder name (with the gh command), and
-                        push the first commit to it
+  --github              also make a private GitHub repository with the folder name (with the gh command), push
+                        the first commit to it, and make the labels of the pending-work skill (if the template
+                        has it)
   --add-to-existing     add the template to a folder that already has files. A file that exists already is never
                         changed: the tool stops before it writes anything if a template file exists. There is no
                         first commit: look at the new files, then commit them yourself
@@ -52,7 +55,7 @@ Other options:
 Exit status: 0 OK; 1 --verify found a problem; 2 bad options, a missing template or a missing tool; 3 PATH is not
 empty; 4 --add-to-existing would change a file that exists; 5 git or gh failed.
 Python 3.8 or later, standard library only. The full description: docs/USER-GUIDE-v001.qmd and
-docs/SPEC-v0.2.0.qmd in yrAiProjectTemplates. Replaces the retired yraiproject tool (git tag yraiproject-final).
+docs/SPEC-v0.3.0.qmd in yrAiProjectTemplates. Replaces the retired yraiproject tool (git tag yraiproject-final).
 """
 import argparse
 import datetime
@@ -67,9 +70,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import agents_init  # noqa: E402
 
-TOOL_VERSION = '0.2.0'
+TOOL_VERSION = '0.3.0'
 SKIP_NAMES = {'.git', '__pycache__', '.quarto', '_book', '.DS_Store', 'yraiproject.template.yml'}
 MANIFEST = Path('.yrAiProjectTemplate') / 'manifest.json'
+PENDING_SCRIPT = Path('.claude') / 'skills' / 'pending-work' / 'scripts' / 'pending.sh'
 SCALAR = re.compile(r'\{\{YRAI:([A-Z][A-Z0-9_]*)\}\}')
 TOKEN = re.compile(r'\{\{YRAI:(BEGIN:|END:)?([A-Z][A-Z0-9_]*)\}\}|<!-- YRAI:(BEGIN|END):([A-Z][A-Z0-9_]*) -->')
 SHARED_BLOCK = re.compile(r'^<!-- begin shared rules.*?^<!-- end shared rules -->[ \t]*$', re.M | re.S)
@@ -217,6 +221,8 @@ def create(args, meta):
               ('; would commit the files' if commit else '; would not commit'))
         if args.github:
             print(f'would run: gh repo create {name} --private --source {target} --remote origin --push')
+            if PENDING_SCRIPT in files:
+                print(f'would run: bash {PENDING_SCRIPT} setup-labels')
         return 0
 
     target.mkdir(parents=True, exist_ok=True)
@@ -265,6 +271,10 @@ def create(args, meta):
         if code:
             raise Fail(5, f'gh repo create failed (the project is made; only GitHub failed):\n{out}')
         print(f'  made the private GitHub repository and pushed: {out.splitlines()[-1] if out else name}')
+        if (target / PENDING_SCRIPT).is_file():
+            code, out = run(['bash', str(PENDING_SCRIPT), 'setup-labels'], cwd=target)
+            print('  made the pending-work labels' if code == 0 else
+                  f'  ! could not make the pending-work labels (run later: bash {PENDING_SCRIPT} setup-labels)\n{out}')
     print('next:')
     print(f'  cd {target}')
     if ptype == 'book':

@@ -7,7 +7,7 @@ These rules are for every collaborator and every coding agent. `CLAUDE.md` impor
 - Templates and tools to start AI-assisted projects: `bin/yrNewAiProject.py` makes a project from
   `templates/VERSION/{shared,TYPE}`, and `bin/agents_init.py` copies the shared rules (`rules/AGENTS.md`) into a
   project. `README.md` gives the layout.
-- `docs/` is the documentation book: `docs/USER-GUIDE-v001.qmd` (how to use it) and `docs/SPEC-v0.2.0.qmd` (what
+- `docs/` is the documentation book: `docs/USER-GUIDE-v001.qmd` (how to use it) and `docs/SPEC-v0.3.0.qmd` (what
   it must do). Read the newest SPEC before you change anything.
 - The commands `yrNewAiProject.sh` and `agents-init.sh` are wrappers in the Dropbox tools folder (`~/Dropbox/tools`,
   a separate git repository). Keep their names and behavior in step with `bin/`.

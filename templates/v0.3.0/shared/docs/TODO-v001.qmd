@@ -1,0 +1,12 @@
+---
+title: "TODO-v001"
+subtitle: "The work still to do"
+---
+
+## Open {#sec-todo-open}
+
+- [ ] TODO: the next task.
+
+## Done {#sec-todo-done}
+
+- [x] {{YRAI:CREATED_DATE}}: made the project from yrAiProjectTemplates {{YRAI:TEMPLATE_VERSION}}.

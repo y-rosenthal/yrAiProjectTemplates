@@ -1,0 +1,5 @@
+# Preface {.unnumbered}
+
+{{YRAI:PROJECT_DESCRIPTION}}
+
+TODO: who the book is for, and how to read it.
