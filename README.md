@@ -1,48 +1,51 @@
 # yrAiProjectTemplates
 
 Templates and tools to start a project for AI-assisted work, so that every project has the same base: rules for
-every AI coding agent, a Quarto book of project documents (SPECs, guides, TODO lists, plans), and the skills and
+every AI coding agent, a Quarto book of project documents (SPECs, guides, plans), pending work as GitHub issues, and the skills and
 checks that go with them.
 
 ## Quick start
 
 ```bash
-yrNewAiProject.sh ~/Dropbox/_yrAiCoding/myProject                 # a work project
-yrNewAiProject.sh --type book ~/Dropbox/_yrQuarto-master/myBook    # a book project
-yrNewAiProject.sh --help                                           # what it does, and every option
+yrAiProject.sh new ~/Dropbox/_yrAiCoding/myProject                 # a new work project
+yrAiProject.sh new --type book ~/Dropbox/_yrQuarto-master/myBook    # a new book project
+yrAiProject.sh status                                               # the state of the project you are in
+yrAiProject.sh update --dry-run                                     # what update would change (changes nothing)
+yrAiProject.sh update                                               # set up or update it (shows the plan, asks)
+yrAiProject.sh --help                                               # every command and option
 ```
 
-`yrNewAiProject.sh` is in the Dropbox tools folder (`~/Dropbox/tools`, on `PATH`). It runs `bin/yrNewAiProject.py`.
-On a new computer, run `bin/setup-computer.sh` once.
+`yrAiProject.sh` is in the Dropbox tools folder (`~/Dropbox/tools`, on `PATH`). It runs `bin/yrAiProject.py`.
+On a new computer, run `yrAiProject.sh setup-computer` once. Before `new` or `update` changes anything, it shows
+what it would change, with diffs, and asks (`-y` skips the question; `--dry-run` only shows).
 
-## The two types of project
+## What a project gets
 
-| Type | Main purpose | Quarto books |
-|---|---|---|
-| `work` | Any work: programs, data, research, ... | The project docs in `docs/` (`quarto preview docs`) |
-| `book` | A Quarto book to publish | The main book at the root (`quarto preview`), and the project docs in `docs/` (`quarto preview docs`) |
+| Part | What it is | `new` | `update` of an existing project |
+|---|---|---|---|
+| rules | `AGENTS.md` (the rules for every AI agent, with the shared rules) and `CLAUDE.md` (imports `AGENTS.md`) | yes | always |
+| pending-work | Things to do later are GitHub issues; a SessionStart hook shows how many are open | yes | yes (`--no-pending-work` to skip) |
+| docs | The project-docs Quarto book in `docs/` (SPECs, guides, plans) and the `new-doc` skill | yes | with `--with-docs` |
 
-Every project gets `AGENTS.md` (the rules for every AI agent, with the shared rules), `CLAUDE.md` (it imports
-`AGENTS.md`), `.gitignore`, the project-docs book with a first SPEC, the `new-doc` skill, and the `pending-work`
-skill: things to do later are GitHub issues, and a SessionStart hook shows how many are open. To add the
-pending-work skill to an existing project: `agents-init.sh --pending-work`.
+A new project also gets a README, `.gitignore` and, for the `book` type, the main Quarto book at the root
+(`quarto preview`; the docs book: `quarto preview docs`). `.yrAiProject/manifest.json` records the version and
+the parts.
 
 ## Layout
 
 | Path | What it holds |
 |---|---|
-| `bin/yrNewAiProject.py` | Makes a project from a template, and checks a project against its template (`--verify`) |
-| `bin/agents_init.py` | Copies the shared rules into a project's `AGENTS.md` (`agents-init.sh` in the tools folder) |
-| `bin/setup-computer.sh` | Sets up a computer: makes Claude Code read the shared rules in every project |
+| `bin/yrAiProject.py` | The tool: `new`, `status`, `update`, `list`, `setup-computer` |
 | `rules/AGENTS.md` | The shared rules for every project and every AI agent |
-| `templates/vX.Y.Z/` | One template version: `shared/` (for every project), `work/` and `book/` (for each type) |
+| `templates/vX.Y.Z/` | One template version: `shared/` (for every project), `work/` and `book/` (for each new type) |
 | `docs/` | The documentation of this repository, a Quarto book: the user guide and the SPECs |
-| `tests/selftest.py` | Tests the tools and the templates; run it after every change |
+| `tests/selftest.py` | Tests the tool and the templates; run it after every change |
 
 ## Documentation
 
 Read the book: `quarto preview docs`. It has the user guide (`docs/USER-GUIDE-v001.qmd`), the specification
 (`docs/SPEC-v0.3.0.qmd`), and the writing and Quarto guides that every project gets.
 
-The `yraiproject` tool of version 0.1.0 is retired; `yrNewAiProject` replaces it. The old tool is in the git tag
-`yraiproject-final`.
+`yrAiProject.sh` replaces `yrNewAiProject.sh` and `agents-init.sh` (the old names only print the new command).
+Template v0.0.1 and the records of older tools are no longer supported; they are in the git tags
+`yraiproject-final` and `templates-v0.2.0`.

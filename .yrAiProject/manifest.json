@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 3,
+  "createdAt": "2026-10-12T15:47:35Z",
+  "projectType": null,
+  "version": "v0.3.0",
+  "parts": [
+    "pending-work",
+    "rules"
+  ],
+  "skippedParts": [],
+  "values": {
+    "PROJECT_NAME": "yrAiProjectTemplates",
+    "PROJECT_TITLE": "yrAiProjectTemplates",
+    "PROJECT_DESCRIPTION": "TODO: one sentence that says what this project is for.",
+    "PROJECT_TYPE": "work",
+    "CREATED_DATE": "2026-10-12",
+    "TEMPLATE_VERSION": "v0.3.0"
+  },
+  "files": {
+    ".claude/skills/pending-work/SKILL.md": "6e0f4084de8a6b0b5207a17f50cbd275ed5c4cdfeb7a139019999df9ef11b2bc",
+    ".claude/skills/pending-work/scripts/pending.sh": "c5f1b7fc508aa978e498de9ba698cb31a7d7883b053c51bfcff1611827ce5df4"
+  },
+  "updatedAt": "2026-10-12T15:58:57Z",
+  "tool": {
+    "name": "yrAiProject",
+    "version": "0.3.0",
+    "templatesCommit": "033591c"
+  }
+}

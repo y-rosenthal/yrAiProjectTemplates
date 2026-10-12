@@ -1,59 +1,91 @@
 ---
 title: "USER-GUIDE-v001"
-subtitle: "How to make, document and check AI-assisted projects"
+subtitle: "How to make, set up and update AI-assisted projects with yrAiProject"
 ---
 
 ## What this repository is for {#sec-purpose}
 
-Each new project for AI-assisted work starts from the same base, so that people and AI agents find the same
-things in the same places:
+Every project for AI-assisted work gets the same base, so that people and AI agents find the same things in the
+same places:
 
 - `AGENTS.md`: the rules for every AI coding agent (Claude Code, Codex, Cursor, Copilot and others) and every
   collaborator. It holds the project's rules and a copy of the **shared rules**, which apply to every project.
-- `CLAUDE.md`: one import line, `@AGENTS.md`, so that Claude Code reads the same rules.
-- `docs/`: the **project-docs Quarto book**: the SPECs, the guides, the TODO list and the plans. It is the quick
-  way to learn what a project holds.
-- `.claude/skills/new-doc/`: the skill that adds a document to `docs/`.
-- `.claude/skills/pending-work/` and `.claude/settings.json`: the **pending work** list, things to do later. They
-  are GitHub issues, and Claude Code shows how many are open when a session starts (@sec-pending).
-- `.yrAiProjectTemplate/manifest.json`: the template that the project was made from.
+- `CLAUDE.md`: the import line `@AGENTS.md`, so that Claude Code reads the same rules.
+- **Pending work**: a list of things to do later, kept as GitHub issues. Claude Code shows how many are open when a
+  session starts (@sec-pending).
+- `docs/`: the **project-docs Quarto book**: the SPECs, the guides and the plans, with the
+  `new-doc` skill that adds a document (@sec-new-doc).
+- `.yrAiProject/manifest.json`: the record of the template version and the parts that the project has.
+
+One command does everything: **`yrAiProject.sh`**.
+
+```bash
+yrAiProject.sh new PATH          # make a new project
+yrAiProject.sh status [PATH]     # what state is this project in? (changes nothing)
+yrAiProject.sh update [PATH]     # set up an existing project, or bring it up to date
+yrAiProject.sh list              # the template versions
+yrAiProject.sh --help            # every command and option
+```
+
+`PATH` is the project folder. For `status` and `update`, the default is the git repository that you are in.
 
 ## Set up a computer {#sec-setup}
 
-You need Dropbox (synced), Python 3.8 or later, git and Quarto. For `--github`, you also need the `gh` command,
-logged in (`gh auth login`). This works on Linux, and in Git Bash on Windows.
+You need Dropbox (synced), Python 3.8 or later, git and Quarto. For pending work and `--github`, you also need the
+`gh` command, logged in (`gh auth login`). This works on Linux, and in Git Bash on Windows.
 
-1. Make sure that the Dropbox tools folder is on `PATH`. The tools folder holds `yrNewAiProject.sh` and
-   `agents-init.sh`. On Linux, `~/.bashrc` has the line `export PATH="$PATH:$HOME/Dropbox/tools"`.
-2. Run the setup script once:
+1. Make sure that the Dropbox tools folder is on `PATH`. The tools folder holds `yrAiProject.sh`. On Linux,
+   `~/.bashrc` has the line `export PATH="$PATH:$HOME/Dropbox/tools"`.
+2. Run once (safe to run again):
 
    ```bash
-   ~/Dropbox/_yrAiCoding/yrAiProjectTemplates/bin/setup-computer.sh
+   ~/Dropbox/tools/yrAiProject.sh setup-computer
    ```
 
    It checks the `PATH`, and it adds an import line to `~/.claude/CLAUDE.md`. Then Claude Code follows the shared
-   rules in every project on this computer. `setup-computer.sh --check` only reports.
-3. Test: `yrNewAiProject.sh --list` shows the template versions.
+   rules in every project on this computer. `setup-computer --check` only reports.
+3. Test: `yrAiProject.sh list` shows the template versions.
 
-On Windows, `python3` can be a Microsoft Store placeholder that does not run. The `.sh` commands then use `python`
+On Windows, `python3` can be a Microsoft Store placeholder that does not run. `yrAiProject.sh` then uses `python`
 or `py -3`.
+
+## It asks before it changes anything {#sec-confirm}
+
+`new` and `update` first show what they would do:
+
+- `+ add` a file that they would add;
+- `~ change` a file that they would change, with the changes line by line (lines that start with `+` would be
+  added, lines that start with `-` would be removed);
+- `= keep` a file that they leave alone, and why.
+
+Then they ask `Apply these changes? [y/N]`. Answer `y` to apply; anything else changes nothing.
+
+| You want to | Add |
+|---|---|
+| Only see the plan, and change nothing | `--dry-run` |
+| Apply without the question (in a script) | `-y` |
+
+With no terminal to ask in (a script, or an AI agent such as Claude Code) and no `-y`, the tool shows the plan,
+changes nothing, and stops with exit status 6. An AI agent should run `--dry-run`, show you the plan, and use `-y`
+only after you say yes.
 
 ## Make a project {#sec-make}
 
 ```bash
-yrNewAiProject.sh --title "Photo Checks" --description "Reads photos of checks into a spreadsheet." ~/Dropbox/_yrAiCoding/yrPhotoChecks
-yrNewAiProject.sh --type book --title "Python for Beginners" ~/Dropbox/_yrQuarto-master/yrPythonBook
+yrAiProject.sh new --title "Photo Checks" --description "Reads photos of checks into a spreadsheet." ~/Dropbox/_yrAiCoding/yrPhotoChecks
+yrAiProject.sh new --type book --title "Python for Beginners" ~/Dropbox/_yrQuarto-master/yrPythonBook
 ```
 
-The last word is the project folder. Its name is the project name. The folder must not exist, or must be empty,
-or must hold only `.git`. The tool:
+The folder must not exist, or must be empty, or must hold only `.git`. Its name is the project name. After you
+confirm, the tool:
 
-1. copies the shared template files, then the files of the type (a type file wins over a shared file with the same
-   name);
-2. fills in the project name, title, description, type, date and template version;
-3. copies the shared rules into `AGENTS.md`;
-4. writes `.yrAiProjectTemplate/manifest.json`;
-5. makes a git repository (branch `main`) and commits the files.
+1. copies the shared template files, then the files of the type, and fills in the project name, title,
+   description, type, date and template version;
+2. copies the shared rules into `AGENTS.md`;
+3. writes the record, `.yrAiProject/manifest.json`;
+4. makes a git repository (branch `main`) and commits the files;
+5. with `--github`: makes a private GitHub repository with the folder name, pushes, and makes the labels for
+   pending work.
 
 Then:
 
@@ -61,14 +93,75 @@ Then:
 2. In `docs/SPEC-v0.1.0.qmd`, write what the first version must do.
 3. Look at the books: `quarto preview docs` (and `quarto preview` in a book project).
 
-Use `--dry-run` to see what the tool would do, with no change.
-
-## The two types of project {#sec-types}
-
 | Type | Use it for | What it adds to the shared files |
 |---|---|---|
 | `work` (the default) | Any work: programs, data, research, ... | A README for any kind of work |
 | `book` | A Quarto book that you publish | The main book at the root (`_quarto.yml`, `index.qmd`, `intro.qmd`), a README for a book, and `docs/PLANNING-v001.qmd` for the plans for the main book |
+
+## See the state of a project {#sec-status}
+
+```bash
+yrAiProject.sh status ~/Dropbox/_yrQuarto-master/yrThinkPython
+```
+
+```
+/home/yitz/Dropbox/_yrQuarto-master/yrThinkPython
+  partly set up: it has rules, but no record of a version (set up by hand, or with the old agents-init tool)
+  rules         out of date: update would change 1 file(s)
+  pending-work  not installed: update adds it (3 file(s))
+  docs          not installed (optional: update --with-docs)
+```
+
+The first line says whether the project was **never set up**, is **partly set up** (it has some parts, but no
+record), was set up with an **older version**, or is **up to date**. Then there is one line for each part. Files
+that you changed by hand are counted too: `update` leaves them alone. `status` changes nothing.
+
+## Set up an existing project, or update one {#sec-update}
+
+```bash
+yrAiProject.sh update --dry-run      # first look (in the project folder)
+yrAiProject.sh update                # then do it: it shows the plan again and asks
+```
+
+`update` works on any folder: one that was never set up, one that was set up by hand or with the old tools, and one
+made by `yrAiProject.sh new`. It adds only the **parts** that a project needs, never the whole template:
+
+| Part | What it is | `update` |
+|---|---|---|
+| `rules` | The shared rules in `AGENTS.md`, and `@AGENTS.md` in `CLAUDE.md` | always |
+| `pending-work` | The pending-work skill, and its hook in `.claude/settings.json` | yes; `--no-pending-work` to skip it (remembered) |
+| `docs` | The project-docs Quarto book in `docs/`, and the `new-doc` skill | only with `--with-docs` (then kept up to date) |
+
+What `update` does with the files:
+
+- In `AGENTS.md`, `CLAUDE.md` and `.claude/settings.json`, it changes only the shared-rules block, the import line
+  and the hook. Your own rules and settings stay.
+- **Tool files** (the skills in `.claude/skills/`, and the guides in `docs/`) get the newest version, unless you
+  changed them by hand: those it leaves alone, and `status` counts them. To take the newest version of such a file,
+  delete it (or rename it), then run `update`.
+- **Starting files** (the first SPEC, the docs `_quarto.yml`, ...) are added once; then they are
+  yours, and `update` never changes them. It never adds a README, `.gitignore` or a main book to an existing
+  project.
+- It makes no commit. Look at the changes (`git status`, `git diff`), then commit them. If a file that it would
+  change has uncommitted changes, it warns you first.
+
+After you change the shared rules, or after a new template version, run `yrAiProject.sh update` in each project.
+
+## Pending work {#sec-pending}
+
+Pending items are things to do later, so that they are not forgotten. You don't use GitHub yourself: tell the agent,
+for example "add a pending item: ...", "list pending", "let's work on #12", or "#12 is no longer needed".
+
+- When a Claude Code session starts (and after `/clear`), a hook shows how many items are open, for example
+  `Pending work: 12 pending items (3 high, 5 medium, 4 low)`. The list itself is not loaded, because a long list
+  uses up the agent's context. Say "list pending" to see it.
+- Each item is a GitHub issue in the project's repository with the label `pending-work`, a category label and a
+  priority label. `_pending-work/pendingWork.md` is a saved copy, for when GitHub cannot be reached.
+- A project with no GitHub repository yet keeps its items in `_pending-work/queue.md` until it has one.
+- Once, in a project with a GitHub repository, make the labels:
+  `bash .claude/skills/pending-work/scripts/pending.sh setup-labels` (`new --github` does it for you).
+- The details: `.claude/skills/pending-work/SKILL.md`, and `bash .claude/skills/pending-work/scripts/pending.sh
+  --help`.
 
 ## The Quarto books of a project {#sec-books}
 
@@ -77,7 +170,7 @@ Each book is a folder with its own `_quarto.yml`. Give `quarto` the folder of th
 | Book | Preview | Render | Output |
 |---|---|---|---|
 | Main book (book projects) | `quarto preview` | `quarto render` | `_book/index.html` |
-| Project docs (every project) | `quarto preview docs` | `quarto render docs` | `docs/_book/index.html` |
+| Project docs | `quarto preview docs` | `quarto render docs` | `docs/_book/index.html` |
 
 Run the commands from the project folder. Both previews can run at the same time. The QUARTO-GUIDE in each
 project tells more.
@@ -94,150 +187,80 @@ python3 .claude/skills/new-doc/new_doc.py --help                # all the option
 
 - **A SPEC is the default type.** A SPEC has the version of its development step: `SPEC-v0.1.0.qmd`, then
   `SPEC-v0.1.1.qmd` (the default next version), or the version that you give with `--version`.
-- **Other types:** `USER-GUIDE`, `DESIGN-GUIDE`, `TODO`, `PLANNING`, or any name in capital letters. They have a
+- **Other types:** `USER-GUIDE`, `DESIGN-GUIDE`, `PLANNING`, or any name in capital letters. They have a
   copy number: `USER-GUIDE-v001.qmd`. The next copy, `-v002`, is only for when you want to keep the old copy next
   to the new one.
 - A new version starts as a copy of the newest version (use `--blank` for an empty outline).
 - The script lists the new file in `docs/_quarto.yml`, above the older versions.
 
-There are no PRD documents: a SPEC holds the requirements. The DOC-GUIDE in each project gives all the rules.
+There are no PRD documents: a SPEC holds the requirements. There is no TODO document: work to do later is a
+pending item (@sec-pending). The DOC-GUIDE in each project gives all the rules.
 
 ## The shared rules for AI agents {#sec-rules}
 
 The shared rules are in `rules/AGENTS.md` of this repository, for example "every script has `--help`". They
-reach the agents in three ways:
+reach the agents in two ways:
 
 | Who | How they get the rules |
 |---|---|
-| Claude Code on your computers | `~/.claude/CLAUDE.md` imports `rules/AGENTS.md` (`setup-computer.sh` adds the line) |
-| Collaborators, any AI agent, cloud agents | A copy in the project's `AGENTS.md`, between `<!-- begin shared rules -->` and `<!-- end shared rules -->` |
-| A new project | `yrNewAiProject.sh` puts the copy in |
+| Claude Code on your computers | `~/.claude/CLAUDE.md` imports `rules/AGENTS.md` (`setup-computer` adds the line) |
+| Collaborators, any AI agent, cloud agents | A copy in the project's `AGENTS.md`, between `<!-- begin shared rules -->` and `<!-- end shared rules -->` (`new` and `update` put it there) |
 
-To change a shared rule:
+To change a shared rule: edit `rules/AGENTS.md`, and commit it. Then, in each project, run `yrAiProject.sh update`
+and commit the change. `yrAiProject.sh status` shows which projects have an old copy.
 
-1. Edit `rules/AGENTS.md`, and commit it.
-2. In each project, run `agents-init.sh`. It replaces the copy, and keeps the project's own rules. Then commit the
-   change in that project.
+## Options {#sec-options}
 
-`agents-init.sh --check` reports a copy that is out of date. `agents-init.sh --diff` shows what it would change,
-as diffs, and changes nothing. `agents-init.sh` also adds the shared rules to an older
-project that does not have them.
-
-## Add the templates to an existing project {#sec-existing}
-
-First, see what would happen. This changes nothing:
-
-```bash
-yrNewAiProject.sh --preview ~/Dropbox/_yrAiCoding/yrOldProject
-```
-
-It lists the template files that `--add-to-existing` would add, and the ones that exist already (because of those,
-it would stop and write nothing). It also shows, as diffs, exactly what `agents-init.sh --pending-work` would
-change: `AGENTS.md`, `CLAUDE.md` and `.claude/settings.json`. In a diff, lines that start with `+` would be added and
-lines that start with `-` would be removed. `agents-init.sh --diff` shows only the agents-init part.
-
-Then:
-
-```bash
-yrNewAiProject.sh --add-to-existing --type work ~/Dropbox/_yrAiCoding/yrOldProject
-```
-
-The tool adds the template files and never changes a file that exists. If a template file (for example
-`README.md`) exists already, it stops before it writes anything and lists those files. Then rename or move them,
-and run it again. It makes no commit: look at the new files (`git status`), then commit them.
-
-## Check a project {#sec-verify}
-
-```bash
-yrNewAiProject.sh --verify PATH                    # every template file is there
-yrNewAiProject.sh --verify --check-content PATH    # ... and its text is as the template made it
-```
-
-`--verify` reads the manifest, and reports the template files that are missing. Extra files, and shared rules
-that are out of date, are notes. With `--check-content`, it also reports each template file whose text changed
-outside the filled-in values and the regions between `<!-- YRAI:BEGIN:NAME -->` and `<!-- YRAI:END:NAME -->`.
-Files that you are expected to edit (the README, the documents) will differ. Use `--check-content` to see what
-changed since the project was made.
-
-## Put a project on GitHub {#sec-github}
-
-Add `--github` when you make the project. The tool then makes a **private** GitHub repository with the folder name
-(`gh repo create`), pushes the first commit, and makes the labels of the pending-work skill. To do this later, from
-the project folder:
-
-```bash
-gh repo create --private --source . --remote origin --push
-bash .claude/skills/pending-work/scripts/pending.sh setup-labels
-```
-
-## Pending work {#sec-pending}
-
-Pending items are things to do later, so that they are not forgotten. You don't use GitHub yourself: tell the agent,
-for example "add a pending item: ...", "list pending", "let's work on #12", or "#12 is no longer needed".
-
-- When a Claude Code session starts (and after `/clear`), a hook shows how many items are open, for example
-  `Pending work: 12 pending items (3 high, 5 medium, 4 low)`. The list itself is not loaded, because a long list
-  uses up the agent's context. Say "list pending" to see it.
-- Each item is a GitHub issue in the project's repository with the label `pending-work`, a category label and a
-  priority label. `_pending-work/pendingWork.md` is a saved copy, for when GitHub cannot be reached.
-- A project with no GitHub repository yet keeps its items in `_pending-work/queue.md` until it has one.
-- The details: `.claude/skills/pending-work/SKILL.md`, and `bash .claude/skills/pending-work/scripts/pending.sh
-  --help`.
-
-To add pending work to a project that does not have it (one made from an older template, or any other project):
-
-```bash
-agents-init.sh --pending-work PATH
-```
-
-It copies the skill, and adds the hook to `.claude/settings.json` (it keeps the other settings). It never replaces a
-file that exists. With a GitHub repository, then run `bash .claude/skills/pending-work/scripts/pending.sh
-setup-labels` once, and commit the new files.
-
-## Options of yrNewAiProject {#sec-options}
-
-| Option | What it does |
+| Command and option | What it does |
 |---|---|
-| `--type work\|book` | The project type (default `work`) |
-| `--title TEXT` | The project title (default: the folder name) |
-| `--description TEXT` | One sentence that says what the project is for (default: a TODO line) |
-| `--version VER` | The template version (default: the newest) |
-| `--github` | Also make a private GitHub repository, push to it, and make the pending-work labels |
-| `--add-to-existing` | Add the template to a folder that has files; never change a file; no commit |
-| `--strict-empty` | Refuse a folder that holds anything, even only `.git` |
-| `--dry-run` | Show what would be done; change nothing |
-| `--meta-repo DIR` | Take the templates from another copy of this repository |
-| `--verify PATH` | Check a project against its template |
-| `--preview PATH` | Show what `--add-to-existing` and `agents-init.sh --pending-work` would do in an existing folder; change nothing |
-| `--check-content` | With `--verify`: also compare the text |
-| `--list` | List the template versions and their types |
+| `new PATH` | Make a project in `PATH` |
+| `  --type work\|book` | The project type (default `work`) |
+| `  --title TEXT` | The project title (default: the folder name) |
+| `  --description TEXT` | One sentence that says what the project is for (default: a TODO line) |
+| `  --version VER` | The template version (default: the newest) |
+| `  --github` | Also make a private GitHub repository, push to it, and make the pending-work labels |
+| `  --strict-empty` | Refuse a folder that holds anything, even only `.git` |
+| `status [PATH]` | Show the state of a project; change nothing |
+| `update [PATH]` | Set up, or bring up to date, an existing project |
+| `  --with-docs` | Also add the project-docs book and the new-doc skill |
+| `  --no-pending-work` | Don't add pending work (remembered) |
+| `  --with-pending-work` | Add pending work after an earlier `--no-pending-work` |
+| `  --version VER` | The template version (default: the newest) |
+| `new` and `update`: `--dry-run` | Show the plan; change nothing |
+| `new` and `update`: `-y`, `--yes` | Don't ask |
+| `list` | List the template versions and their types |
+| `setup-computer [--check]` | Set up this computer (@sec-setup) |
 | `-h`, `--help` | Show the help and stop |
 
-Exit status: 0 OK; 1 `--verify` found a problem; 2 bad options, a missing template or a missing tool; 3 the folder
-is not empty; 4 `--add-to-existing` would change a file; 5 git or gh failed.
+Exit status: 0 OK; 1 `status` found something to do, or you answered no; 2 bad options, a missing template or a
+missing tool; 3 `new`: the folder is not empty; 5 git or gh failed; 6 the tool needs your answer but there is no
+terminal (use `-y` or `--dry-run`).
 
 ## Change the templates {#sec-change}
 
 1. A released template version does not change. A version is released when it has the git tag
-   `templates-vX.Y.Z`. Projects record their version, and `--verify` compares them with it.
-2. To change the templates, copy the newest version folder to a new version, for example `templates/v0.3.0/`, and
-   change the copy. `yrNewAiProject.sh` uses the newest version.
-3. Write a SPEC for the new version (`docs/SPEC-v0.3.0.qmd`), and update this guide.
+   `templates-vX.Y.Z`. Projects record their version, and `status` compares it with the newest.
+2. To change the templates, copy the newest version folder to a new version, for example `templates/v0.4.0/`, and
+   change the copy. `yrAiProject.sh` uses the newest version.
+3. Write a SPEC for the new version (`docs/SPEC-v0.4.0.qmd`), and update this guide.
 4. Run `python3 tests/selftest.py`. It must print `OK`. Then render this book: `quarto render docs`.
-5. Commit, and tag the version: `git tag templates-v0.3.0`.
+5. Commit, and tag the version: `git tag templates-v0.4.0`.
 
-## The retired yraiproject tool {#sec-retired}
+## Older tools {#sec-retired}
 
-Version 0.1.0 had a pip-installed tool, `yraiproject`, and one template, `genericTemplate`. `yrNewAiProject`
-replaces it and keeps all its functions:
+- **yrNewAiProject.sh and agents-init.sh** (template v0.2.0) are replaced by `yrAiProject.sh`. The old names still
+  exist in the tools folder, but they only print the new command:
 
-| yraiproject | yrNewAiProject |
-|---|---|
-| `yraiproject install TARGET` | `yrNewAiProject.sh TARGET` (also git, the shared rules, the type, `--github`) |
-| `--template`, `--version` | `--type`, `--version` |
-| `--allow-non-empty-safe` | `--add-to-existing` |
-| `--strict-empty`, `--dry-run`, `--repo-root` | `--strict-empty`, `--dry-run`, `--meta-repo` |
-| `yraiproject verify TARGET [--check-content]` | `yrNewAiProject.sh --verify [--check-content] TARGET` |
-| `genericTemplate/v0.0.1` | `templates/v0.0.1/generic` (`--version v0.0.1 --type generic`) |
+  | Old | New |
+  |---|---|
+  | `yrNewAiProject.sh PATH` | `yrAiProject.sh new PATH` |
+  | `yrNewAiProject.sh --add-to-existing PATH` | `yrAiProject.sh update PATH` |
+  | `yrNewAiProject.sh --verify PATH` | `yrAiProject.sh status PATH` |
+  | `agents-init.sh [DIR]` | `yrAiProject.sh update [DIR]` |
+  | `agents-init.sh --check` / `--diff` | `yrAiProject.sh status` / `update --dry-run` |
+  | `bin/setup-computer.sh` | `yrAiProject.sh setup-computer` |
 
-The old tool is in the git tag `yraiproject-final`. `--verify` also reads the manifests that it wrote.
+- **No longer supported** (no project uses them): template v0.0.1 (type `generic`), and the records of the
+  retired `yraiproject` tool and of `yrNewAiProject` (`.yrAiProjectTemplate/manifest.json`). They are in the git
+  history: tag `yraiproject-final` (the pip-installed `yraiproject` tool of version 0.1.0, and v0.0.1) and tag
+  `templates-v0.2.0` (`yrNewAiProject`).

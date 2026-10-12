@@ -7,12 +7,12 @@ These rules are for every collaborator and every coding agent (Claude Code, Code
 
 - {{YRAI:PROJECT_DESCRIPTION}}
 - A {{YRAI:PROJECT_TYPE}} project, made on {{YRAI:CREATED_DATE}} from yrAiProjectTemplates {{YRAI:TEMPLATE_VERSION}}
-  (see `.yrAiProjectTemplate/manifest.json`).
+  (see `.yrAiProject/manifest.json`; `yrAiProject.sh status` shows whether the project is up to date).
 - `README.md` gives the layout and the commands that build each Quarto book.
 
 ## Documentation
 
-- `docs/` is the project-docs Quarto book: SPECs, guides, TODO lists and plans. Read the newest SPEC first. It says
+- `docs/` is the project-docs Quarto book: SPECs, guides and plans. Read the newest SPEC first. It says
   what the project must do.
 - Add a document with the `new-doc` skill (`.claude/skills/new-doc/SKILL.md`). The rules for documents are in
   `docs/DOC-GUIDE-v001.qmd`.

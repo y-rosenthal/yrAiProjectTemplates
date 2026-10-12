@@ -13,10 +13,10 @@ TODO: say who the book is for, and how and where it is published.
 | Path | What it holds |
 |---|---|
 | `_quarto.yml`, `index.qmd`, the chapter files | The main book, which is published |
-| `docs/` | The project-docs Quarto book: the SPECs, the TODO list, the plans for the main book, and the guides |
+| `docs/` | The project-docs Quarto book: the SPECs, the plans for the main book, and the guides |
 | `AGENTS.md` | The rules for AI coding agents; `CLAUDE.md` imports it |
 | `.claude/skills/` | Step-by-step procedures for agents (`new-doc` adds a document to `docs/`) |
-| `.yrAiProjectTemplate/manifest.json` | The template that this project was made from |
+| `.yrAiProject/manifest.json` | The record of the template version and parts (`yrAiProject.sh status` reads it) |
 
 ## The Quarto books
 

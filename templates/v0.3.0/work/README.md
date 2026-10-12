@@ -12,10 +12,10 @@ TODO: say how to install, run and test the project.
 
 | Path | What it holds |
 |---|---|
-| `docs/` | The project-docs Quarto book: the SPECs, the guides, the TODO list and the plans |
+| `docs/` | The project-docs Quarto book: the SPECs, the guides and the plans |
 | `AGENTS.md` | The rules for AI coding agents; `CLAUDE.md` imports it |
 | `.claude/skills/` | Step-by-step procedures for agents (`new-doc` adds a document to `docs/`) |
-| `.yrAiProjectTemplate/manifest.json` | The template that this project was made from |
+| `.yrAiProject/manifest.json` | The record of the template version and parts (`yrAiProject.sh status` reads it) |
 
 ## The Quarto book
 

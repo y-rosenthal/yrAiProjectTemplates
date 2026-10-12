@@ -1,5 +1,0 @@
-# Authoring manifest for genericTemplate v0.0.1 (not copied into install targets).
-# Future SPEC versions may use include/exclude lists here; v0.1.0 CLI walks the tree.
-schemaVersion: 1
-templateId: genericTemplate
-templateVersion: "0.0.1"

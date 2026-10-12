@@ -3,7 +3,7 @@
 
 Usage: new_doc.py [TYPE] [--title TEXT] [--version X.Y.Z] [--part NAME] [--blank] [--docs DIR] [--dry-run]
 
-  TYPE            the document type: SPEC (default), USER-GUIDE, DESIGN-GUIDE, TODO, PLANNING, or any other name
+  TYPE            the document type: SPEC (default), USER-GUIDE, DESIGN-GUIDE, PLANNING, or any other name
                   in capital letters, digits and hyphens (small letters are changed to capitals)
   --title TEXT    the subtitle: a short description of the document (default: one for the type)
   --version X.Y.Z SPEC only: the version of the new SPEC (default: the newest SPEC's version with the last number
@@ -31,7 +31,6 @@ OUTLINES = {
               'Design {#sec-design}', 'Open questions {#sec-open-questions}']),
     'USER-GUIDE': ('how to use the project', ['Who this guide is for', 'Start', 'Tasks', 'Troubleshooting']),
     'DESIGN-GUIDE': ('how the project is made, and why', ['Goals', 'Structure', 'Decisions', 'Rejected alternatives']),
-    'TODO': ('the work still to do', ['Open', 'Done']),
     'PLANNING': ('plans', ['Goals', 'Steps', 'Risks']),
 }
 DEFAULT_OUTLINE = ('TODO: a short description', ['Purpose', 'Content'])

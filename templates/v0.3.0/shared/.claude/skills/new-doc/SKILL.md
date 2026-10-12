@@ -1,6 +1,6 @@
 ---
 name: new-doc
-description: Add a document to the project-docs Quarto book (docs/) - a SPEC by default, or a USER-GUIDE, DESIGN-GUIDE, TODO, PLANNING or other type that the user names - with the right file name and version, listed in docs/_quarto.yml. Use when asked for a new spec, guide, plan or other project document, or for the next version of one.
+description: Add a document to the project-docs Quarto book (docs/) - a SPEC by default, or a USER-GUIDE, DESIGN-GUIDE, PLANNING or other type that the user names - with the right file name and version, listed in docs/_quarto.yml. Use when asked for a new spec, guide, plan or other project document, or for the next version of one.
 argument-hint: "[TYPE] [--title TEXT] [--version X.Y.Z]"
 ---
 

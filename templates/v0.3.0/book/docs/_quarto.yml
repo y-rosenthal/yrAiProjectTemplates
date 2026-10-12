@@ -1,4 +1,4 @@
-# The project-docs book: SPECs, guides, the TODO list and the plans for the main book.
+# The project-docs book: SPECs, guides and the plans for the main book.
 # Preview: quarto preview docs      Render: quarto render docs      (from the project folder)
 # docs/QUARTO-GUIDE-v001.qmd explains the books. List the newest version of a document first.
 
@@ -15,7 +15,6 @@ book:
         - SPEC-v0.1.0.qmd
     - part: "Work"
       chapters:
-        - TODO-v001.qmd
         - PLANNING-v001.qmd
     - part: "Guides"
       chapters:

@@ -14,11 +14,11 @@ decisions.
 | `SPEC` | What the project must do in one development step: purpose, scope, requirements, design, open questions. The default type. |
 | `USER-GUIDE` | How to use the project, step by step. |
 | `DESIGN-GUIDE` | How the project is made, and why: structure, decisions, rejected alternatives. |
-| `TODO` | The work still to do, and the work done. |
 | `PLANNING` | Plans: goals, steps, risks. In a book project, the plans for the main book. |
 | Other | Any other name in capital letters and hyphens, for example `STYLE-GUIDE` or `RESEARCH-NOTES`. |
 
-There are no PRD documents. A SPEC holds the requirements.
+There are no PRD documents. A SPEC holds the requirements. There is no TODO document: work to do later is a
+pending item, a GitHub issue (the `pending-work` skill).
 
 ## File names and versions {#sec-doc-names}
 
