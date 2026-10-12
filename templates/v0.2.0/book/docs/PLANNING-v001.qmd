@@ -1,0 +1,18 @@
+---
+title: "PLANNING-v001"
+subtitle: "Plans for the main book"
+---
+
+## Goals {#sec-plan-goals}
+
+- TODO: what the book must give its readers.
+
+## Chapters {#sec-plan-chapters}
+
+| Chapter | Content | State |
+|---|---|---|
+| Introduction | TODO | Not started |
+
+## Steps {#sec-plan-steps}
+
+1. TODO.

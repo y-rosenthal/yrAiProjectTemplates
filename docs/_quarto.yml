@@ -1,29 +1,27 @@
-# Quarto book: yrAiProjectTemplates (meta repository)
-# See docs/QUARTO-DOC-GUIDE.qmd for how to install Quarto and render this book.
+# The documentation of yrAiProjectTemplates. Preview: quarto preview docs   Render: quarto render docs
+# List the newest version of a document first.
 
 project:
   type: book
   output-dir: _book
 
 book:
-  title: "yrAiProjectTemplates — meta documentation"
-  description: "Templates, SPEC, shared content, CLI, and vendor-neutral conventions for assisted development"
+  title: "yrAiProjectTemplates"
+  subtitle: "Templates and tools for AI-assisted projects"
   chapters:
     - index.qmd
-    - part: "Guide to the documentation"
+    - USER-GUIDE-v001.qmd
+    - part: "Specification"
+      chapters:
+        - SPEC-v0.2.0.qmd
+        - SPEC-v0.1.0.qmd
+    - part: "The guides that every project gets"
       chapters:
         - DOC-GUIDE-v001.qmd
-        - DOC-AUTHORING-GUIDE.qmd
-        - QUARTO-DOC-GUIDE.qmd
-    - part: "Meta project — specification and tooling"
-      chapters:
-        - META-SPEC-v0.1.0.qmd
-        - META-PROJECT-CONVENTIONS.qmd
+        - QUARTO-GUIDE-v001.qmd
 
 format:
   html:
     theme: cosmo
     toc: true
     toc-depth: 3
-    toc-title: "Contents"
-    code-fold: false

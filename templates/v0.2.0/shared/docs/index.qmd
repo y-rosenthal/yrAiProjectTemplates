@@ -1,0 +1,8 @@
+---
+title: "About this project"
+---
+
+This book holds the project documents: the SPECs, the guides, the TODO list and the plans. The text below is the
+project's `README.md`.
+
+{{< include ../README.md >}}

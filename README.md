@@ -1,47 +1,46 @@
 # yrAiProjectTemplates
 
-This **meta repository** holds **versioned project templates** for projects that may be developed with help from **language models or other automated assistants**. Conventions here emphasize **plain-text, version-controlled** files that any tool (or human) can read—without tying you to a specific vendor (see **`docs/`**).
+Templates and tools to start a project for AI-assisted work, so that every project has the same base: rules for
+every AI coding agent, a Quarto book of project documents (SPECs, guides, TODO lists, plans), and the skills and
+checks that go with them.
 
-## What lives here
-
-| Path | Role |
-|------|------|
-| **`README.md` (this file)** | Overview of the **template library** repository itself. |
-| **`docs/`** | Quarto source for the **meta-project documentation book** (SPEC, authoring guides, AI-tool notes—not a downstream app’s doc set). |
-| **`shared/`** | Optional files merged into **every** template install before the versioned template overlay (see the SPEC). |
-| **`genericTemplate/<version>/`** | A **frozen** template tree (e.g. `v0.0.1`) you can copy into a new project. |
-
-Each **downstream** project created from a template has its **own** root `README.md` and **`docs/`** folder as defined by that template version.
-
-## Templates and versions
-
-Each subfolder under the repo root is a **template family** (today: **`genericTemplate`**). Inside it, **version directories** (e.g. **`v0.0.1`**) hold immutable snapshots so you can compare versions without relying only on git history.
-
-## Files, folders, and assisted development
-
-Templates and this book encourage **predictable layout** (root `README`, `docs/`, documented commands) and optional **project playbooks** so context stays in git. That works with **any** assistant that can read repository files. See **`docs/META-PROJECT-CONVENTIONS.qmd`** or the **“Project files and assisted development”** chapter in the rendered book—not product-specific setup guides.
-
-## Specification and CLI
-
-- **Normative behavior** (placeholders, `.yrAiProjectTemplate/manifest.json`, shared overlay, CI rationale): **`docs/META-SPEC-v0.1.0.qmd`** (also the **“META-SPEC v0.1.0”** chapter in the rendered book).
-- **Command-line tools:** Python package **`tools/yraiproject/`**. On many Linux systems Python is **PEP 668–managed**, so use a virtual environment:
+## Quick start
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e ./tools/yraiproject
-yraiproject install /path/to/new-project --repo-root "$(pwd)"
-yraiproject verify /path/to/new-project --repo-root "$(pwd)" --check-content
+yrNewAiProject.sh ~/Dropbox/_yrAiCoding/myProject                 # a work project
+yrNewAiProject.sh --type book ~/Dropbox/_yrQuarto-master/myBook    # a book project
+yrNewAiProject.sh --help                                           # what it does, and every option
 ```
 
-See **`tools/yraiproject/README.md`** for flag details; **`--repo-root`** can be omitted when you run the command from (or inside) a clone of this repository.
+`yrNewAiProject.sh` is in the Dropbox tools folder (`~/Dropbox/tools`, on `PATH`). It runs `bin/yrNewAiProject.py`.
+On a new computer, run `bin/setup-computer.sh` once.
 
-## Building the meta documentation book
+## The two types of project
 
-From the repository root:
+| Type | Main purpose | Quarto books |
+|---|---|---|
+| `work` | Any work: programs, data, research, ... | The project docs in `docs/` (`quarto preview docs`) |
+| `book` | A Quarto book to publish | The main book at the root (`quarto preview`), and the project docs in `docs/` (`quarto preview docs`) |
 
-```bash
-quarto render docs
-```
+Every project gets `AGENTS.md` (the rules for every AI agent, with the shared rules), `CLAUDE.md` (it imports
+`AGENTS.md`), `.gitignore`, the project-docs book with a first SPEC, and the `new-doc` skill.
 
-Open **`docs/_book/index.html`**. For a deeper walkthrough, see **`docs/QUARTO-DOC-GUIDE.qmd`**.
+## Layout
+
+| Path | What it holds |
+|---|---|
+| `bin/yrNewAiProject.py` | Makes a project from a template, and checks a project against its template (`--verify`) |
+| `bin/agents_init.py` | Copies the shared rules into a project's `AGENTS.md` (`agents-init.sh` in the tools folder) |
+| `bin/setup-computer.sh` | Sets up a computer: makes Claude Code read the shared rules in every project |
+| `rules/AGENTS.md` | The shared rules for every project and every AI agent |
+| `templates/vX.Y.Z/` | One template version: `shared/` (for every project), `work/` and `book/` (for each type) |
+| `docs/` | The documentation of this repository, a Quarto book: the user guide and the SPECs |
+| `tests/selftest.py` | Tests the tools and the templates; run it after every change |
+
+## Documentation
+
+Read the book: `quarto preview docs`. It has the user guide (`docs/USER-GUIDE-v001.qmd`), the specification
+(`docs/SPEC-v0.2.0.qmd`), and the writing and Quarto guides that every project gets.
+
+The `yraiproject` tool of version 0.1.0 is retired; `yrNewAiProject` replaces it. The old tool is in the git tag
+`yraiproject-final`.

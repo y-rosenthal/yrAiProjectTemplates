@@ -1,0 +1,19 @@
+# The main book (the book that is published).
+# Preview: quarto preview      Render: quarto render      (from the project folder)
+# The project docs are a separate book in docs/ (quarto preview docs). Do not list docs/ files here.
+
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "{{YRAI:PROJECT_TITLE}}"
+  date: "{{YRAI:CREATED_DATE}}"
+  chapters:
+    - index.qmd
+    - intro.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true

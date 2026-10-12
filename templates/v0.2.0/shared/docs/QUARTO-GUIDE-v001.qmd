@@ -1,0 +1,44 @@
+---
+title: "QUARTO-GUIDE-v001"
+subtitle: "How to build the Quarto books of this project"
+---
+
+## The books in a project {#sec-quarto-books}
+
+Each Quarto book is a folder that has its own `_quarto.yml`. Every project has the **project-docs book** in `docs/`.
+A **book project** also has the **main book**, the book that is published, at the project root.
+
+| Book | Folder | Preview | Render | Output |
+|---|---|---|---|---|
+| Main book (book projects only) | the project root | `quarto preview` | `quarto render` | `_book/index.html` |
+| Project docs (every project) | `docs/` | `quarto preview docs` | `quarto render docs` | `docs/_book/index.html` |
+
+Run the commands from the project folder. To choose a book, give `quarto` the folder that holds its `_quarto.yml`.
+Without a folder, `quarto` uses the current folder.
+
+- `quarto preview` renders the book, opens it in the browser, and renders again each time that you save a file.
+  Press `Ctrl+C` to stop it.
+- You can preview both books at the same time: each preview uses a different port. To choose the port, add
+  `--port 4200`.
+- The main book does not include the `docs/` book: a book renders only the chapters in its own `_quarto.yml`.
+- Git ignores the output folders (`_book/`) and the caches (`.quarto/`).
+
+## Install Quarto {#sec-quarto-install}
+
+If `quarto --version` shows a version, Quarto is installed. If not, install it from
+<https://quarto.org/docs/get-started/>, then run `quarto check`.
+
+## Add or remove a chapter {#sec-quarto-chapters}
+
+1. Add the `.qmd` file to the book folder. The `new-doc` skill does this for the project docs.
+2. Add the file to `book: chapters:` in the book's `_quarto.yml`, in the order that you want. Put the newest version
+   of a document first.
+3. Render the book again.
+
+To remove a chapter, remove it from `_quarto.yml`.
+
+## If a render fails {#sec-quarto-errors}
+
+- Read the first error line. It usually names the file and the line.
+- A file in `_quarto.yml` that does not exist stops the render: correct the name.
+- An `@sec-…` reference to a label that does not exist gives a warning: correct the label.

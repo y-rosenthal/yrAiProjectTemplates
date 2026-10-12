@@ -1,7 +1,7 @@
-# Renders the meta-project Quarto book under docs/ on every push and PR.
-# See docs/META-SPEC-v0.1.0.qmd (Continuous integration) for rationale.
+# On every push and pull request: test the tools and the templates, and render the documentation book.
+# The same checks as on your computer: python3 tests/selftest.py and quarto render docs.
 
-name: Quarto docs
+name: Test and render
 
 on:
   push:
@@ -10,13 +10,16 @@ on:
     branches: [master, main]
 
 jobs:
-  render:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Quarto
+      - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render book
+      - name: Test the tools and the templates (they make and render test projects)
+        run: python3 tests/selftest.py
+
+      - name: Render the documentation book
         run: quarto render docs

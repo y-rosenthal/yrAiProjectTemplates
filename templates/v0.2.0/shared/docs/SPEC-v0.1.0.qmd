@@ -1,0 +1,25 @@
+---
+title: "SPEC-v0.1.0"
+subtitle: "{{YRAI:PROJECT_TITLE}}: what version 0.1.0 must do"
+---
+
+## Purpose {#sec-purpose}
+
+{{YRAI:PROJECT_DESCRIPTION}}
+
+## Scope {#sec-scope}
+
+- In scope: TODO.
+- Out of scope: TODO.
+
+## Requirements {#sec-requirements}
+
+1. TODO: one requirement in each item. Write what the project must do, not how.
+
+## Design {#sec-design}
+
+TODO: the main parts and how they work together. Put long design notes in a DESIGN-GUIDE document.
+
+## Open questions {#sec-open-questions}
+
+- TODO.

@@ -1,0 +1,28 @@
+# The project-docs book: SPECs, guides, TODO lists and plans.
+# Preview: quarto preview docs      Render: quarto render docs      (from the project folder)
+# docs/QUARTO-GUIDE-v001.qmd explains the books. List the newest version of a document first.
+
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "{{YRAI:PROJECT_TITLE}}: project docs"
+  chapters:
+    - index.qmd
+    - part: "Specification"
+      chapters:
+        - SPEC-v0.1.0.qmd
+    - part: "Work"
+      chapters:
+        - TODO-v001.qmd
+    - part: "Guides"
+      chapters:
+        - DOC-GUIDE-v001.qmd
+        - QUARTO-GUIDE-v001.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3

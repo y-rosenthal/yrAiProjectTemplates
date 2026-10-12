@@ -1,8 +1,13 @@
-**/_book/
-**/.quarto/
+# Quarto: rendered books and caches
+_book/
+/.quarto/
 
-# Python (yraiproject CLI)
-**/__pycache__/
-**/*.egg-info/
-**/.eggs/
-**/*.pyc
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors and operating systems
+.DS_Store
+*.swp
+*~

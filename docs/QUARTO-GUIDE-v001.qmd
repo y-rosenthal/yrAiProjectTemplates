@@ -1,0 +1,4 @@
+<!-- This chapter shows the guide that every project gets: templates/v0.2.0/shared/docs/QUARTO-GUIDE-v001.qmd.
+     Edit it there, in the newest template version. -->
+
+{{< include ../templates/v0.2.0/shared/docs/QUARTO-GUIDE-v001.qmd >}}

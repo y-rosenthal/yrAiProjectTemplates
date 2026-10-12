@@ -1,0 +1,200 @@
+---
+title: "USER-GUIDE-v001"
+subtitle: "How to make, document and check AI-assisted projects"
+---
+
+## What this repository is for {#sec-purpose}
+
+Each new project for AI-assisted work starts from the same base, so that people and AI agents find the same
+things in the same places:
+
+- `AGENTS.md`: the rules for every AI coding agent (Claude Code, Codex, Cursor, Copilot and others) and every
+  collaborator. It holds the project's rules and a copy of the **shared rules**, which apply to every project.
+- `CLAUDE.md`: one import line, `@AGENTS.md`, so that Claude Code reads the same rules.
+- `docs/`: the **project-docs Quarto book**: the SPECs, the guides, the TODO list and the plans. It is the quick
+  way to learn what a project holds.
+- `.claude/skills/new-doc/`: the skill that adds a document to `docs/`.
+- `.yrAiProjectTemplate/manifest.json`: the template that the project was made from.
+
+## Set up a computer {#sec-setup}
+
+You need Dropbox (synced), Python 3.8 or later, git and Quarto. For `--github`, you also need the `gh` command,
+logged in (`gh auth login`). This works on Linux, and in Git Bash on Windows.
+
+1. Make sure that the Dropbox tools folder is on `PATH`. The tools folder holds `yrNewAiProject.sh` and
+   `agents-init.sh`. On Linux, `~/.bashrc` has the line `export PATH="$PATH:$HOME/Dropbox/tools"`.
+2. Run the setup script once:
+
+   ```bash
+   ~/Dropbox/_yrAiCoding/yrAiProjectTemplates/bin/setup-computer.sh
+   ```
+
+   It checks the `PATH`, and it adds an import line to `~/.claude/CLAUDE.md`. Then Claude Code follows the shared
+   rules in every project on this computer. `setup-computer.sh --check` only reports.
+3. Test: `yrNewAiProject.sh --list` shows the template versions.
+
+On Windows, `python3` can be a Microsoft Store placeholder that does not run. The `.sh` commands then use `python`
+or `py -3`.
+
+## Make a project {#sec-make}
+
+```bash
+yrNewAiProject.sh --title "Photo Checks" --description "Reads photos of checks into a spreadsheet." ~/Dropbox/_yrAiCoding/yrPhotoChecks
+yrNewAiProject.sh --type book --title "Python for Beginners" ~/Dropbox/_yrQuarto-master/yrPythonBook
+```
+
+The last word is the project folder. Its name is the project name. The folder must not exist, or must be empty,
+or must hold only `.git`. The tool:
+
+1. copies the shared template files, then the files of the type (a type file wins over a shared file with the same
+   name);
+2. fills in the project name, title, description, type, date and template version;
+3. copies the shared rules into `AGENTS.md`;
+4. writes `.yrAiProjectTemplate/manifest.json`;
+5. makes a git repository (branch `main`) and commits the files.
+
+Then:
+
+1. In `README.md`, write the "Getting started" section.
+2. In `docs/SPEC-v0.1.0.qmd`, write what the first version must do.
+3. Look at the books: `quarto preview docs` (and `quarto preview` in a book project).
+
+Use `--dry-run` to see what the tool would do, with no change.
+
+## The two types of project {#sec-types}
+
+| Type | Use it for | What it adds to the shared files |
+|---|---|---|
+| `work` (the default) | Any work: programs, data, research, ... | A README for any kind of work |
+| `book` | A Quarto book that you publish | The main book at the root (`_quarto.yml`, `index.qmd`, `intro.qmd`), a README for a book, and `docs/PLANNING-v001.qmd` for the plans for the main book |
+
+## The Quarto books of a project {#sec-books}
+
+Each book is a folder with its own `_quarto.yml`. Give `quarto` the folder of the book:
+
+| Book | Preview | Render | Output |
+|---|---|---|---|
+| Main book (book projects) | `quarto preview` | `quarto render` | `_book/index.html` |
+| Project docs (every project) | `quarto preview docs` | `quarto render docs` | `docs/_book/index.html` |
+
+Run the commands from the project folder. Both previews can run at the same time. The QUARTO-GUIDE in each
+project tells more.
+
+## Add documents: the new-doc skill {#sec-new-doc}
+
+Ask your AI agent for a new document ("make the next SPEC", "add a USER-GUIDE"), or run the script yourself:
+
+```bash
+python3 .claude/skills/new-doc/new_doc.py                       # the next SPEC
+python3 .claude/skills/new-doc/new_doc.py USER-GUIDE --title "How to use the tool"
+python3 .claude/skills/new-doc/new_doc.py --help                # all the options
+```
+
+- **A SPEC is the default type.** A SPEC has the version of its development step: `SPEC-v0.1.0.qmd`, then
+  `SPEC-v0.1.1.qmd` (the default next version), or the version that you give with `--version`.
+- **Other types:** `USER-GUIDE`, `DESIGN-GUIDE`, `TODO`, `PLANNING`, or any name in capital letters. They have a
+  copy number: `USER-GUIDE-v001.qmd`. The next copy, `-v002`, is only for when you want to keep the old copy next
+  to the new one.
+- A new version starts as a copy of the newest version (use `--blank` for an empty outline).
+- The script lists the new file in `docs/_quarto.yml`, above the older versions.
+
+There are no PRD documents: a SPEC holds the requirements. The DOC-GUIDE in each project gives all the rules.
+
+## The shared rules for AI agents {#sec-rules}
+
+The shared rules are in `rules/AGENTS.md` of this repository, for example "every script has `--help`". They
+reach the agents in three ways:
+
+| Who | How they get the rules |
+|---|---|
+| Claude Code on your computers | `~/.claude/CLAUDE.md` imports `rules/AGENTS.md` (`setup-computer.sh` adds the line) |
+| Collaborators, any AI agent, cloud agents | A copy in the project's `AGENTS.md`, between `<!-- begin shared rules -->` and `<!-- end shared rules -->` |
+| A new project | `yrNewAiProject.sh` puts the copy in |
+
+To change a shared rule:
+
+1. Edit `rules/AGENTS.md`, and commit it.
+2. In each project, run `agents-init.sh`. It replaces the copy, and keeps the project's own rules. Then commit the
+   change in that project.
+
+`agents-init.sh --check` reports a copy that is out of date. `agents-init.sh` also adds the shared rules to an older
+project that does not have them.
+
+## Add the templates to an existing project {#sec-existing}
+
+```bash
+yrNewAiProject.sh --add-to-existing --type work ~/Dropbox/_yrAiCoding/yrOldProject
+```
+
+The tool adds the template files and never changes a file that exists. If a template file (for example
+`README.md`) exists already, it stops before it writes anything and lists those files. Then rename or move them,
+and run it again. It makes no commit: look at the new files (`git status`), then commit them.
+
+## Check a project {#sec-verify}
+
+```bash
+yrNewAiProject.sh --verify PATH                    # every template file is there
+yrNewAiProject.sh --verify --check-content PATH    # ... and its text is as the template made it
+```
+
+`--verify` reads the manifest, and reports the template files that are missing. Extra files, and shared rules
+that are out of date, are notes. With `--check-content`, it also reports each template file whose text changed
+outside the filled-in values and the regions between `<!-- YRAI:BEGIN:NAME -->` and `<!-- YRAI:END:NAME -->`.
+Files that you are expected to edit (the README, the documents) will differ. Use `--check-content` to see what
+changed since the project was made.
+
+## Put a project on GitHub {#sec-github}
+
+Add `--github` when you make the project. The tool then makes a **private** GitHub repository with the folder name
+(`gh repo create`), and pushes the first commit. To do this later, from the project folder:
+
+```bash
+gh repo create --private --source . --remote origin --push
+```
+
+## Options of yrNewAiProject {#sec-options}
+
+| Option | What it does |
+|---|---|
+| `--type work\|book` | The project type (default `work`) |
+| `--title TEXT` | The project title (default: the folder name) |
+| `--description TEXT` | One sentence that says what the project is for (default: a TODO line) |
+| `--version VER` | The template version (default: the newest) |
+| `--github` | Also make a private GitHub repository and push to it |
+| `--add-to-existing` | Add the template to a folder that has files; never change a file; no commit |
+| `--strict-empty` | Refuse a folder that holds anything, even only `.git` |
+| `--dry-run` | Show what would be done; change nothing |
+| `--meta-repo DIR` | Take the templates from another copy of this repository |
+| `--verify PATH` | Check a project against its template |
+| `--check-content` | With `--verify`: also compare the text |
+| `--list` | List the template versions and their types |
+| `-h`, `--help` | Show the help and stop |
+
+Exit status: 0 OK; 1 `--verify` found a problem; 2 bad options, a missing template or a missing tool; 3 the folder
+is not empty; 4 `--add-to-existing` would change a file; 5 git or gh failed.
+
+## Change the templates {#sec-change}
+
+1. A released template version does not change. A version is released when it has the git tag
+   `templates-vX.Y.Z`. Projects record their version, and `--verify` compares them with it.
+2. To change the templates, copy the newest version folder to a new version, for example `templates/v0.3.0/`, and
+   change the copy. `yrNewAiProject.sh` uses the newest version.
+3. Write a SPEC for the new version (`docs/SPEC-v0.3.0.qmd`), and update this guide.
+4. Run `python3 tests/selftest.py`. It must print `OK`. Then render this book: `quarto render docs`.
+5. Commit, and tag the version: `git tag templates-v0.3.0`.
+
+## The retired yraiproject tool {#sec-retired}
+
+Version 0.1.0 had a pip-installed tool, `yraiproject`, and one template, `genericTemplate`. `yrNewAiProject`
+replaces it and keeps all its functions:
+
+| yraiproject | yrNewAiProject |
+|---|---|
+| `yraiproject install TARGET` | `yrNewAiProject.sh TARGET` (also git, the shared rules, the type, `--github`) |
+| `--template`, `--version` | `--type`, `--version` |
+| `--allow-non-empty-safe` | `--add-to-existing` |
+| `--strict-empty`, `--dry-run`, `--repo-root` | `--strict-empty`, `--dry-run`, `--meta-repo` |
+| `yraiproject verify TARGET [--check-content]` | `yrNewAiProject.sh --verify [--check-content] TARGET` |
+| `genericTemplate/v0.0.1` | `templates/v0.0.1/generic` (`--version v0.0.1 --type generic`) |
+
+The old tool is in the git tag `yraiproject-final`. `--verify` also reads the manifests that it wrote.
