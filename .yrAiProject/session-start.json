@@ -1,0 +1,7 @@
+{
+  "systemMessage": "Set up by yrAiProject.sh (yrAiProjectTemplates v0.4.0; parts: rules, pending-work). Before you change its files, read .yrAiProject/README.md.",
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "This project was set up by yrAiProject.sh (yrAiProjectTemplates v0.4.0; parts: rules, pending-work); the user saw a one-line notice about it. .yrAiProject/README.md lists the files that the tool installed, and tells who changes each one. Read it before you change AGENTS.md, CLAUDE.md, .claude/settings.json, a file in .claude/skills/, or the docs guides. Do not edit the tool's blocks in AGENTS.md and README.md, or the files in .yrAiProject/: \"yrAiProject.sh update\" writes them again. \"yrAiProject.sh status\" shows whether the project is up to date."
+  }
+}

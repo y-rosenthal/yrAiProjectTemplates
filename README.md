@@ -54,3 +54,9 @@ Read the book: `quarto preview docs`. It has the user guide (`docs/USER-GUIDE-v0
 `yrAiProject.sh` replaces `yrNewAiProject.sh` and `agents-init.sh` (the old names only print the new command).
 Template v0.0.1 and the records of older tools are no longer supported; they are in the git tags
 `yraiproject-final` and `templates-v0.2.0`.
+
+<!-- begin yrAiProject setup: written by yrAiProject.sh; "yrAiProject.sh update" replaces this block -->
+*Set up by `yrAiProject.sh` (yrAiProjectTemplates v0.4.0; parts: rules, pending-work). It installed the rules
+for AI agents, the skills and the settings, and it updates them. Before you change them, read
+`.yrAiProject/README.md`.*
+<!-- end yrAiProject setup -->

@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "createdAt": "2026-10-12T15:47:35Z",
   "projectType": null,
-  "version": "v0.3.0",
+  "version": "v0.4.0",
   "parts": [
     "pending-work",
     "rules"
@@ -14,16 +14,34 @@
     "PROJECT_DESCRIPTION": "TODO: one sentence that says what this project is for.",
     "PROJECT_TYPE": "work",
     "CREATED_DATE": "2026-10-12",
-    "TEMPLATE_VERSION": "v0.3.0"
+    "TEMPLATE_VERSION": "v0.4.0"
   },
   "files": {
     ".claude/skills/pending-work/SKILL.md": "6e0f4084de8a6b0b5207a17f50cbd275ed5c4cdfeb7a139019999df9ef11b2bc",
-    ".claude/skills/pending-work/scripts/pending.sh": "c5f1b7fc508aa978e498de9ba698cb31a7d7883b053c51bfcff1611827ce5df4"
+    ".claude/skills/pending-work/scripts/pending.sh": "c5f1b7fc508aa978e498de9ba698cb31a7d7883b053c51bfcff1611827ce5df4",
+    "README.md": "a69d80174c0141b221bb23eaa3f1aeb85095849653f99195d3ce9b1fe1409770"
   },
-  "updatedAt": "2026-10-12T15:58:57Z",
+  "updatedAt": "2026-10-12T16:44:04Z",
   "tool": {
     "name": "yrAiProject",
-    "version": "0.3.0",
-    "templatesCommit": "033591c"
-  }
+    "version": "0.4.0",
+    "templatesCommit": "2916a8a"
+  },
+  "history": [
+    {
+      "date": "2026-10-12",
+      "command": "set up (no history before v0.4.0)",
+      "version": null,
+      "parts": []
+    },
+    {
+      "date": "2026-10-12",
+      "command": "update",
+      "version": "v0.4.0",
+      "parts": [
+        "pending-work",
+        "rules"
+      ]
+    }
+  ]
 }
