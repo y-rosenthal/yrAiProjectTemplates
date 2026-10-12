@@ -9,8 +9,8 @@ Usage: python3 tests/selftest.py [--keep] [--no-quarto]
 
 In a scratch folder, it makes work and book projects and checks: the files, the filled-in values, the manifest,
 the shared rules in AGENTS.md, the first commit, --verify and --check-content (also after a Quarto render), the
-new-doc script, the pending-work skill (its hook output, and agents-init --pending-work), the template v0.0.1, and
-every error case (exit statuses 2, 3 and 4). It never uses --github
+new-doc script, the pending-work skill (its hook output, and agents-init --pending-work), --preview and
+agents-init --diff (they change nothing), the template v0.0.1, and every error case (exit statuses 2, 3 and 4). It never uses --github
 without --dry-run, so it makes nothing on GitHub. Prints OK at the end; exit status 1 if a check fails.
 Stdlib only.
 """
@@ -165,6 +165,28 @@ def main(argv):
     check(code == 0 and code2 == 0 and (old / PENDING).read_text() == '# changed by the project\n'
           and (old / '.claude' / 'settings.json').read_text() == before,
           'agents-init --pending-work again: replaces no file, adds no second hook', out + out2)
+
+    print('preview and diff')
+    pre = tmp / 'preview-me'
+    (pre / '.claude').mkdir(parents=True)
+    (pre / 'README.md').write_text('# Mine\n')
+    (pre / 'CLAUDE.md').write_text('# My rules\n')
+    (pre / '.claude' / 'settings.json').write_text('{"permissions": {}}\n')
+    before = {q: q.read_bytes() for q in pre.rglob('*') if q.is_file()}
+    code, out = tool('--preview', pre)
+    check(code == 0 and '! README.md  (differs from the template)' in out and 'would STOP (exit 4)' in out
+          and '+ docs/_quarto.yml' in out and 'would create' in out and '+@AGENTS.md' in out
+          and '"matcher": "startup|clear"' in out and 'would add' in out,
+          '--preview lists the clashes, the files to add, and the agents-init diffs', out)
+    code2, out2 = run([sys.executable, AGENTS_INIT, pre, '--diff', '--pending-work'])
+    check(code2 == 0 and '+@AGENTS.md' in out2 and 'would change' in out2, 'agents-init --diff shows the changes', out2)
+    after = {q: q.read_bytes() for q in pre.rglob('*') if q.is_file()}
+    check(before == after, '--preview and agents-init --diff change nothing')
+    code, out = tool('--preview', tmp / 'no-such-folder')
+    check(code == 2, '--preview of a folder that does not exist: exit 2', out)
+    code, out = tool('--preview', work)
+    check(code == 0 and 'nothing: the shared rules and the pending-work skill are up to date' in out
+          and 'use --verify' in out, '--preview of a project made by the tool: nothing to change', out)
 
     print('verify finds problems')
     work = tmp / 'my-work'

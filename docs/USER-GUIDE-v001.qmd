@@ -119,10 +119,24 @@ To change a shared rule:
 2. In each project, run `agents-init.sh`. It replaces the copy, and keeps the project's own rules. Then commit the
    change in that project.
 
-`agents-init.sh --check` reports a copy that is out of date. `agents-init.sh` also adds the shared rules to an older
+`agents-init.sh --check` reports a copy that is out of date. `agents-init.sh --diff` shows what it would change,
+as diffs, and changes nothing. `agents-init.sh` also adds the shared rules to an older
 project that does not have them.
 
 ## Add the templates to an existing project {#sec-existing}
+
+First, see what would happen. This changes nothing:
+
+```bash
+yrNewAiProject.sh --preview ~/Dropbox/_yrAiCoding/yrOldProject
+```
+
+It lists the template files that `--add-to-existing` would add, and the ones that exist already (because of those,
+it would stop and write nothing). It also shows, as diffs, exactly what `agents-init.sh --pending-work` would
+change: `AGENTS.md`, `CLAUDE.md` and `.claude/settings.json`. In a diff, lines that start with `+` would be added and
+lines that start with `-` would be removed. `agents-init.sh --diff` shows only the agents-init part.
+
+Then:
 
 ```bash
 yrNewAiProject.sh --add-to-existing --type work ~/Dropbox/_yrAiCoding/yrOldProject
@@ -194,6 +208,7 @@ setup-labels` once, and commit the new files.
 | `--dry-run` | Show what would be done; change nothing |
 | `--meta-repo DIR` | Take the templates from another copy of this repository |
 | `--verify PATH` | Check a project against its template |
+| `--preview PATH` | Show what `--add-to-existing` and `agents-init.sh --pending-work` would do in an existing folder; change nothing |
 | `--check-content` | With `--verify`: also compare the text |
 | `--list` | List the template versions and their types |
 | `-h`, `--help` | Show the help and stop |

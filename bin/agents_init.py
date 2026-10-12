@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """agents-init: put the shared AI-agent rules into a project, so every collaborator's coding agent follows them.
 
-Usage: agents-init.sh [DIR] [--check] [--pending-work]
+Usage: agents-init.sh [DIR] [--check | --diff] [--pending-work]
 
 agents-init.sh is the command in the Dropbox tools folder; it runs this file, bin/agents_init.py.
 
@@ -17,6 +17,9 @@ at the top of an existing CLAUDE.md. Prints what it changed. Safe to run again: 
   DIR             the project (default: the top of the current git repository, else the current directory)
   --check         change nothing; exit 1 if AGENTS.md or CLAUDE.md is out of date (or, with --pending-work, if the
                   pending-work skill or its hook is missing)
+  --diff          change nothing; show what would change: a diff of each file that would be created or changed
+                  (AGENTS.md, CLAUDE.md and, with --pending-work, .claude/settings.json) and the files that would be
+                  added. Exit 0
   --pending-work  also add the pending-work skill: things to do later are GitHub issues labeled pending-work, and a
                   SessionStart hook shows how many are open. Copies .claude/skills/pending-work/ from the newest
                   template version that has it, and adds the hook to .claude/settings.json (the file is created, or
@@ -28,6 +31,7 @@ at the top of an existing CLAUDE.md. Prints what it changed. Safe to run again: 
 Environment: AGENTS_SHARED_RULES=FILE uses FILE as the source instead of rules/AGENTS.md.
 Stdlib only.
 """
+import difflib
 import json
 import os
 import re
@@ -80,9 +84,19 @@ def new_claude_md(old):
     return f'{IMPORT}\n\n{old}'
 
 
-def update(root, source=None, check=False, quiet=False):
-    """Bring root/AGENTS.md and root/CLAUDE.md up to date (with check=True, change nothing).
-    Returns the names of the files that were (or would be) changed. Used by yrNewAiProject."""
+def show_diff(path, old, new):
+    """Print a unified diff from old to new (old None: a new file)."""
+    print(f'  {"would create" if old is None else "would change"} {path}:')
+    lines = difflib.unified_diff((old or '').splitlines(keepends=True), new.splitlines(keepends=True),
+                                 'a/' + path.name if old is not None else '/dev/null', 'b/' + path.name)
+    for line in lines:
+        print('    ' + line.rstrip('\n'))
+
+
+def update(root, source=None, check=False, quiet=False, diff=False):
+    """Bring root/AGENTS.md and root/CLAUDE.md up to date (with check=True, change nothing; with diff=True, also
+    print a diff of each change). Returns the names of the files that were (or would be) changed. Used by
+    yrNewAiProject."""
     block = shared_block(Path(source or os.environ.get('AGENTS_SHARED_RULES', RULES)))
     stale = []
     for name, make in (('AGENTS.md', lambda old: new_agents_md(old, block, root.name)), ('CLAUDE.md', new_claude_md)):
@@ -96,7 +110,9 @@ def update(root, source=None, check=False, quiet=False):
         if new == old:
             continue
         stale.append(name)
-        if not check:
+        if diff:
+            show_diff(path, old, new)
+        elif not check:
             path.write_text(new, encoding='utf-8')
             if not quiet:
                 print(f'  {"created" if old is None else "updated"} {path}')
@@ -112,9 +128,11 @@ def pending_source():
     return max(found, key=lambda s: tuple(int(x) for x in s.parent.name[1:].split('.')))
 
 
-def install_pending_work(root, check=False, quiet=False):
-    """Add the pending-work skill and its SessionStart hook to root (with check=True, change nothing). Never
-    replaces a file that exists. Returns the paths that were (or would be) added or changed."""
+def install_pending_work(root, check=False, quiet=False, diff=False):
+    """Add the pending-work skill and its SessionStart hook to root (with check=True, change nothing; with
+    diff=True, also print what would change). Never replaces a file that exists. Returns the paths that were (or
+    would be) added or changed."""
+    check = check or diff
     shared = pending_source()
     changed = []
     for src in sorted((shared / PENDING).rglob('*')):
@@ -122,6 +140,8 @@ def install_pending_work(root, check=False, quiet=False):
         if not src.is_file() or '__pycache__' in rel.parts or (root / rel).exists():
             continue
         changed.append(str(rel))
+        if diff:
+            print(f'  would add {root / rel} (from template {shared.parent.name})')
         if not check:
             (root / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, root / rel)
@@ -142,8 +162,11 @@ def install_pending_work(root, check=False, quiet=False):
         sys.exit(f'agents-init: {path} has hooks in a form that agents-init does not know; add the hook by hand')
     if 'pending.sh' not in json.dumps(entries):
         changed.append(str(SETTINGS))
+        old = path.read_text(encoding='utf-8') if existed else None
+        entries.extend(template['hooks']['SessionStart'])
+        if diff:
+            show_diff(path, old, json.dumps(settings, indent=2) + '\n')
         if not check:
-            entries.extend(template['hooks']['SessionStart'])
             path.parent.mkdir(exist_ok=True)
             path.write_text(json.dumps(settings, indent=2) + '\n', encoding='utf-8')
     if not check and not quiet:
@@ -157,9 +180,20 @@ def main(argv):
         print(__doc__)
         return 0
     check = '--check' in argv
+    diff = '--diff' in argv
+    if check and diff:
+        sys.exit('agents-init: use --check or --diff, not both')
     root = project_dir(argv)
     if not root.is_dir():
         sys.exit(f'agents-init: {root} is not a directory')
+    if diff:
+        print(f'agents-init --diff: what agents-init{" --pending-work" if "--pending-work" in argv else ""} would '
+              f'do in {root} (nothing is changed)')
+        stale = update(root, diff=True)
+        pending = install_pending_work(root, diff=True) if '--pending-work' in argv else []
+        if not stale and not pending:
+            print('  nothing: everything is up to date')
+        return 0
     stale = update(root, check=check)
     pending = install_pending_work(root, check=check) if '--pending-work' in argv else []
     if check:

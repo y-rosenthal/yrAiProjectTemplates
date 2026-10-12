@@ -22,6 +22,8 @@ says what they must do.
   that shows the user how many pending items are open (@sec-pending). `AGENTS.md` has a "Pending work" section.
 - `yrNewAiProject --github` also makes the labels of the pending-work skill (@sec-tool-make).
 - `agents-init --pending-work` adds the skill and the hook to an existing project (@sec-pending-existing).
+- `yrNewAiProject --preview` and `agents-init --diff` show what the tools would do to an existing folder, and
+  change nothing (@sec-tool-preview).
 - `yrNewAiProject` is version 0.3.0. Template v0.2.0 does not change.
 
 ## Repository layout {#sec-layout}
@@ -152,6 +154,23 @@ The tool fills these values:
    difference is a problem. Line ends `\r\n` and `\n` are the same. A binary file must be the same, byte for byte.
 4. Exit 1 if there is a problem, else 0.
 
+### Preview an existing folder {#sec-tool-preview}
+
+`--preview PATH` changes nothing. `PATH` must be a folder (else exit 2). The type is `--type`, or `book` if `PATH`
+has `_quarto.yml`, else `work`. The report has two parts:
+
+1. What `--add-to-existing` would do. Each template file that exists already is listed and marked "same as the
+   template" (the same text, with the values filled in) or "differs from the template"; an existing manifest is
+   listed too. If anything is listed, the report says that the tool would stop with exit 4 and write nothing. Then
+   it lists the template files that would be added.
+2. What `agents-init --pending-work` would do: the output of `agents-init --diff --pending-work` (below).
+
+Exit 0. `--preview` with `--verify`: exit 2.
+
+`agents-init --diff [--pending-work] [DIR]` changes nothing. For each file that agents-init would create or change
+(`AGENTS.md`, `CLAUDE.md` and, with `--pending-work`, `.claude/settings.json`) it prints a unified diff, and it
+lists the skill files that it would add. Exit 0. `--diff` with `--check`: an error.
+
 ### Other {#sec-tool-other}
 
 `--list` lists the versions, newest first, with their types. `-h` and `--help` print the help (the docstring) and
@@ -218,5 +237,6 @@ Pending items are things to do later. The user talks to the agent; the agent doe
 
 `tests/selftest.py` makes test projects in a scratch folder and checks every function in this SPEC. It also
 checks every error status, that a Quarto render leaves no uncommitted change, the output of
-`pending.sh session-start` (with no GitHub repository, so it needs no network), and `agents-init --pending-work`. GitHub Actions runs it and
+`pending.sh session-start` (with no GitHub repository, so it needs no network), `agents-init --pending-work`, and
+that `--preview` and `agents-init --diff` change nothing. GitHub Actions runs it and
 renders this book on each push. It never runs `--github` without `--dry-run`.

@@ -4,6 +4,7 @@
 Usage:
   yrNewAiProject.sh [--type work|book] [OPTIONS] PATH    make a project in the folder PATH
   yrNewAiProject.sh --verify [--check-content] PATH       check a project against the template that it was made from
+  yrNewAiProject.sh --preview [--type work|book] PATH     show what the tools would do to an existing folder
   yrNewAiProject.sh --list                                list the template versions and their project types
 
 yrNewAiProject.sh is the command in the Dropbox tools folder; it runs this file, bin/yrNewAiProject.py
@@ -47,6 +48,16 @@ Options to check a project:
                         differ; any other change is reported. Files that you edit (README, docs) are expected to
                         differ: use this to see what changed since the project was made
   --type, --version     with --verify: check against this type or version, not the ones in the manifest
+
+Options to preview an existing folder (changes nothing):
+  --preview PATH        show what would happen in the existing folder PATH:
+                          1. with --add-to-existing: the template files that it would add, and the ones that exist
+                             already (then it stops and writes nothing; each one is marked "same as the template"
+                             or "differs from the template");
+                          2. with agents-init.sh --pending-work: a diff of each file that agents-init would create or
+                             change (AGENTS.md, CLAUDE.md, .claude/settings.json), and the files it would add.
+                        --type (default: book if PATH has _quarto.yml, else work), --version, --title and
+                        --description work as when you make a project
 
 Other options:
   --list                list the template versions (newest first) and their project types
@@ -172,6 +183,17 @@ def meta_commit(meta):
 
 # ---- make a project --------------------------------------------------------------------------------------------
 
+def project_values(args, name, ptype, version):
+    return {
+        'PROJECT_NAME': name,
+        'PROJECT_TITLE': args.title or name,
+        'PROJECT_DESCRIPTION': args.description or 'TODO: one sentence that says what this project is for.',
+        'PROJECT_TYPE': ptype,
+        'CREATED_DATE': datetime.date.today().isoformat(),
+        'TEMPLATE_VERSION': version,
+    }
+
+
 def create(args, meta):
     target = Path(args.path).expanduser().resolve()
     name = target.name
@@ -200,14 +222,7 @@ def create(args, meta):
         code, out = run(['gh', 'auth', 'status'])
         if code:
             raise Fail(2, f'--github: gh is not logged in (run: gh auth login)\n{out}')
-    values = {
-        'PROJECT_NAME': name,
-        'PROJECT_TITLE': args.title or name,
-        'PROJECT_DESCRIPTION': args.description or 'TODO: one sentence that says what this project is for.',
-        'PROJECT_TYPE': ptype,
-        'CREATED_DATE': datetime.date.today().isoformat(),
-        'TEMPLATE_VERSION': version,
-    }
+    values = project_values(args, name, ptype, version)
     has_git = (target / '.git').exists()
     commit = not args.add_to_existing
 
@@ -359,6 +374,58 @@ def verify(args, meta):
     return 1 if problems else 0
 
 
+# ---- preview an existing folder --------------------------------------------------------------------------------
+
+def preview(args, meta):
+    target = Path(args.path).expanduser().resolve()
+    if not target.is_dir():
+        raise Fail(2, f'{target} is not a folder; --preview is for a folder that exists')
+    versions = template_versions(meta)
+    if not versions:
+        raise Fail(2, f'no templates in {meta / "templates"}')
+    version = args.version or versions[0]
+    version = version if version.startswith('v') else 'v' + version
+    ptype = args.type or ('book' if (target / '_quarto.yml').is_file() else 'work')
+    files = plan(meta, version, ptype)
+    values = project_values(args, target.name, ptype, version)
+    add, exist = [], []
+    for rel, src in sorted(files.items(), key=lambda x: str(x[0])):
+        dest = target / rel
+        if not dest.exists():
+            add.append(rel)
+            continue
+        t, u = read_text(src), read_text(dest)
+        same = (fill_file(t, values, src.suffix) == u.replace('\r\n', '\n')) if t is not None and u is not None \
+            else src.read_bytes() == dest.read_bytes()
+        exist.append(f'{rel}  ({"same as the template" if same else "differs from the template"})')
+    if (target / MANIFEST).exists():
+        exist.append(f'{MANIFEST}  (the folder was made from a template already: use --verify)')
+
+    print(f'Preview for {target} (nothing is changed)')
+    print(f'Template {version}, type {ptype}' + ('' if args.type else ' (the default for this folder; use --type)'))
+    print()
+    print(f'1. yrNewAiProject.sh --add-to-existing --type {ptype} {target}')
+    if exist:
+        print(f'   would STOP (exit 4) and write nothing, because {len(exist)} template file(s) exist already:')
+        for e in exist:
+            print(f'     ! {e}')
+        print(f'   Only if those files were moved away, it would add {len(add)} file(s):')
+    else:
+        print(f'   would add {len(add)} file(s), and write the manifest and the shared rules (no commit):')
+    for rel in add:
+        print(f'     + {rel}')
+    print()
+    print(f'2. agents-init.sh --pending-work {target}')
+    stale = agents_init.update(target, diff=True)
+    pending = agents_init.install_pending_work(target, diff=True)
+    if not stale and not pending:
+        print('  nothing: the shared rules and the pending-work skill are up to date')
+    print()
+    print('Without --pending-work, agents-init.sh changes only AGENTS.md and CLAUDE.md. '
+          'agents-init.sh --diff shows its changes too.')
+    return 0
+
+
 def list_templates(meta):
     versions = template_versions(meta)
     if not versions:
@@ -384,6 +451,7 @@ def main(argv):
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--meta-repo')
     p.add_argument('--verify', action='store_true')
+    p.add_argument('--preview', action='store_true')
     p.add_argument('--check-content', action='store_true')
     p.add_argument('--list', action='store_true')
     try:
@@ -399,6 +467,10 @@ def main(argv):
             raise Fail(2, 'give the project folder (PATH); see: yrNewAiProject.sh --help')
         if args.check_content and not args.verify:
             raise Fail(2, '--check-content is used with --verify')
+        if args.preview:
+            if args.verify:
+                raise Fail(2, 'use --preview or --verify, not both')
+            return preview(args, meta)
         return verify(args, meta) if args.verify else create(args, meta)
     except Fail as e:
         print(f'yrNewAiProject: {e}', file=sys.stderr)
