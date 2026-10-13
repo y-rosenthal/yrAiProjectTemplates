@@ -369,13 +369,20 @@ def main(argv):
     home = tmp / 'home'
     home.mkdir()
     env = dict(ENV, HOME=str(home))
-    code, out = tool('setup-computer', '--check', env=env)
-    check(code == 1 and not (home / '.claude').exists(), 'setup-computer --check: reports, changes nothing', out)
     tool('setup-computer', env=env)
+    code, out = tool('setup-computer', '--check', env=env)
+    check(not (home / '.claude').exists() and 'does not import the shared rules' in out,
+          'setup-computer: creates no ~/.claude/CLAUDE.md, and reports no import', out)
+    (home / '.claude').mkdir()
+    old_text = f'# Mine\n\n@{(META / "rules" / "AGENTS.md").as_posix()}\n'
+    (home / '.claude' / 'CLAUDE.md').write_text(old_text)
+    code, out = tool('setup-computer', '--check', env=env)
+    check(code == 1 and 'imports the shared rules' in out
+          and (home / '.claude' / 'CLAUDE.md').read_text() == old_text,
+          'setup-computer --check: reports an old import line (exit 1), changes nothing', out)
     code, out = tool('setup-computer', env=env)
-    text = (home / '.claude' / 'CLAUDE.md').read_text()
-    check(text.count('rules/AGENTS.md') == 1 and 'imports the shared rules' in out,
-          'setup-computer adds the import line once', text + out)
+    check(code == 0 and (home / '.claude' / 'CLAUDE.md').read_text() == old_text,
+          'setup-computer: only reports the old import line', out)
 
     if '--keep' in argv:
         print(f'kept: {tmp}')

@@ -16,7 +16,7 @@ yrAiProject.sh --help                                               # every comm
 ```
 
 `yrAiProject.sh` is in the Dropbox tools folder (`~/Dropbox/tools`, on `PATH`). It runs `bin/yrAiProject.py`.
-On a new computer, run `yrAiProject.sh setup-computer` once. Before `new` or `update` changes anything, it shows
+On a new computer, run `yrAiProject.sh setup-computer` to check the setup (it changes nothing). Before `new` or `update` changes anything, it shows
 what it would change, with diffs, and asks (`-y` skips the question; `--dry-run` only shows).
 
 ## What a project gets
@@ -49,7 +49,7 @@ point to it.
 ## Documentation
 
 Read the book: `quarto preview docs`. It has the user guide (`docs/USER-GUIDE-v001.qmd`), the specification
-(`docs/SPEC-v0.4.0.qmd`), and the writing and Quarto guides that every project gets.
+(`docs/SPEC-v0.4.1.qmd`), and the writing and Quarto guides that every project gets.
 
 `yrAiProject.sh` replaces `yrNewAiProject.sh` and `agents-init.sh` (the old names only print the new command).
 Template v0.0.1 and the records of older tools are no longer supported; they are in the git tags

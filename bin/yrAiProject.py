@@ -38,9 +38,10 @@ Commands:
                     --with-pending-work  add the pending-work part after an earlier --no-pending-work
                     --version VER        the template version (default: the newest)
   list            list the template versions (newest first) and their project types
-  setup-computer  set up this computer (once; safe to repeat): checks that the Dropbox tools folder is on PATH
-                  (it only reports this), and makes ~/.claude/CLAUDE.md import the shared rules, so that Claude
-                  Code follows them in every project. --check: change nothing; exit 1 if something is missing
+  setup-computer  check this computer (safe to repeat; it changes nothing): that the Dropbox tools folder is on
+                  PATH, and that ~/.claude/CLAUDE.md does not import the shared rules (before 0.4.1 it did; the
+                  shared rules now reach a project only through its AGENTS.md). It reports what to fix.
+                  --check: also exit 1 if something needs fixing
 
 Options of new and update:
   --dry-run       show what would be done, then stop; change nothing
@@ -78,7 +79,7 @@ Exit status: 0 OK (done, nothing to do, or --dry-run); 1 status found something 
 Replaces yrNewAiProject.sh and agents-init.sh (they are now stubs that print the new command) and
 bin/setup-computer.sh. No longer supported: template v0.0.1 (type generic), the manifests of the retired
 yraiproject tool and of yrNewAiProject (.yrAiProjectTemplate/), --add-to-existing (use update), --verify (use
-status) and --meta-repo. The full description: docs/USER-GUIDE-v001.qmd and docs/SPEC-v0.4.0.qmd in
+status) and --meta-repo. The full description: docs/USER-GUIDE-v001.qmd and docs/SPEC-v0.4.1.qmd in
 yrAiProjectTemplates. Python 3.8 or later, standard library only; Linux, and Git Bash on Windows.
 """
 import argparse
@@ -94,7 +95,7 @@ import sys
 from pathlib import Path
 
 META = Path(__file__).resolve().parents[1]
-TOOL_VERSION = '0.4.0'
+TOOL_VERSION = '0.4.1'
 REPO_URL = 'https://github.com/y-rosenthal/yrAiProjectTemplates'
 SKIP_NAMES = {'.git', '__pycache__', '.quarto', '_book', '.DS_Store'}
 MANIFEST = Path('.yrAiProject') / 'manifest.json'
@@ -916,30 +917,22 @@ def cmd_setup_computer(args):
         missing = True
     else:
         print(f'  ok: {tools} is on PATH (yrAiProject.sh)')
+    # Before 0.4.1, setup-computer added this import line. Now the shared rules reach a project only through
+    # its own AGENTS.md, so the line must go; the tool only reports it, because the file is the owner's.
     try:
         line = '@~/' + RULES.relative_to(home).as_posix()
     except ValueError:
         line = '@' + RULES.as_posix()
     claude = home / '.claude' / 'CLAUDE.md'
     text = read(claude)
-    if text is not None and line in text.split('\n'):
-        print(f'  ok: {claude} imports the shared rules')
-    elif args.check:
-        print(f'  ! {claude} does not import the shared rules (line: {line})')
+    if text is not None and any(l.strip() in (line, '@' + RULES.as_posix()) for l in text.split('\n')):
+        print(f'  ! {claude} imports the shared rules. Remove the line {line}: the shared rules reach a project')
+        print('    only through its own AGENTS.md (yrAiProject.sh new and update put them there).')
         missing = True
     else:
-        claude.parent.mkdir(exist_ok=True)
-        if text is not None:
-            claude.write_text(text.rstrip('\n') + f'\n\nThe shared rules for every project (yrAiProjectTemplates):\n\n{line}\n',
-                              encoding='utf-8')
-            print(f'  added the import line to {claude}')
-        else:
-            claude.write_text('# My instructions for Claude Code (all projects)\n\nThe shared rules for every project '
-                              f'(yrAiProjectTemplates):\n\n{line}\n\n## Claude Code only\n\n(Add rules here that apply '
-                              'only to Claude Code.)\n', encoding='utf-8')
-            print(f'  created {claude}')
-    print('Other AI tools read their own global file. For example, for Codex: ln -s RULES ~/.codex/AGENTS.md '
-          '(RULES is the path above).')
+        print(f'  ok: {claude} does not import the shared rules')
+    print('The shared rules are not installed for the whole computer. Each project gets them in its AGENTS.md '
+          '(yrAiProject.sh new or update).')
     return 1 if args.check and missing else 0
 
 

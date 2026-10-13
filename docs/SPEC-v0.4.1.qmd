@@ -1,0 +1,338 @@
+---
+title: "SPEC-v0.4.1"
+subtitle: "yrAiProject: new, status, update; the parts of a project; pending work; the setup notice; no computer-wide rules; version 0.4.1"
+---
+
+## Purpose {#sec-purpose}
+
+Every project for AI-assisted work has the same base:
+
+- rules that every AI agent and every collaborator reads;
+- a list of pending work (things to do later), kept as GitHub issues;
+- for new projects, and for existing ones that want it, a Quarto book of project documents (SPECs, guides,
+  plans), with a skill to add documents. Work to do later is not a document: it is pending items;
+- a clear notice, for people and for AI agents, that `yrAiProject.sh` set up the project, which files it installed,
+  and who changes each one (@sec-notice).
+
+One command, `yrAiProject.sh`, makes new projects, reports the state of any project, and sets up or updates
+existing projects. Before it changes a project, it shows what it would change and asks. The user guide
+(`USER-GUIDE-v001.qmd`) tells how to use it. This SPEC says what it must do.
+
+## Changes from SPEC-v0.4.0 {#sec-changes}
+
+- **The shared rules are no longer installed for the whole computer.** Before, `setup-computer` made
+  `~/.claude/CLAUDE.md` import `rules/AGENTS.md`, so Claude Code followed the shared rules in every folder on the
+  owner's computers, including folders that were not set up with `yrAiProject.sh` (for example a test repository
+  in which the owner works as a student would). Now the shared rules reach a project only through the copy in its
+  own `AGENTS.md` (@sec-rules).
+- **`setup-computer`** changes nothing. It reports whether the Dropbox tools folder is on `PATH`, and whether
+  `~/.claude/CLAUDE.md` still has the old import line, which the owner should remove (@sec-tool-other).
+- The tool's version is 0.4.1. **The templates do not change:** there is no template v0.4.1, and v0.4.0 stays the
+  newest template version, so `status` reports no project as out of date because of this change.
+
+The changes from SPEC-v0.3.0 to SPEC-v0.4.0 are in SPEC-v0.4.0.
+
+## Repository layout {#sec-layout}
+
+| Path | Content |
+|---|---|
+| `templates/vX.Y.Z/shared/` | Files for every project of that version |
+| `templates/vX.Y.Z/TYPE/` | Files for one type of new project (`work`, `book`) |
+| `rules/AGENTS.md` | The shared rules: the text from its first `## ` heading on |
+| `bin/yrAiProject.py` | The tool (Python 3.8 or later, standard library only) |
+| `tests/selftest.py` | The tests |
+| `docs/` | This book |
+
+The command `yrAiProject.sh` is a wrapper in the Dropbox tools folder. It finds the repository by a path relative
+to its own folder (`../_yrAiCoding/yrAiProjectTemplates`), and runs the Python script with the first of `python3`,
+`python` and `py -3` that runs Python 3.8 or later.
+
+## Template versions {#sec-versions}
+
+1. A version folder name is `v` and three numbers. The newest version (highest numbers) is the default.
+2. A version is released when the repository has the git tag `templates-vX.Y.Z`. The files of a released
+   version must not change. A change goes into a new version folder, which has its own SPEC.
+3. The type folders of a version are its types. The `shared` folder is not a type.
+
+## The parts of a project {#sec-parts}
+
+| Part | Files | New project | `update` of an existing folder |
+|---|---|---|---|
+| `rules` | `AGENTS.md` (the setup block and the shared-rules block), `CLAUDE.md` (the line `@AGENTS.md`), the notice hook in `.claude/settings.json`, the setup block in `README.md`, `.yrAiProject/` | yes | always |
+| `pending-work` | `.claude/skills/pending-work/**`, the SessionStart hook in `.claude/settings.json` | yes | yes, unless `--no-pending-work` |
+| `docs` | `docs/**` (with `PROJECT-SETUP.qmd`), `.claude/skills/new-doc/**` | yes | only with `--with-docs`, or if the project has it |
+| (base) | `README.md`, `.gitignore`, and the files of the type (the main book of a `book` project) | yes | never |
+
+1. `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, `README.md` and `docs/_quarto.yml` are **merged**: the tool
+   changes only its blocks, its line or its hooks, and keeps the rest of the file (@sec-rules, @sec-notice,
+   @sec-pending). `update` does not create a `README.md`.
+2. The other files are of two kinds:
+   - **tool files**: the files under `.claude/skills/`, the guides `docs/NAME-GUIDE-vNNN.qmd`, and
+     `docs/PROJECT-SETUP.qmd`. `update` keeps
+     them up to date, unless they were changed by hand (@sec-update);
+   - **starting files**: all the others (the README, the first SPEC, `_quarto.yml`, ...). The
+     project owns them: the tool adds each one once, and never changes it.
+3. `update` uses the `shared/` files of the version only; the type folders are for `new`.
+
+## Placeholders {#sec-placeholders}
+
+| Form | Meaning |
+|---|---|
+| `{{YRAI:KEY}}` | A value that the tool fills in. `KEY` is capital letters, digits and `_` |
+| `<!-- YRAI:BEGIN:NAME -->` ... `<!-- YRAI:END:NAME -->` | A region that the user writes. The markers stay in the file |
+
+The tool fills these values:
+
+| Key | Value |
+|---|---|
+| `PROJECT_NAME` | The folder name |
+| `PROJECT_TITLE` | `--title`, the recorded title, or the folder name |
+| `PROJECT_DESCRIPTION` | `--description`, the recorded description, or a TODO line |
+| `PROJECT_TYPE` | The type (`work` for a folder set up by `update`) |
+| `CREATED_DATE` | The recorded date, or today, `YYYY-MM-DD` |
+| `TEMPLATE_VERSION` | The version, `vX.Y.Z` |
+
+1. In `.yml` files, and in the YAML front matter of `.qmd` and `.md` files, a template puts each value in double
+   quotes. The tool escapes `\` and `"` in those values.
+2. A key that the tool does not know stays as it is.
+3. Tool files have no placeholders, so their fingerprints do not depend on the values.
+
+## The shared rules {#sec-rules}
+
+1. The shared block is the text of `rules/AGENTS.md` from its first `## ` heading on, between the line
+   `<!-- begin shared rules: copied by yrAiProject from yrAiProjectTemplates/rules/AGENTS.md; edit there -->` and
+   the line `<!-- end shared rules -->`. (The environment variable `AGENTS_SHARED_RULES=FILE` gives another source.)
+2. In a project's `AGENTS.md`, the tool replaces the text from a line that starts with `<!-- begin shared rules`
+   to the line `<!-- end shared rules -->`, and keeps the rest of the file. If there is no block, it adds the block
+   at the end. A begin line without an end line is an error (exit 2). If there is no `AGENTS.md`, `update` creates
+   one with a title and the block.
+3. `CLAUDE.md` gets the line `@AGENTS.md` at the top, or is created with that line. The tool does not write through
+   a symlink.
+4. The shared rules are not installed for the whole computer. `~/.claude/CLAUDE.md` does not import
+   `rules/AGENTS.md`, so a folder that was not set up with `yrAiProject.sh` gets none of the shared rules
+   (`setup-computer` reports an import line left from before 0.4.1, @sec-tool-other).
+
+## The setup notice {#sec-notice}
+
+`new` and `update` write the notice each time that they write the record. Its text comes from the record only (the
+version, the parts, the files, the history), so `status` can check it.
+
+1. **`.yrAiProject/README.md`** has no `#` title (the docs page gives the title). It starts with the bold line
+   "Project setup by yrAiProject.sh" and the link to this repository. Then:
+   - a table: the template version, the parts, "set up by" (`new`, with the type, or `update`), and the date of the
+     last change;
+   - "The parts": one line for each installed part;
+   - "The files": a table of `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json` (if it exists), `README.md` (if it
+     exists), each file of the record's `files`, and `.yrAiProject/`, with the part and who changes the file: you;
+     you, and the tool only its block, line or hooks; or the tool (a tool file: `update` replaces it, unless it was
+     changed by hand);
+   - "How to change things", "Commands" (`status`, `update --dry-run`, `update`), and "History" (a table of the
+     record's history).
+2. **`.yrAiProject/session-start.json`** is the JSON output of a SessionStart hook:
+   - `systemMessage`, for the user: `Set up by yrAiProject.sh (yrAiProjectTemplates VERSION; parts: PARTS). Before
+     you change its files, read .yrAiProject/README.md.`;
+   - `hookSpecificOutput.additionalContext`, for the agent: the same facts, the files not to edit, and the
+     commands.
+3. **The hook** is the first SessionStart entry of `.claude/settings.json`, for the sources `startup` and `clear`:
+   `cat "$CLAUDE_PROJECT_DIR/.yrAiProject/session-start.json" 2>/dev/null || true`. It needs only `cat`, so it also
+   runs in Git Bash on Windows. Without the file, it prints nothing and does not fail. Claude Code runs all the
+   SessionStart hooks, and gives the agent the text of each one.
+4. **The block in `AGENTS.md`** is between a line that starts with `<!-- begin yrAiProject setup` and the line
+   `<!-- end yrAiProject setup -->`. It has the heading "Set up by yrAiProject.sh", the version and the parts, a
+   pointer to `.yrAiProject/README.md`, the files not to edit, and an instruction for agents without the hook: tell
+   the user in one line at the start of a session, unless a SessionStart message did. The tool replaces the block.
+   If there is none, it puts the block after the `#` title line (or at the top of a file without one).
+5. **The block in `README.md`** has the same markers, and one sentence in italics. If there is none, the tool adds
+   it at the end. A begin line without an end line, in either file, is an error (exit 2).
+6. **In the docs book:** `docs/PROJECT-SETUP.qmd` (title "Project setup by yrAiProject.sh") includes
+   `../.yrAiProject/README.md`. `docs/_quarto.yml` lists it after `index.qmd`: in a project of an older version,
+   `update` adds the line after the line `- index.qmd`, or, if there is no such line, says to add it by hand. The
+   template's `docs/index.qmd` starts with a notice that links to the page; `update` does not change an existing
+   `index.qmd`.
+
+## The record {#sec-manifest}
+
+`.yrAiProject/manifest.json`, schema 3:
+
+```json
+{
+  "schemaVersion": 3,
+  "version": "v0.4.0",
+  "projectType": "work",
+  "parts": ["docs", "pending-work", "rules"],
+  "skippedParts": [],
+  "values": {"PROJECT_NAME": "...", "PROJECT_TITLE": "...", "PROJECT_DESCRIPTION": "...",
+             "PROJECT_TYPE": "work", "CREATED_DATE": "2026-10-12", "TEMPLATE_VERSION": "v0.4.0"},
+  "history": [{"date": "2026-10-12", "command": "new", "version": "v0.4.0", "parts": ["docs", "pending-work", "rules"]}],
+  "files": {".claude/skills/pending-work/SKILL.md": "<SHA-256 of the text as installed>", "...": "..."},
+  "createdAt": "2026-10-12T18:00:00Z",
+  "updatedAt": "2026-10-12T18:00:00Z",
+  "tool": {"name": "yrAiProject", "version": "0.4.1", "templatesCommit": "abc1234"}
+}
+```
+
+1. `projectType` is `null` for a folder that `update` set up.
+2. `skippedParts` holds `pending-work` after `update --no-pending-work`, so that later updates do not add it.
+3. `files` has a fingerprint for each file that the tool added or changed, and for each tool file that it found up
+   to date. The fingerprint is the SHA-256 of the UTF-8 text with `\n` line ends. The merged files have none.
+4. `history` has one entry for each run of `new` and `update` that wrote the record. A record from before v0.4.0
+   has no `history`: the first update starts it with an entry "set up (no history before v0.4.0)" on the date of
+   `createdAt`.
+5. The tool does not read the records of older tools (`.yrAiProjectTemplate/manifest.json`); `status` notes one.
+
+## yrAiProject {#sec-tool}
+
+`yrAiProject.sh COMMAND [PATH] [OPTIONS]`. For `status` and `update`, `PATH` defaults to the top of the current git
+repository, else the current folder. No command, `-h`, `--help` or `help`: the help, exit 0. An unknown command or
+option: exit 2.
+
+### Confirmation {#sec-confirm}
+
+1. `new` and `update` first print the plan: each file that they would add (`+ add`) or change (`~ change`), the
+   record, and each file that they leave alone with the reason (`= keep`). `update` also prints a unified diff of
+   each file that it would change, and of each merged file that it would create.
+2. Then they ask `Apply these changes? [y/N]`. Only `y` or `yes` applies. Any other answer: "Nothing was
+   changed", exit 1.
+3. `-y` (`--yes`) applies without the question. `--dry-run` prints the plan and "nothing was changed", exit 0.
+4. If standard input is not a terminal and there is no `-y`, the tool prints the plan, changes nothing, and exits
+   with status 6, with a message that names `-y` and `--dry-run`. It never waits for an answer that cannot come.
+
+### new {#sec-tool-new}
+
+1. `PATH` must not exist, or be empty, or hold only `.git`. With `--strict-empty`, `.git` alone is refused.
+   Otherwise: exit 3, and the message names `update` and `status`.
+2. `--type` (`work`, the default, or `book`), `--version` (the newest by default), `--title`, `--description`.
+   An unknown type or version: exit 2.
+3. With `--github`, the tool first checks that `gh` exists and is logged in (else exit 2).
+4. The plan lists every file. After confirmation, the tool writes the `shared` files, then the type files (a type
+   file replaces a shared file with the same path), with the values filled in and the file permissions kept. It
+   skips `.git`, `__pycache__`, `.quarto`, `_book` and `.DS_Store`. It fills in the shared rules and the setup
+   blocks, and writes the record with every part that the version has, and the setup notice (@sec-notice).
+5. If the folder has no `.git`, it runs `git init -b main`. It commits all the files ("Make NAME from
+   yrAiProjectTemplates VERSION (TYPE project)", with a second paragraph that names the parts and
+   `.yrAiProject/README.md`). A git failure: exit 5.
+6. With `--github`, it runs `gh repo create NAME --private --source PATH --remote origin --push`, then
+   `pending.sh setup-labels` if the project has the pending-work part. A failure of `gh repo create`: exit 5, and
+   the local project stays. A failure of `setup-labels` is a warning.
+
+### status {#sec-status}
+
+`status` changes nothing. It prints:
+
+1. the state: "set up with yrAiProject, template VERSION (DATE)", with "the newest version is ..." if it is older;
+   or "partly set up: it has PARTS, but no record of a version" (a project without a record that has the
+   shared-rules block, the pending-work skill or hook, or the docs book with the new-doc skill); or "not set up
+   with yrAiProject";
+2. one line for each part: up to date; out of date (what `update` would add and change); not installed (and
+   whether `update` adds it, or how to add it); and the number of files changed by hand, which `update` leaves
+   alone;
+3. "setup notice out of date or missing" if `.yrAiProject/README.md` or `session-start.json` is not what the
+   record makes; else the path of `.yrAiProject/README.md`;
+4. notes (for example a record of an older tool, or a `docs/_quarto.yml` that is not from yrAiProject).
+
+Exit 0 if `update` has nothing to do, else 1.
+
+### update {#sec-update}
+
+1. `PATH` must be a folder (else exit 2). It may be a project that was never set up.
+2. The parts: the parts that the record lists (or, without a record, that the folder has), plus `rules`, plus
+   `pending-work` unless `--no-pending-work` or the record's `skippedParts` (`--with-pending-work` removes it from
+   there), plus `docs` with `--with-docs`. `--no-pending-work` with `--with-pending-work`: exit 2.
+3. If `docs` would be added, but `docs/_quarto.yml` exists and is not from yrAiProject, the docs part is not added
+   (a note says so).
+4. For each `shared` file of the version in those parts:
+   - a **tool file** that is missing is added (also if it was deleted); one that is the same as the template is up
+     to date; one whose fingerprint is the recorded one is replaced (`~ change`, "a newer version"); any other one
+     was changed by hand, or was not installed by yrAiProject, and is left alone (`= keep`);
+   - a **starting file** is added if it does not exist and the record does not list it. Otherwise it is not
+     touched, and not reported. If the project has no `README.md`, `docs/index.qmd` is added without its include of
+     `../README.md` (Quarto cannot render an include of a missing file).
+5. The merged files: the shared rules (@sec-rules); the setup blocks (@sec-notice); the SessionStart entries of the
+   template's `.claude/settings.json`: the notice hook (`rules`) first, unless an entry already names
+   `session-start.json`, and the pending-work hook at the end, unless an entry already runs `pending.sh`. The other
+   settings are kept. A settings file that is not JSON, or has hooks in another form, is left alone with a note; the
+   rest of the update goes on. With the docs part, `docs/_quarto.yml` gets the line for `PROJECT-SETUP.qmd`.
+6. Before it asks, the tool warns if the folder is not a git repository, and lists the files that it would change
+   and that have uncommitted changes.
+7. After confirmation, it writes the files, the record and the setup notice, and says that nothing was committed. It makes no
+   commit. If it added the pending-work part, it names `pending.sh setup-labels`.
+8. If nothing would change and the record is current, it prints "Nothing to do", exit 0.
+
+### list, setup-computer {#sec-tool-other}
+
+- `list`: the versions, newest first, with their types.
+- `setup-computer [--check]`: changes nothing. It reports whether the Dropbox tools folder (`../../tools` from
+  this repository, with `yrAiProject.sh`) is on `PATH`, and whether `~/.claude/CLAUDE.md` imports
+  `rules/AGENTS.md` (the line `@~/...` under the home folder, or `@` and the full path), which the owner should
+  remove (@sec-rules). It never creates or edits `~/.claude/CLAUDE.md`. With `--check`, it exits with status 1 if
+  something needs fixing.
+
+### Exit status {#sec-exit}
+
+0 OK (done, nothing to do, or `--dry-run`); 1 `status` found something to do, or the answer was no; 2 bad
+options, a missing template or a missing tool; 3 `new`: `PATH` is not empty; 5 git or gh failed; 6 confirmation
+needed, but there is no terminal.
+
+### The old command names {#sec-stubs}
+
+`yrNewAiProject.sh` and `agents-init.sh` in the tools folder print the `yrAiProject.sh` command that replaces each
+of their uses, and exit with status 2 (`--help`: status 0). They do nothing else.
+
+## The new-doc skill {#sec-documents}
+
+1. Document types are names in capital letters, digits and hyphens. The default is `SPEC`. There are no PRDs.
+2. A SPEC file is `SPEC-vX.Y.Z.qmd`. The default version is the newest SPEC's version with the last number plus 1,
+   or `0.1.0` if there is no SPEC. `--version` gives another one.
+3. Another type's file is `TYPE-vNNN.qmd`, with the next copy number (`001` first).
+4. The new file is a copy of the newest version of its type, with the new title. With `--blank`, or when there is
+   no older version, it is the outline of the type.
+5. The script lists the file in `docs/_quarto.yml`: above the newest older version of the type; else at the end of
+   its part (`Specification` for SPEC, `Guides` for a name that ends in `GUIDE`, else `Work`, or `--part`); else in
+   a new part at the end of `book: chapters:`.
+6. A file that exists is never replaced.
+
+## Pending work {#sec-pending}
+
+Pending items are things to do later. The user talks to the agent; the agent does the GitHub work.
+
+1. An item is a GitHub issue in the project's repository (the `origin` remote) with the label `pending-work`, one
+   category label (by default `fix`, `improvement`, `decision` or `recheck`) and one priority label
+   (`priority: high`, `priority: medium` or `priority: low`).
+2. `scripts/pending.sh` needs only bash and `gh` (it uses the jq that is built into `gh`), so it also runs in Git
+   Bash on Windows. Its commands:
+
+   | Command | What it does |
+   |---|---|
+   | `session-start` | Prints the JSON for the SessionStart hook (below) |
+   | `list` | The open items, one per line (`#12 [high] Title  (category)`), highest priority first |
+   | `export` | Writes the open items, with their text, to `_pending-work/pendingWork.md` |
+   | `setup-labels` | Makes or updates the labels (safe to repeat) |
+   | `-h`, `--help` | Prints the help and stops |
+
+   The settings at the top of the script, `MIRROR`, `QUEUE` and `CATEGORIES`, may be changed for a project (the
+   script is then "changed by hand", and `update` leaves it alone). The folder `_pending-work/` starts with `_`, so
+   Quarto does not render it.
+3. `.claude/settings.json` runs `pending.sh session-start` for the SessionStart sources `startup` and `clear`, after
+   the notice hook (@sec-notice). The output is JSON with:
+   - `systemMessage`, which the user sees: the count by priority, for example `Pending work: 12 pending items (3
+     high, 5 medium, 4 low). Want to see them? Say "list pending".`, or `Pending work: nothing pending.`;
+   - `hookSpecificOutput.additionalContext`, which the agent gets: the same count and how to answer. **It does not
+     hold the list**, so that the list uses no context until the user asks for it.
+4. When `gh` is missing or not logged in, GitHub cannot be reached, or the project has no GitHub remote,
+   `session-start` and `list` use the saved copy (`_pending-work/pendingWork.md`) and the items that the agent
+   queued in `_pending-work/queue.md` (headings `### [priority] Title`). The output says that the count may be out
+   of date.
+5. `SKILL.md` tells the agent how to show, add, change, work on and close items, and how to handle the queue.
+
+## Tests {#sec-tests}
+
+`tests/selftest.py` makes test projects in a scratch folder and checks every function in this SPEC: `new` of each
+type (and of v0.2.0), `status` in each state, `update` of existing folders (the plan and its diffs, `--dry-run`,
+exit 6 without a terminal, a newer tool file, a file changed by hand, a deleted file, out-of-date shared rules,
+`--with-docs`, `--no-pending-work`, `--with-pending-work`, a foreign `docs/_quarto.yml`, a settings file that is not
+JSON), the setup notice (its files, the hook command with and without the file, the blocks, the docs page and its
+render, the history, the update of a v0.3.0 project, a block without its end line), `setup-computer` with a scratch
+`HOME` (no file created; an old import line reported and left as it is), the output of `pending.sh session-start` (with no GitHub repository,
+so it needs no network), the new-doc script, every error status, and that a Quarto render leaves no uncommitted
+change. Every command runs with standard input from `/dev/null`. GitHub Actions runs it and renders this book on each
+push. It never runs `--github` without `--dry-run`.

@@ -1,12 +1,12 @@
 # Shared rules for AI coding agents (all projects)
 
 The source of the rules that Prof. Rosenthal wants in every project, for every AI coding tool and every
-collaborator. Everything from the first `## ` heading on is the shared block:
+collaborator. Everything from the first `## ` heading on is the shared block.
 
-- `yrAiProject.sh new` and `yrAiProject.sh update` (in the Dropbox tools folder; they run `bin/yrAiProject.py`)
-  copy it into a project's `AGENTS.md`, between `<!-- begin shared rules -->` and `<!-- end shared rules -->`;
-- Claude Code reads this file directly on each of the owner's computers: `~/.claude/CLAUDE.md` imports it
-  (`yrAiProject.sh setup-computer` adds the import line).
+`yrAiProject.sh new` and `yrAiProject.sh update` (in the Dropbox tools folder; they run `bin/yrAiProject.py`)
+copy it into a project's `AGENTS.md`, between `<!-- begin shared rules -->` and `<!-- end shared rules -->`.
+That copy is the only way the rules reach an AI agent: `~/.claude/CLAUDE.md` does not import this file, so a
+folder that was not set up with `yrAiProject.sh` gets none of these rules.
 
 Edit the rules here and commit them. Then run `yrAiProject.sh update` in each project to update its copy
 (`yrAiProject.sh status` shows whether a project's copy is out of date).

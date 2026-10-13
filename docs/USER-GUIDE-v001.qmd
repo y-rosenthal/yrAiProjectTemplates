@@ -38,14 +38,17 @@ You need Dropbox (synced), Python 3.8 or later, git and Quarto. For pending work
 
 1. Make sure that the Dropbox tools folder is on `PATH`. The tools folder holds `yrAiProject.sh`. On Linux,
    `~/.bashrc` has the line `export PATH="$PATH:$HOME/Dropbox/tools"`.
-2. Run once (safe to run again):
+2. Check the setup (it changes nothing; safe to run again):
 
    ```bash
    ~/Dropbox/tools/yrAiProject.sh setup-computer
    ```
 
-   It checks the `PATH`, and it adds an import line to `~/.claude/CLAUDE.md`. Then Claude Code follows the shared
-   rules in every project on this computer. `setup-computer --check` only reports.
+   It checks the `PATH`. It also checks that `~/.claude/CLAUDE.md` does **not** import the shared rules: the
+   rules reach a project only through its own `AGENTS.md`, so a folder that you didn't set up with
+   `yrAiProject.sh` (for example a test repository where you work as a student would) gets none of them. Before
+   version 0.4.1, `setup-computer` added that import line; if it reports the line, delete it from the file.
+   With `--check`, it also exits with status 1 if something needs fixing.
 3. Test: `yrAiProject.sh list` shows the template versions.
 
 On Windows, `python3` can be a Microsoft Store placeholder that does not run. `yrAiProject.sh` then uses `python`
@@ -221,12 +224,9 @@ pending item (@sec-pending). The DOC-GUIDE in each project gives all the rules.
 ## The shared rules for AI agents {#sec-rules}
 
 The shared rules are in `rules/AGENTS.md` of this repository, for example "every script has `--help`". They
-reach the agents in two ways:
-
-| Who | How they get the rules |
-|---|---|
-| Claude Code on your computers | `~/.claude/CLAUDE.md` imports `rules/AGENTS.md` (`setup-computer` adds the line) |
-| Collaborators, any AI agent, cloud agents | A copy in the project's `AGENTS.md`, between `<!-- begin shared rules -->` and `<!-- end shared rules -->` (`new` and `update` put it there) |
+reach every agent, yours and your collaborators', in one way: a copy in the project's `AGENTS.md`, between
+`<!-- begin shared rules -->` and `<!-- end shared rules -->` (`new` and `update` put it there). They are not
+installed for the whole computer, so a folder that you didn't set up with `yrAiProject.sh` gets none of them.
 
 To change a shared rule: edit `rules/AGENTS.md`, and commit it. Then, in each project, run `yrAiProject.sh update`
 and commit the change. `yrAiProject.sh status` shows which projects have an old copy.
@@ -251,7 +251,7 @@ and commit the change. `yrAiProject.sh status` shows which projects have an old 
 | `new` and `update`: `--dry-run` | Show the plan; change nothing |
 | `new` and `update`: `-y`, `--yes` | Don't ask |
 | `list` | List the template versions and their types |
-| `setup-computer [--check]` | Set up this computer (@sec-setup) |
+| `setup-computer [--check]` | Check this computer's setup; changes nothing (@sec-setup) |
 | `-h`, `--help` | Show the help and stop |
 
 Exit status: 0 OK; 1 `status` found something to do, or you answered no; 2 bad options, a missing template or a
